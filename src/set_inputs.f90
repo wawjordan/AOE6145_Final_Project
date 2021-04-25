@@ -8,7 +8,7 @@ module set_inputs
 
   private
 
-  public :: imax, neq, xmin, xmax, n_ghost_cells
+  public :: imax, neq, xmin, xmax, n_ghost
   public :: i_high, i_low, ig_high, ig_low
   public :: Astar, area, darea
   public :: CFL, k2, k4, eps, tol, eps_roe, beta_lim, epsM, kappaM
@@ -17,6 +17,7 @@ module set_inputs
   public :: p0, T0, a0, rho0, pb, p_ratio
   public :: set_derived_inputs, flux_scheme, limiter_scheme, cons
   public :: leftV, rightV, leftU, rightU, limiter_freeze, psi_plus, psi_minus
+  public :: grid_name
    
   integer :: imax    = 128
   integer :: i_low   = 10
@@ -28,7 +29,7 @@ module set_inputs
   integer :: shock = 0
   integer :: ramp = 0
   integer :: max_iter = 150000
-  integer :: n_ghost_cells   = 2
+  integer :: n_ghost   = 2
   integer :: max_newton_iter = 1000
 
   real(prec) :: newton_tol = 1.0e-15_prec
@@ -60,6 +61,7 @@ module set_inputs
   real(prec), dimension(:,:), allocatable :: leftV, rightV, leftU, rightU
   real(prec), dimension(:,:), allocatable :: psi_plus, psi_minus
   integer :: counter = 1
+  character(64) :: grid_name = "../grids/curvilinear-grids/curv2d257.grd"
   contains
 
   !=================================== area ==================================80
@@ -110,8 +112,8 @@ module set_inputs
     rho0 = 1000.0_prec*p0/(R_gas*T0)
     i_low = 1
     i_high = imax
-    ig_low  = 1 - n_ghost_cells
-    ig_high = imax + n_ghost_cells
+    ig_low  = 1 - n_ghost
+    ig_high = imax + n_ghost
     pb = p_ratio*p0*1000_prec
     write(*,'(A8,F20.14,A13)') 'R     = ', R_gas, ' [J/(kmol*K)]'
     write(*,'(A8,F20.14)')     'gamma = ', gamma

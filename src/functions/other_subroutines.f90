@@ -8,7 +8,6 @@ module other_subroutines
   use variable_conversion
   use limiter_calc, only : limiter_fun, calc_consecutive_variations
   use soln_type, only : soln_t
-  use exact_q1d_type, only : exact_q1d_t
   use grid_type, only : grid_t
   
   implicit none
@@ -117,7 +116,7 @@ module other_subroutines
   subroutine calc_de( soln, exact_soln, DE, DEnorm, pnorm, cons )
     
     type(soln_t), intent(inout) :: soln
-    type(exact_q1d_t), intent(in) :: exact_soln
+    type(soln_t), intent(in) :: exact_soln
     logical, intent(in) :: cons
     real(prec), dimension(i_low:i_high,1:neq), intent(out) :: DE
     real(prec), dimension(1,1:neq), intent(out) :: DEnorm
@@ -125,9 +124,9 @@ module other_subroutines
     real(prec) :: Linv
     Linv = one/real(i_high-i_low)
     if (cons) then
-      DE = soln%U(i_low:i_high,1:neq) - exact_soln%Uc(i_low:i_high,1:neq)
+      DE = soln%U(i_low:i_high,1:neq) - zero
     else
-      DE = soln%V(i_low:i_high,1:neq) - exact_soln%Vc(i_low:i_high,1:neq)
+      DE = soln%V(i_low:i_high,1:neq) - zero
     end if
     
     if (pnorm == 0) then
@@ -297,7 +296,7 @@ module other_subroutines
     
     type( grid_t ), intent(in) :: grid
     type( soln_t ), intent(in) :: soln
-    type( exact_q1d_t ), intent(in) :: ex_soln
+    type( soln_t ), intent(in) :: ex_soln
     integer,        intent(in) :: num_iter
     
     integer :: i
@@ -315,10 +314,10 @@ module other_subroutines
       !write(40,*) 'DT=(DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE DOUBLE &
       !       & DOUBLE DOUBLE)'
       do i = i_low,i_high
-        write(40,*) grid%xc(i),grid%Ac(i),soln%V(i,1),soln%V(i,2),soln%V(i,3),&
+        write(40,*) grid%x(1,i),grid%A_eta(1,i),soln%V(i,1),soln%V(i,2),soln%V(i,3),&
              & soln%mach(i),soln%U(i,1),soln%U(i,2),soln%U(i,3), &
-             & ex_soln%Mc(i), ex_soln%Vc(i,1), ex_soln%Vc(i,2),  &
-             & ex_soln%Vc(i,3), soln%DE(i,1), soln%DE(i,2), soln%DE(i,3)
+             & ex_soln%mach(i), ex_soln%V(i,1), ex_soln%V(i,2),  &
+             & ex_soln%V(i,3), soln%DE(i,1), soln%DE(i,2), soln%DE(i,3)
         !write(40,*) grid%xc(i),soln%V(i,1),soln%V(i,2),soln%V(i,3),&
         !     & soln%mach(i), ex_soln%Mc(i), ex_soln%Vc(i,1), ex_soln%Vc(i,2),&
         !     & ex_soln%Vc(i,3)
@@ -331,7 +330,7 @@ module other_subroutines
       do i = i_low,i_high
         !write(40,*) grid%xc(i),grid%Ac(i),soln%V(i,1),soln%V(i,2),soln%V(i,3),&
         !     & soln%mach(i),soln%U(i,1),soln%U(i,2),soln%U(i,3)
-        write(40,*) grid%xc(i),soln%V(i,1),soln%V(i,2),soln%V(i,3),&
+        write(40,*) grid%x(1,i),soln%V(i,1),soln%V(i,2),soln%V(i,3),&
              & soln%mach(i)
       end do
     endif

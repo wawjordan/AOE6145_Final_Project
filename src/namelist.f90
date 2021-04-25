@@ -2,7 +2,7 @@ module namelist
   
   use fluid_constants, only : R_gas, gamma
   use set_inputs, only : imax, i_high, i_low, ig_high, ig_low
-  use set_inputs, only : imax, neq, xmin, xmax, n_ghost_cells
+  use set_inputs, only : imax, neq, xmin, xmax, n_ghost
   use set_inputs, only : i_high, i_low, ig_high, ig_low
   use set_inputs, only : Astar, area, darea
   use set_inputs, only : CFL, k2, k4, eps, tol, eps_roe, beta_lim, epsM, kappaM
@@ -11,7 +11,7 @@ module namelist
   use set_inputs, only : p0, T0, a0, rho0, pb, p_ratio
   use set_inputs, only : set_derived_inputs, flux_scheme, limiter_scheme, cons
   use set_inputs, only : leftV, rightV, leftU, rightU
-  
+  use set_inputs, only : grid_name
   implicit none
   private
   
@@ -30,7 +30,7 @@ contains
     logical :: fexist
     logical :: fopen = .false.
     !character(len=20) :: file_path = 'q1d.nml'
-    namelist /grid/ imax, xmin, xmax, n_ghost_cells
+    namelist /grid/ imax, xmin, xmax, n_ghost
     namelist /geometry/ Astar
     namelist /constants/ R_gas, gamma
     namelist /initial/ p0, T0, p_ratio, shock

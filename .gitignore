@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Data Files
+*.dat
+
+# Build Directory
+build/

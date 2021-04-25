@@ -67,24 +67,24 @@ module time_integration
     
     !integer :: i
     
-    R(i_low:i_high,1) = F(i_low:i_high,1)*grid%Ai(i_low:i_high) &
-           - F(i_low-1:i_high-1,1)*grid%Ai(i_low-1:i_high-1)
-    R(i_low:i_high,2) = F(i_low:i_high,2)*grid%Ai(i_low:i_high) & 
-           - F(i_low-1:i_high-1,2)*grid%Ai(i_low-1:i_high-1) &
-           - src(i_low:i_high)*grid%dx
-    R(i_low:i_high,3) = F(i_low:i_high,3)*grid%Ai(i_low:i_high) &
-           - F(i_low-1:i_high-1,3)*grid%Ai(i_low-1:i_high-1)
+    R(i_low:i_high,1) = F(i_low:i_high,1)*grid%A_eta(1,i_low:i_high) &
+           - F(i_low-1:i_high-1,1)*grid%A_eta(1,i_low-1:i_high-1)
+    R(i_low:i_high,2) = F(i_low:i_high,2)*grid%A_eta(1,i_low:i_high) & 
+           - F(i_low-1:i_high-1,2)*grid%A_eta(1,i_low-1:i_high-1) &
+           - src(i_low:i_high)
+    R(i_low:i_high,3) = F(i_low:i_high,3)*grid%A_eta(1,i_low:i_high) &
+           - F(i_low-1:i_high-1,3)*grid%A_eta(1,i_low-1:i_high-1)
     
     
     U(i_low:i_high,1) = U(i_low:i_high,1) & 
                       - dt(i_low:i_high)/ &
-                        (grid%Ac(i_low:i_high)*grid%dx)*R(:,1)
+                        (grid%A_eta(1,i_low:i_high))*R(:,1)
     U(i_low:i_high,2) = U(i_low:i_high,2) &
                       - dt(i_low:i_high)/ &
-                        (grid%Ac(i_low:i_high)*grid%dx)*R(:,2)
+                        (grid%A_eta(1,i_low:i_high))*R(:,2)
     U(i_low:i_high,3) = U(i_low:i_high,3) &
                       - dt(i_low:i_high)/ &
-                        (grid%Ac(i_low:i_high)*grid%dx)*R(:,3)
+                        (grid%A_eta(1,i_low:i_high))*R(:,3)
     
   end subroutine explicit_euler
   
