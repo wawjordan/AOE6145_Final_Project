@@ -2,7 +2,7 @@ program main_program
   
   use set_constants, only : set_derived_constants
   use fluid_constants, only : set_fluid_constants
-  use set_inputs, only : set_derived_inputs
+  use set_inputs, only : set_derived_inputs, grid_name
   !use set_inputs, only : max_iter, tol, soln_save, res_save
   !use set_inputs, only : leftV, rightV, leftU, rightU, flux_scheme
   !use set_inputs, only : limiter_freeze, res_out, cons
@@ -12,6 +12,7 @@ program main_program
   !use limiter_calc, only : select_limiter
   !use flux_calc, only : select_flux, flux_fun
   use other_subroutines
+  use file_handling, only : grid_in, grid_out
   !use geometry, only : setup_geometry, teardown_geometry
   !use init_problem, only : initialize
   use namelist, only : read_namelist
@@ -32,6 +33,10 @@ program main_program
   !call read_namelist('input.nml')
   call set_derived_inputs
   call allocate_grid( grid )
+  call grid_in(grid_name,grid)
+  call ghost_shape(grid)
+  call cell_geometry(grid)
+  call grid_out('example.dat',grid)
   call deallocate_grid( grid )
   !call setup_geometry(grid,soln)
   
