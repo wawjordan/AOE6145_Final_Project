@@ -2,13 +2,13 @@ module grid_type
   
   use set_precision, only : prec
   use set_constants, only : zero, one, two, half
-  
+  use set_inputs,    only : i_low, i_high, ig_low, ig_high
+  use set_inputs,    only : j_low, j_high, jg_low, jg_high
   implicit none
   
   private
   
-  public :: grid_t
-  public :: allocate_grid, deallocate_grid
+  public :: grid_t, allocate_grid, deallocate_grid
   public :: ghost_shape, cell_geometry
   
   type grid_t
@@ -42,17 +42,7 @@ module grid_type
     use set_inputs   , only : grid_name, n_ghost
     
     type( grid_t ), intent( inout ) :: grid
-    integer :: i_low, i_high, ig_low, ig_high
-    integer :: j_low, j_high, jg_low, jg_high
     
-    i_low   = grid%i_low
-    j_low   = grid%j_low
-    i_high  = grid%i_high
-    j_high  = grid%j_high
-    ig_low  = grid%ig_low
-    jg_low  = grid%jg_low
-    ig_high = grid%ig_high
-    jg_high = grid%jg_high
     allocate( grid%x(       ig_low:ig_high+1,jg_low:jg_high+1), &
               grid%y(       ig_low:ig_high+1,jg_low:jg_high+1), &
               grid%A_xi(    ig_low:ig_high+1,jg_low:jg_high), &
@@ -68,19 +58,8 @@ module grid_type
   subroutine ghost_shape(grid)
     
     type(grid_t), intent(inout) :: grid
-    integer :: i_low, i_high, ig_low, ig_high
-    integer :: j_low, j_high, jg_low, jg_high
     integer :: i, j
     
-    i_low   = grid%i_low
-    j_low   = grid%j_low
-    i_high  = grid%i_high
-    j_high  = grid%j_high
-    ig_low  = grid%ig_low
-    jg_low  = grid%jg_low
-    ig_high = grid%ig_high
-    jg_high = grid%jg_high
-
     ! extrapolate coordinates to form ghost cells
     do j = j_low-1, jg_low, -1
     do i = i_low, i_high+1
@@ -143,18 +122,8 @@ module grid_type
   subroutine cell_geometry(grid)
     
     type(grid_t), intent(inout) :: grid 
-    integer :: i_low, i_high, ig_low, ig_high
-    integer :: j_low, j_high, jg_low, jg_high
     integer :: i, j
     
-    i_low   = grid%i_low
-    j_low   = grid%j_low
-    i_high  = grid%i_high
-    j_high  = grid%j_high
-    ig_low  = grid%ig_low
-    jg_low  = grid%jg_low
-    ig_high = grid%ig_high
-    jg_high = grid%jg_high
     ! calculate cell face areas, normals, and volumes
     do j = jg_low, jg_high
     do i = ig_low, ig_high
