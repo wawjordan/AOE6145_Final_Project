@@ -13,10 +13,11 @@ program main_program
   !use flux_calc, only : select_flux, flux_fun
   use other_subroutines
   use file_handling, only : grid_in, grid_out
-  !use geometry, only : setup_geometry, teardown_geometry
+  use geometry, only : setup_geometry, teardown_geometry
   !use init_problem, only : initialize
   use namelist, only : read_namelist
-  use grid_type
+  use grid_type, only : grid_t, allocate_grid, deallocate_grid, &
+                        ghost_shape, cell_geometry
   use soln_type
   implicit none
   
@@ -32,15 +33,15 @@ program main_program
   call set_fluid_constants
   !call read_namelist('input.nml')
   call set_derived_inputs
-  call allocate_grid( grid )
-  call grid_in(grid_name,grid)
-  call ghost_shape(grid)
-  call cell_geometry(grid)
-  call grid_out('example.dat',grid)
-  call deallocate_grid( grid )
-  !call setup_geometry(grid,soln)
+  !call allocate_grid( grid )
+  !call grid_in(grid_name,grid)
+  !call ghost_shape(grid)
+  !call cell_geometry(grid)
+  !call grid_out('example.dat',grid)
+  !call deallocate_grid( grid )
+  call setup_geometry(grid,soln)
   
   
-  !call teardown_geometry(grid,soln)
+  call teardown_geometry(grid,soln)
   close(50)
 end program main_program
