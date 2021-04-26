@@ -17,7 +17,7 @@ module set_inputs
   public :: p0, T0, a0, rho0, pb, p_ratio
   public :: set_derived_inputs, flux_scheme, limiter_scheme, cons
   public :: leftV, rightV, leftU, rightU, limiter_freeze, psi_plus, psi_minus
-  public :: grid_name
+  public :: grid_name, geometry_file
    
   integer :: imax    = 128
   integer :: i_low   = 10
@@ -62,8 +62,9 @@ module set_inputs
   real(prec), dimension(:,:), allocatable :: psi_plus, psi_minus
   integer :: counter = 1
   !character(64) :: grid_name = "../grids/curvilinear-grids/curv2d17.grd"
-  !character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.extra-coarse.27x14.grd"
-  character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.fine.385x105.grd"
+  character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.extra-coarse.27x14.grd"
+  !character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.fine.385x105.grd"
+  character(64) :: geometry_file = "example.dat"
   contains
 
   !=================================== area ==================================80
