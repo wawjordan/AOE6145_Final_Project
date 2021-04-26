@@ -5,4 +5,5 @@ add_lib_sources(
      flux_calc.f90
      limiter_calc.f90
      other_subroutines.f90
+     MMS_functions.f90
 )
