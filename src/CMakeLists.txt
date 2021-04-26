@@ -1,8 +1,8 @@
 add_subdirectory( fileio )
 add_subdirectory( constants )
-add_subdirectory( functions )
+#add_subdirectory( functions )
 add_subdirectory( types )
-add_subdirectory( boundary )
+#add_subdirectory( boundary )
 # Propagate lib_srcs list to parent
 add_lib_sources( set_precision.f90 )
 add_lib_sources( set_inputs.f90 )
