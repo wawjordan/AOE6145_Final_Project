@@ -4,17 +4,16 @@ contains
 !!!!MMS functions
 pure function rho_mms(length, x, y)
 
-  use set_precision, only : dp
-  use constants,     only : two
+  use set_precision, only : prec
+  use set_constants, only : pi, two
   use mms_constants, only : rho0, rhox, rhoy
-  use set_inputs,    only : pi
-
+  
   implicit none
 
-  real(dp), intent(in) :: x
-  real(dp), intent(in) :: y
-  real(dp), intent(in) :: length
-  real(dp) :: rho_mms
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec), intent(in) :: length
+  real(prec) :: rho_mms
 
   rho_mms = rho0 + rhoy*cos((pi*y)/(two*length)) + rhox*sin((pi*x)/length)
 
@@ -22,17 +21,16 @@ end function rho_mms
 !=============================================================================80
 pure function uvel_mms(length, x, y)
 
-  use set_precision, only : dp
-  use constants,     only : two, three, five
+  use set_precision, only : prec
+  use set_constants, only : pi, two, three, five
   use mms_constants, only : uvel0, uvelx, uvely
-  use set_inputs,    only : pi
-
+  
   implicit none
 
-  real(dp), intent(in) :: x
-  real(dp), intent(in) :: y
-  real(dp), intent(in) :: length
-  real(dp) :: uvel_mms
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec), intent(in) :: length
+  real(prec) :: uvel_mms
   
   uvel_mms = uvel0 + uvely*cos((three*pi*y)/(five*length)) +                   &
                  uvelx*sin((three*pi*x)/(two*length))
@@ -41,17 +39,16 @@ end function uvel_mms
 !=============================================================================80
 pure function vvel_mms(length,x,y)
 
-  use set_precision, only : dp
-  use constants,     only : two, three
+  use set_precision, only : prec
+  use set_constants, only : pi, two, three
   use mms_constants, only : vvel0, vvelx, vvely
-  use set_inputs,    only : pi
-
+  
   implicit none
 
-  real(dp), intent(in)  :: x
-  real(dp), intent(in)  :: y
-  real(dp), intent(in)  :: length
-  real(dp) :: vvel_mms
+  real(prec), intent(in)  :: x
+  real(prec), intent(in)  :: y
+  real(prec), intent(in)  :: length
+  real(prec) :: vvel_mms
 
   vvel_mms = vvel0 + vvelx*cos((pi*x)/(two*length)) +                          &
                  vvely*sin((two*pi*y)/(three*length))
@@ -59,17 +56,16 @@ end function vvel_mms
 !=============================================================================80
 pure function press_mms(length,x,y)
 
-  use set_precision, only : dp
-  use constants,     only : two
+  use set_precision, only : prec
+  use set_constants, only : pi, two
   use mms_constants, only : press0, pressx, pressy
-  use set_inputs,    only : pi
   
   implicit none
 
-  real(dp), intent(in) :: x
-  real(dp), intent(in) :: y
-  real(dp), intent(in) :: length
-  real(dp) :: press_mms
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec), intent(in) :: length
+  real(prec) :: press_mms
 
   press_mms = press0 + pressx*cos((two*pi*x)/length) + pressy*sin((pi*y)/length)
 
@@ -77,18 +73,17 @@ end function press_mms
 !=============================================================================80
 pure function rmassconv(length,x,y)
 
-  use set_precision, only : dp
-  use constants,     only : two, three, five
+  use set_precision, only : prec
+  use set_constants, only : pi, two, three, five
   use mms_constants, only : rho0, rhox, rhoy, uvel0, uvelx, uvely,             &
                             vvel0, vvelx, vvely, press0, pressx, pressy
-  use set_inputs,    only : pi
-
+  
   implicit none
 
-  real(dp), intent(in) :: x
-  real(dp), intent(in) :: y
-  real(dp), intent(in) :: length
-  real(dp) :: rmassconv
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec), intent(in) :: length
+  real(prec) :: rmassconv
 
   rmassconv = (three*pi*uvelx*cos((three*pi*x)/(two*length)) *                 &
     (rho0 + rhoy*cos((pi*y)/(two*length)) + rhox*sin((pi*x)/length))) /        &
@@ -104,18 +99,17 @@ end function rmassconv
 !=============================================================================80
 pure function xmtmconv(length,x,y)
 
-  use set_precision, only : dp
-  use constants,     only : two, three, five
+  use set_precision, only : prec
+  use set_constants, only : pi, two, three, five
   use mms_constants, only : rho0, rhox, rhoy, uvel0, uvelx, uvely,             &
                             vvel0, vvelx, vvely, press0, pressx, pressy
-  use set_inputs,    only : pi
   
   implicit none
 
-  real(dp), intent(in) :: x
-  real(dp), intent(in) :: y
-  real(dp), intent(in) :: length
-  real(dp) :: xmtmconv
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec), intent(in) :: length
+  real(prec) :: xmtmconv
 
   xmtmconv = (three*pi*uvelx*cos((three*pi*x)/(two*length)) *                  &
     (rho0 + rhoy*cos((pi*y)/(two*length)) + rhox*sin((pi*x)/length)) *         &
@@ -141,18 +135,17 @@ end function xmtmconv
 !=============================================================================80
 pure function ymtmconv(length,x,y)
 
-  use set_precision, only : dp
-  use constants,     only : two, three, four, five
+  use set_precision, only : prec
+  use set_constants, only : pi, two, three, four, five
   use mms_constants, only : rho0, rhox, rhoy, uvel0, uvelx, uvely,             &
                             vvel0, vvelx, vvely, press0, pressx, pressy
-  use set_inputs,    only : pi
-
+  
   implicit none
 
-  real(dp), intent(in) :: x
-  real(dp), intent(in) :: y
-  real(dp), intent(in) :: length
-  real(dp) :: ymtmconv
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec), intent(in) :: length
+  real(prec) :: ymtmconv
 
   ymtmconv = (pi*pressy*cos((pi*y)/length))/length -                           &
     (pi*vvelx*sin((pi*x)/(two*length))*(rho0 + rhoy*cos((pi*y)/(two*length)) + &
@@ -179,20 +172,19 @@ end function ymtmconv
 !=============================================================================80
 pure function energyconv(gamma, length,x,y)
 
-  use set_precision, only : dp
-  use constants,     only : one, two, three, four, five, six
+  use set_precision, only : prec
+  use set_constants, only : pi, one, two, three, four, five, six
   use mms_constants, only : rho0, rhox, rhoy, uvel0, uvelx, uvely,             &
                             vvel0, vvelx, vvely, wvel0, wvelx, wvely,          &
                             press0, pressx, pressy
-  use set_inputs,    only : pi
-
+  
   implicit none
 
-  real(dp), intent(in) :: gamma
-  real(dp), intent(in) :: length
-  real(dp), intent(in) :: x
-  real(dp), intent(in) :: y
-  real(dp) :: energyconv
+  real(prec), intent(in) :: gamma
+  real(prec), intent(in) :: length
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec) :: energyconv
 
   energyconv = (uvel0 + uvely*cos((three*pi*y)/(five*length)) +                &
     uvelx*sin((three*pi*x)/(two*length)))*((-two*pi*pressx*sin((two*pi*x) /    &
@@ -234,7 +226,7 @@ pure function energyconv(gamma, length,x,y)
     (vvel0 + vvelx*cos((pi*x)/(two*length)) +                                  &
     vvely*sin((two*pi*y)/(three*length)))**2)/two +                            &
     (press0 + pressx*cos((two*pi*x)/length) + pressy*sin((pi*y)/length)) /     &
-	((-one + gamma)*(rho0 + rhoy*cos((pi*y)/(two*length)) +                    &
+    ((-one + gamma)*(rho0 + rhoy*cos((pi*y)/(two*length)) +                    &
     rhox*sin((pi*x)/length))))))/(three*length) + (vvel0 + vvelx*cos((pi*x) /  &
     (two*length)) + vvely*sin((two*pi*y)/(three*length))) *                    &
     ((pi*pressy*cos((pi*y)/length))/length - (pi*rhoy*sin((pi*y)/(two*length))*&
