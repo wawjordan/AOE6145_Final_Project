@@ -5,6 +5,12 @@ module grid_type
   
   implicit none
   
+  private
+  
+  public :: grid_t
+  public :: allocate_grid, deallocate_grid
+  public :: ghost_shape, cell_geometry
+  
   type grid_t
 
     integer :: imax, jmax, n_ghost
