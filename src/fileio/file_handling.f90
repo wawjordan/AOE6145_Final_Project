@@ -7,6 +7,11 @@ module file_handling
   use grid_type, only : grid_t, allocate_grid
   
   implicit none
+  
+  private
+  
+  public :: grid_in, grid_out
+  
 contains
   
 subroutine grid_in(filename,grid)
