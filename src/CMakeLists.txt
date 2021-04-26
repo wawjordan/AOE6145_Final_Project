@@ -1,6 +1,6 @@
 add_subdirectory( fileio )
 add_subdirectory( constants )
-#add_subdirectory( functions )
+add_subdirectory( functions )
 add_subdirectory( types )
 #add_subdirectory( boundary )
 # Propagate lib_srcs list to parent
