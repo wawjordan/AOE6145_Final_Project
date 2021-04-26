@@ -3,28 +3,32 @@ module soln_type
   use set_precision, only : prec
   use set_constants, only : zero, one
   use set_inputs,    only : i_low, i_high, ig_low, ig_high
-  use set_inputs,    only : neq, max_iter, shock
+  use set_inputs,    only : j_low, j_high, jg_low, jg_high
+  use set_inputs,    only : neq, max_iter, isMMS
   
   implicit none
+  
+  private
+  
+  public :: soln_t, allocate_soln, deallocate_soln
 
   type soln_t
     
-    real(prec), allocatable, dimension(:,:) :: V
-    real(prec), allocatable, dimension(:,:) :: U
-    real(prec), allocatable, dimension(:,:) :: R
-    real(prec), allocatable, dimension(:,:) :: F
-    real(prec), allocatable, dimension(:,:) :: D
-    real(prec), allocatable, dimension(:)   :: asnd
-    real(prec), allocatable, dimension(:)   :: mach
-    real(prec), allocatable, dimension(:)   :: temp
-    real(prec), allocatable, dimension(:)   :: dt
-    real(prec), allocatable, dimension(:)   :: src
-    real(prec), allocatable, dimension(:)   :: lambda
-    real(prec), allocatable, dimension(:,:) :: DE
-    real(prec), allocatable, dimension(:)   :: DEnorm
-    real(prec), allocatable, dimension(:)   :: rnorm
-    real(prec), allocatable, dimension(:)   :: rold
-    real(prec), allocatable, dimension(:)   :: rinit
+    real(prec), allocatable, dimension(:,:,:) :: U ! conserved variables
+    real(prec), allocatable, dimension(:,:,:) :: F ! normal fluxes
+    real(prec), allocatable, dimension(:,:,:) :: S ! source terms
+    real(prec), allocatable, dimension(:,:,:) :: V ! primitive variables
+    real(prec), allocatable, dimension(:,:,:) :: L ! eigenvalues
+    real(prec), allocatable, dimension(:,:,:) :: R ! residuals
+    real(prec), allocatable, dimension(:,:,:) :: DE ! discretization error
+    real(prec), allocatable, dimension(:,:)   :: asnd
+    real(prec), allocatable, dimension(:,:)   :: mach
+    real(prec), allocatable, dimension(:,:)   :: temp
+    real(prec), allocatable, dimension(:,:)   :: dt
+    real(prec), allocatable, dimension(:)     :: DEnorm
+    real(prec), allocatable, dimension(:)     :: rnorm
+    real(prec), allocatable, dimension(:)     :: rold
+    real(prec), allocatable, dimension(:)     :: rinit
     
   end type soln_t
 
@@ -44,41 +48,40 @@ module soln_type
 
     type(soln_t), intent(inout) :: soln
     
-    allocate( soln%V( ig_low:ig_high, neq ), &
-              soln%U( ig_low:ig_high, neq ), &
-              soln%R( i_low:i_high,   neq ), &
-              soln%F( i_low-1:i_high, neq ), &
-              soln%D( i_low-1:i_high, neq ), &
-              soln%asnd( ig_low:ig_high ),      &
-              soln%mach( ig_low:ig_high ),      &
-              soln%temp( ig_low:ig_high ),      &
-              soln%src( i_low:i_high ),      &
-              soln%dt( i_low:i_high ),     &
-              soln%lambda( ig_low:ig_high ), &
-              soln%rnorm( 1:neq ),        &
-              soln%rold( 1:neq ),        &
-              soln%rinit( 1:neq ) )
+    allocate( &
+              soln%U( ig_low:ig_high, jg_low:jg_high, neq ), &
+              soln%F( ig_low:ig_high, jg_low:jg_high, neq ), &
+              soln%S( ig_low:ig_high, jg_low:jg_high, neq ), &
+              soln%V( ig_low:ig_high, jg_low:jg_high, neq ), &
+              soln%L( ig_low:ig_high, jg_low:jg_high, neq ), &
+              soln%R(  i_low:i_high,   j_low:j_high,  neq ), &
+              soln%asnd( ig_low:ig_high, jg_low:jg_high ),   &
+              soln%mach( ig_low:ig_high, jg_low:jg_high ),   &
+              soln%temp( ig_low:ig_high, jg_low:jg_high ),   &
+              soln%dt(   ig_low:ig_high, jg_low:jg_high ),   &
+              soln%rnorm( neq ), &
+              soln%rold( neq ),  &
+              soln%rinit( neq ) )
     
-    if (shock.eq.0) then
-      allocate( soln%DE( i_low:i_high, neq ), &
-                soln%DEnorm( 1:neq )  )
-      soln%DE = zero
-      soln%DE = zero
+    if (isMMS) then
+      allocate( soln%DE( i_low:i_high,  j_low:j_high, neq ), &
+                soln%DEnorm( neq ) )
+      soln%DE     = zero
+      soln%DEnorm = zero
     end if
     
-    soln%V   = zero
-    soln%U   = zero
-    soln%R   = zero
-    soln%F   = zero
-    soln%D   = zero
-    soln%asnd   = zero
-    soln%mach   = zero
-    soln%temp   = zero
-    soln%src   = zero
-    soln%dt  = zero
-    soln%lambda = zero
+    soln%U     = zero
+    soln%F     = zero
+    soln%S     = zero
+    soln%V     = zero
+    soln%L     = zero
+    soln%R     = zero
+    soln%asnd  = zero
+    soln%mach  = zero
+    soln%temp  = zero
+    soln%dt    = zero
     soln%rnorm = zero
-    soln%rold = zero
+    soln%rold  = zero
     soln%rinit = zero
 
   end subroutine allocate_soln
@@ -99,22 +102,22 @@ module soln_type
     
     type(soln_t), intent(inout) :: soln
     
-    deallocate(soln%V,      &
-               soln%U,      &
-               soln%R,      &
-               soln%F,      &
-               soln%D,      &
-               soln%asnd,      &
-               soln%mach,      &
-               soln%temp,      &
-               soln%src,      &
-               soln%dt,     &
-               soln%lambda, &
-               soln%rnorm,  &
+    deallocate( &
+               soln%U,     &
+               soln%F,     &
+               soln%S,     &
+               soln%V,     &
+               soln%L,     &
+               soln%R,     &
+               soln%asnd,  &
+               soln%mach,  &
+               soln%temp,  &
+               soln%dt,    &
+               soln%rnorm, &
                soln%rold,  &
-               soln%rinit  )
+               soln%rinit   )
     
-    if (shock.eq.0) then
+    if (isMMS) then
       deallocate( soln%DE, soln%DEnorm )
     end if
     
