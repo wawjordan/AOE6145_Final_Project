@@ -4,7 +4,9 @@ module file_handling
   use set_constants, only : zero, one, two, half
   !use fluid_constants, only :
   use set_inputs, only : n_ghost
-  use grid_type, only : grid_t, allocate_grid
+  use set_inputs, only : i_low, i_high, ig_low, ig_high
+  use set_inputs, only : j_low, j_high, jg_low, jg_high
+  use grid_type,  only : grid_t, allocate_grid
   
   implicit none
   
@@ -20,8 +22,8 @@ subroutine grid_in(filename,grid)
   character(len=*), intent(in) :: filename
   integer :: fstat
   integer :: i, j, k, imax, jmax, kmax, nzones
-  integer :: i_low, i_high, ig_low, ig_high
-  integer :: j_low, j_high, jg_low, jg_high
+  !integer :: i_low, i_high, ig_low, ig_high
+  !integer :: j_low, j_high, jg_low, jg_high
   real(prec) :: zztemp
   
   open(unit=12,file=filename,status='old',action='read',iostat=fstat)
@@ -48,7 +50,7 @@ subroutine grid_in(filename,grid)
     
     call allocate_grid(grid)
     
-    if (kmax>1) then
+    if (kmax>2) then
       !! Read in x-coordinate
       do k = 1, kmax
         do j = j_low, j_high+1
@@ -87,18 +89,18 @@ subroutine grid_out(filename,grid)
   
   type(grid_t), intent(in) :: grid
   character(len=*), intent(in) :: filename
-  integer :: i_low, i_high, ig_low, ig_high
-  integer :: j_low, j_high, jg_low, jg_high
+  !integer :: i_low, i_high, ig_low, ig_high
+  !integer :: j_low, j_high, jg_low, jg_high
   integer :: i, j
    
-  i_low   = grid%i_low
-  j_low   = grid%j_low
-  i_high  = grid%i_high
-  j_high  = grid%j_high
-  ig_low  = grid%ig_low
-  jg_low  = grid%jg_low
-  ig_high = grid%ig_high
-  jg_high = grid%jg_high
+  !i_low   = grid%i_low
+  !j_low   = grid%j_low
+  !i_high  = grid%i_high
+  !j_high  = grid%j_high
+  !ig_low  = grid%ig_low
+  !jg_low  = grid%jg_low
+  !ig_high = grid%ig_high
+  !jg_high = grid%jg_high
 
 
   open(40,file=filename,status='unknown')
