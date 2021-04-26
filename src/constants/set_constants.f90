@@ -6,7 +6,7 @@ module set_constants
 
   private
 
-  public :: zero, one, two, three, four, six
+  public :: zero, one, two, three, four, five, six
   public :: half, third, fourth, fifth, sixth, tenth
   public :: pi, set_derived_constants
 
@@ -21,6 +21,7 @@ module set_constants
   real(prec), parameter :: two    = 2.0_prec
   real(prec), parameter :: three  = 3.0_prec
   real(prec), parameter :: four   = 4.0_prec
+  real(prec), parameter :: five   = 5.0_prec
   real(prec), parameter :: six    = 6.0_prec
   real(prec)            :: pi     = 3.0_prec
 
