@@ -7,7 +7,7 @@ module namelist
   use set_inputs, only : Astar, area, darea
   use set_inputs, only : CFL, k2, k4, eps, tol, eps_roe, beta_lim, epsM, kappaM
   use set_inputs, only : max_iter, max_newton_iter, newton_tol, counter
-  use set_inputs, only : iSS, shock, ramp, soln_save, res_save, res_out
+  use set_inputs, only : soln_save, res_save, res_out
   use set_inputs, only : p0, T0, a0, rho0, pb, p_ratio
   use set_inputs, only : set_derived_inputs, flux_scheme, limiter_scheme, cons
   use set_inputs, only : leftV, rightV, leftU, rightU
