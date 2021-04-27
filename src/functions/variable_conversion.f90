@@ -47,11 +47,10 @@ module variable_conversion
   !! Outputs:     sound_speed :
   !<
   !===========================================================================80
-  subroutine speed_of_sound( pressure, rho, sound_speed )
+  elemental subroutine speed_of_sound( pressure, rho, sound_speed )
     
-    real(prec), dimension(:,:), intent(in)  :: pressure, rho
-    real(prec), dimension(:,:), intent(out) :: sound_speed
-    integer :: i
+    real(prec), intent(in)  :: pressure, rho
+    real(prec), intent(out) :: sound_speed
     
     sound_speed = sqrt(gamma*pressure/rho)
     
