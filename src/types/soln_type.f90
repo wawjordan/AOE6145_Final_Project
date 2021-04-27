@@ -70,19 +70,19 @@ module soln_type
       soln%DEnorm = zero
     end if
     
-    soln%U     = zero
-    soln%F     = zero
-    soln%S     = zero
-    soln%V     = zero
-    soln%L     = zero
-    soln%R     = zero
-    soln%asnd  = zero
-    soln%mach  = zero
-    soln%temp  = zero
-    soln%dt    = zero
-    soln%rnorm = zero
-    soln%rold  = zero
-    soln%rinit = zero
+    soln%U     = one
+    soln%F     = one
+    soln%S     = one
+    soln%V     = one
+    soln%L     = one
+    soln%R     = one
+    soln%asnd  = one
+    soln%mach  = one
+    soln%temp  = one
+    soln%dt    = one
+    soln%rnorm = one
+    soln%rold  = one
+    soln%rinit = one
 
   end subroutine allocate_soln
   
