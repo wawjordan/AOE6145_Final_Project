@@ -11,12 +11,12 @@ module flux_calc
   
   private
   
-  public :: flux_fun, select_flux
+  public :: flux_fun, select_flux, calc_flux_2D
   
   procedure( calc_flux ), pointer :: flux_fun
-   
+  
   abstract interface
-    
+  
   !================================ calc_flux ================================80
   !>
   !! Description:
@@ -30,16 +30,32 @@ module flux_calc
   subroutine calc_flux(left_state, right_state, nx, ny, F)
     
     import :: prec, i_low, i_high, j_low, j_high, neq
-    real(prec), dimension(:,:,:), intent(in) :: left_state, right_state
-    real(prec), dimension(:,:), intent(in) :: nx, ny
-    real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq), intent(out) :: F
+    real(prec), dimension(:), intent(in) :: left_state, right_state
+    real(prec), intent(in) :: nx, ny
+    real(prec), dimension(:), intent(out) :: F
     
   end subroutine calc_flux
     
   end interface
   
 contains
-  
+
+  subroutine calc_flux_2D(left,right,nx,ny,F)
+    
+    real(prec), dimension(:,:,:), &
+                                      intent(in) :: left, right
+    real(prec), dimension(:,:), &
+                                      intent(in) :: nx, ny
+    real(prec), dimension(:,:,:), intent(out) :: F
+    integer :: i, j
+    
+    do j = j_low,j_high+1
+    do i = i_low,i_high+1
+    call flux_fun(left(i,j,:),right(i,j,:),nx(i,j),ny(i,j),F(i,j,:))
+    end do
+    end do
+    
+  end subroutine calc_flux_2D
   !================================ select_flux ==============================80
   !>
   !! Description:
@@ -73,68 +89,57 @@ contains
   !! Outputs:     F     :
   !<
   !===========================================================================80
-  subroutine van_leer_flux(VL, VR, nx, ny, F)
+  subroutine van_leer_flux(left, right, nx, ny, F)
     
-    real(prec), dimension(:,:,:)               , intent(in)  :: VL, VR
-    real(prec), dimension(:,:)                 , intent(in)  :: nx, ny
-    real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq), intent(out) :: F
-    real(prec), dimension(i_low:i_high+1,j_low:j_high+1)     :: aL, aR
-    real(prec) :: rhoL, rhoR
-    real(prec) ::   uL,   uR
-    real(prec) ::   pL,   pR
-    real(prec) ::   ML,   MR
-    real(prec) ::  htL,  htR
-    real(prec) :: M_plus, M_minus
-    real(prec) :: p_plus, p_minus
-    real(prec) :: c_plus, c_minus
-    real(prec) :: d_plus, d_minus
-    real(prec) :: alpha_plus, alpha_minus
-    real(prec) :: beta_L, beta_R
-    real(prec) :: Fc1, Fc2, Fc3, Fc4, Fp
-    integer :: i, j
+    real(prec), dimension(:), intent(in)  :: left, right
+    real(prec), dimension(:), intent(out) :: F
+    real(prec), intent(in) :: nx, ny
+    real(prec) :: rhoL, uL, vL, pL, aL, htL, unL, ML, beta_L
+    real(prec) :: rhoR, uR, vR, pR, aR, htR, unR, MR, beta_R
+    real(prec) :: M_plus , alpha_plus , c_plus , p_plus , d_plus
+    real(prec) :: M_minus, alpha_minus, c_minus, p_minus, d_minus
+    real(prec) :: Fp
     
-    call speed_of_sound(VL(:,:,4),VL(:,:,1),aL)
-    call speed_of_sound(VR(:,:,4),VR(:,:,1),aR)
-    do j = j_low-1,j_high
-    do i = i_low-1,i_high
-      rhoL = VL(i,j,1)
-      rhoR = VR(i,j,1)
-      uL   = VL(i,j,2)*nx(i,j) + VL(i,j,3)*ny(i,j)
-      uR   = VR(i,j,2)*nx(i,j) + VR(i,j,3)*ny(i,j)
-      pL   = VL(i,j,3)
-      pR   = VR(i,j,3)
-      
-      ML = uL/aL(i,j)
-      MR = uR/aR(i,j)
-      M_plus  =  fourth*(ML+one)**2
-      M_minus = -fourth*(MR-one)**2
-      beta_L = -max(zero,one-int(abs(ML)))
-      beta_R = -max(zero,one-int(abs(MR)))
-      alpha_plus  = half*(one+sign(one,ML))
-      alpha_minus = half*(one-sign(one,MR))
-      c_plus  = alpha_plus*(one+beta_L)*ML - beta_L*M_plus
-      c_minus = alpha_minus*(one+beta_R)*MR - beta_R*M_minus
-      htL = aL(i,j)**2/(gamma-one) + half*uL**2
-      htR = aR(i,j)**2/(gamma-one) + half*uR**2
-      
-      Fc1 = rhoL*aL(i,j)*c_plus + rhoR*aR(i,j)*c_minus
-      Fc2 = rhoL*aL(i,j)*c_plus*VL(i,j,2) + rhoR*aR(i,j)*c_minus*VR(i,j,2)
-      Fc3 = rhoL*aL(i,j)*c_plus*VL(i,j,3) + rhoR*aR(i,j)*c_minus*VR(i,j,3)
-      Fc4 = rhoL*aL(i,j)*c_plus*htL + rhoR*aR(i,j)*c_minus*htR
-      
-      p_plus  = M_plus*(-ML + two)
-      p_minus = M_minus*(-MR - two)
-      d_plus  = alpha_plus*(one+beta_L) - beta_L*p_plus
-      d_minus = alpha_minus*(one+beta_R) - beta_R*p_minus
-      
-      Fp = d_plus*pL + d_minus*pR
-      
-      F(i,j,1) = Fc1
-      F(i,j,2) = Fc2 + Fp*nx(i,j)
-      F(i,j,3) = Fc2 + Fp*ny(i,j)
-      F(i,j,4) = Fc3
-    end do
-    end do
+    rhoL = left(1)
+    uL   = left(2)
+    vL   = left(2)
+    pL   = left(4)
+    call speed_of_sound(pL,rhoL,aL)
+    htL = aL**2/(gamma-one) + half*uL**2
+    
+    rhoR = right(1)
+    uR   = right(2)
+    vR   = right(2)
+    pR   = right(4)
+    call speed_of_sound(pR,rhoR,aR)
+    htR = aR**2/(gamma-one) + half*uR**2
+    
+    unL = uL*nx + vL*ny
+    unR = uR*nx + vR*ny
+    
+    ML = unL/aL
+    MR = unR/aR
+    M_plus  =  fourth*(ML+one)**2
+    M_minus = -fourth*(MR-one)**2
+    
+    beta_L = -max(zero,one-int(abs(ML)))
+    beta_R = -max(zero,one-int(abs(MR)))
+    alpha_plus  = half*(one+sign(one,ML))
+    alpha_minus = half*(one-sign(one,MR))
+    c_plus  = alpha_plus*(one+beta_L)*ML - beta_L*M_plus
+    c_minus = alpha_minus*(one+beta_R)*MR - beta_R*M_minus
+    
+    p_plus  = M_plus*(-ML + two)
+    p_minus = M_minus*(-MR - two)
+    d_plus  = alpha_plus*(one+beta_L) - beta_L*p_plus
+    d_minus = alpha_minus*(one+beta_R) - beta_R*p_minus
+    
+    Fp = d_plus*pL + d_minus*pR
+    
+    F(1) = rhoL*aL*c_plus + rhoR*aR*c_minus
+    F(2) = rhoL*aL*c_plus*uL + rhoR*aR*c_minus*uR + Fp*nx
+    F(3) = rhoL*aL*c_plus*vL + rhoR*aR*c_minus*vR + Fp*ny
+    F(4) = rhoL*aL*c_plus*htL + rhoR*aR*c_minus*htR
     
   end subroutine van_leer_flux
   
@@ -148,86 +153,65 @@ contains
   !! Outputs:     F     :
   !<
   !===========================================================================80
-  subroutine roe_flux( VL, VR, nx, ny, F )
+  subroutine roe_flux( left, right, nx, ny, F )
     
-    real(prec), dimension(:,:,:)               , intent(in)  :: VL, VR
-    real(prec), dimension(:,:)                 , intent(in)  :: nx, ny
-    real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq), intent(out) :: F
-    real(prec), dimension(i_low:i_high+1,j_low:j_high+1)     :: aL, aR
-    real(prec), dimension(i_low:i_high+1,j_low:j_high+1)     :: R
-    real(prec), dimension(4) :: FL, FR, rvec1, rvec2, rvec3, rvec4, lambda
-    real(prec) ::  rhoL,  rhoR,  rho2
-    real(prec) ::   uvL,   uvR,    u2
-    real(prec) ::   vvL,   vvR,    v2
-    real(prec) ::    pL,    pR,    a2
-    real(prec) ::   htL,   htR,   ht2
-    real(prec) :: uhatL, uhatR, uhat2
-    real(prec) :: dw1, dw2, dw3, dw4
-    integer :: i, j
+    real(prec), dimension(:), intent(in)  :: left, right
+    real(prec), dimension(:), intent(out) :: F
+    real(prec), intent(in) :: nx, ny
+    real(prec), dimension(size(left)) :: rvec1, rvec2, rvec3, rvec4
+    real(prec), dimension(size(left)) :: lambda, FL, FR
+    real(prec) :: rhoL, uL, vL, pL, aL, htL, unL
+    real(prec) :: rhoR, uR, vR, pR, aR, htR, unR
+    real(prec) :: rho2, u2, v2, p2, a2, ht2, un2
+    real(prec) :: dw1, dw2, dw3, dw4, R
     
-    call speed_of_sound(VL(:,:,3),VL(:,:,1),aL)
-    call speed_of_sound(VR(:,:,3),VR(:,:,1),aR)
+    rhoL = left(1)
+    uL   = left(2)
+    vL   = left(2)
+    pL   = left(4)
+    call speed_of_sound(pL,rhoL,aL)
+    htL = aL**2/(gamma-one) + half*uL**2
     
-    do j = j_low-1,j_high
-    do i = i_low-1,i_high
-      rhoL = VL(i,j,1)
-      rhoR = VR(i,j,1)
-      uvL  = VL(i,j,2)
-      uvR  = VR(i,j,2)
-      vvL  = VL(i,j,3)
-      vvR  = VR(i,j,3)
-      uhatL = uvL*nx(i,j) + vvL*ny(i,j)
-      uhatR = uvR*nx(i,j) + vvR*ny(i,j)
+    rhoR = right(1)
+    uR   = right(2)
+    vR   = right(2)
+    pR   = right(4)
+    call speed_of_sound(pR,rhoR,aR)
+    htR = aR**2/(gamma-one) + half*uR**2
+    
+    unL = uL*nx + vL*ny
+    unR = uR*nx + vR*ny
+    
+    R = sqrt(rhoR/rhoL)
+    rho2 = R*rhoL
+    u2   = (R*uR + uL)/(R + one)
+    v2   = (R*vR + vL)/(R + one)
+    ht2  = (R*htR + htL)/(R + one)
+    a2   = sqrt((gamma-one)*(ht2 - half*(u2**2 + v2**2)))
+    un2 = u2*nx + v2*ny
+    
+    rvec1 = (/ one, u2, v2, half*(u2**2 +v2**2) /)
+    rvec2 = (/ zero, ny*rho2, nx*rho2, rho2*(ny*u2-nx*v2) /)
+    rvec3 = half*(rho2/a2)*(/ one, u2+nx*a2, v2+ny*a2, ht2+un2*a2 /)
+    rvec4 = half*(rho2/a2)*(/ one, u2-nx*a2, v2-ny*a2, ht2-un2*a2 /)
+    lambda = (/ un2, un2, un2 + a2, un2 - a2 /)
       
-      pL   = VL(i,j,4)
-      pR   = VR(i,j,4)
-      htL  = aL(i,j)**2/(gamma-one) + half*(uvL**2 + vvL**2)
-      htR  = aR(i,j)**2/(gamma-one) + half*(uvR**2 + vvR**2)
-      
-      R(i,j) = sqrt(rhoR/rhoL)
-      rho2 = R(i,j)*rhoL
-      u2   = (R(i,j)*uvR + uvL)/(R(i,j) + one)
-      v2   = (R(i,j)*vvR + vvL)/(R(i,j) + one)
-      ht2  = (R(i,j)*htR + htL)/(R(i,j) + one)
-      a2   = sqrt((gamma-one)*(ht2 - half*(u2**2 + v2**2)))
-      uhat2 = u2*nx(i,j) + v2*ny(i,j)
-      
-      lambda = (/ uhat2, uhat2, uhat2 + a2, uhat2 - a2 /)
-      
-      rvec1 = (/ one, u2, v2, half*(u2**2 +v2**2) /)
-      rvec2 = (/ zero, ny(i,j)*rho2, nx(i,j)*rho2, &
-                     rho2*(ny(i,j)*u2-nx(i,j)*v2) /)
-      rvec3 = half*(rho2/a2)*(/ one, u2+nx(i,j)*a2,&
-                      v2+ny(i,j)*a2, ht2+uhat2*a2 /)
-      rvec4 = half*(rho2/a2)*(/ one, u2-nx(i,j)*a2,&
-                      v2-ny(i,j)*a2, ht2-uhat2*a2 /)
-      
-      lambda = abs(lambda)
-      lambda = half*(one+sign(one,lambda-two*eps_roe*a2))*lambda &
+    lambda = abs(lambda)
+    lambda = half*(one+sign(one,lambda-two*eps_roe*a2))*lambda &
            & + half*(one-sign(one,lambda-two*eps_roe*a2))*&
            & (lambda**2/(four*eps_roe*a2) + eps_roe*a2)
-      
-      dw1 = (rhoR - rhoL) - (pR - pL)/a2**2
-      dw2 = ny(i,j)*(uvR - uvL) - nx(i,j)*(vvR - vvL)
-      dw3 = nx(i,j)*(uvR - uvL) + ny(i,j)*(vvR - vvL) + (pR - pL)/(rho2*a2)
-      dw4 = nx(i,j)*(uvR - uvL) + ny(i,j)*(vvR - vvL) - (pR - pL)/(rho2*a2)
-     
-      FL = (/ rhoL*uhatL,                  &
-              rhoL*uvL*uhatL + pL*nx(i,j), &
-              rhoL*vvL*uhatL + pR*ny(i,j), &
-              rhoL*htL*uhatL /)
-      FR = (/ rhoR*uhatR,                  &
-              rhoR*uvR*uhatR + pR*nx(i,j), &
-              rhoR*vvR*uhatR + pR*ny(i,j), &
-              rhoR*htR*uhatR /)
-      
-      F(i,j,:) = half*( (FL+FR)      &
-               - lambda(1)*dw1*rvec1 &
-               - lambda(2)*dw2*rvec2 &
-               - lambda(3)*dw3*rvec3 &
-               - lambda(4)*dw4*rvec4 )
-    end do
-    end do
+    
+    dw1 = (rhoR - rhoL) - (pR - pL)/a2**2
+    dw2 = ny*(uR - uL) - nx*(vR - vL)
+    dw3 = nx*(uR - uL) + ny*(vR - vL) + (pR - pL)/(rho2*a2)
+    dw4 = nx*(uR - uL) + ny*(vR - vL) - (pR - pL)/(rho2*a2)
+    
+    FL = (/ rhoL*unL, rhoL*uL*unL + pL*nx, rhoL*vL*unL + pL*ny, rhoL*htL*unL /)
+    FR = (/ rhoR*unR, rhoR*uR*unR + pR*nx, rhoR*vR*unR + pR*ny, rhoR*htR*unR /)
+    
+    F = half*( (FL+FR) - lambda(1)*dw1*rvec1 - lambda(2)*dw2*rvec2 &
+                       - lambda(3)*dw3*rvec3 - lambda(4)*dw4*rvec4 )
+    
   end subroutine roe_flux
   
 end module flux_calc
