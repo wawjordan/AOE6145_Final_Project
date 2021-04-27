@@ -31,12 +31,11 @@ module geometry
     type( soln_t ), intent(inout) :: soln
     type( grid_t ), intent(inout) :: grid
     
-    call allocate_soln( soln )
-    
     call grid_in(grid_name,grid)
     call ghost_shape(grid)
     call cell_geometry(grid)
     call grid_out(geometry_file,grid)
+    call allocate_soln( soln )
     
   end subroutine setup_geometry
   
