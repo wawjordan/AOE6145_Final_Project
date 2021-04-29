@@ -8,7 +8,7 @@ module set_inputs
 
   private
 
-  public :: imax, neq, xmin, xmax, n_ghost
+  public :: imax, jmax, neq, xmin, xmax, n_ghost
   public :: i_high, i_low, ig_high, ig_low
   public :: j_high, j_low, jg_high, jg_low
   public :: CFL, k2, k4, eps, tol, eps_roe, beta_lim, epsM, kappaM
@@ -60,13 +60,13 @@ module set_inputs
   real(prec) :: kappaM     = -one
   logical :: limiter_freeze = .false.
   logical :: cons           = .true.
-  logical :: isMMS = .false.
+  logical :: isMMS = .true.
   real(prec), dimension(:,:), allocatable :: leftV, rightV, leftU, rightU
   real(prec), dimension(:,:), allocatable :: psi_plus, psi_minus
   integer :: counter = 1
-  character(64) :: grid_name = "../grids/curvilinear-grids/curv2d17.grd"
+  !character(64) :: grid_name = "../grids/curvilinear-grids/curv2d17.grd"
   !character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.extra-coarse.27x14.grd"
-  !character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.fine.385x105.grd"
+  character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.fine.385x105.grd"
   character(64) :: geometry_file = "example.dat"
   contains
 
