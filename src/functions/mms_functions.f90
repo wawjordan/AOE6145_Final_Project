@@ -2,7 +2,7 @@ module mms_functions
 contains
 !=============================================================================80
 !!!!MMS functions
-pure function rho_mms(length, x, y)
+pure elemental function rho_mms(length, x, y)
 
   use set_precision, only : prec
   use set_constants, only : pi, two
@@ -19,7 +19,7 @@ pure function rho_mms(length, x, y)
 
 end function rho_mms
 !=============================================================================80
-pure function uvel_mms(length, x, y)
+pure elemental function uvel_mms(length, x, y)
 
   use set_precision, only : prec
   use set_constants, only : pi, two, three, five
@@ -37,7 +37,7 @@ pure function uvel_mms(length, x, y)
 
 end function uvel_mms
 !=============================================================================80
-pure function vvel_mms(length,x,y)
+pure elemental function vvel_mms(length,x,y)
 
   use set_precision, only : prec
   use set_constants, only : pi, two, three
@@ -54,7 +54,7 @@ pure function vvel_mms(length,x,y)
                  vvely*sin((two*pi*y)/(three*length))
 end function vvel_mms
 !=============================================================================80
-pure function press_mms(length,x,y)
+pure elemental function press_mms(length,x,y)
 
   use set_precision, only : prec
   use set_constants, only : pi, two
@@ -71,7 +71,7 @@ pure function press_mms(length,x,y)
 
 end function press_mms
 !=============================================================================80
-pure function rmassconv(length,x,y)
+pure elemental function rmassconv(length,x,y)
 
   use set_precision, only : prec
   use set_constants, only : pi, two, three, five
@@ -97,7 +97,7 @@ pure function rmassconv(length,x,y)
 
 end function rmassconv
 !=============================================================================80
-pure function xmtmconv(length,x,y)
+pure elemental function xmtmconv(length,x,y)
 
   use set_precision, only : prec
   use set_constants, only : pi, two, three, five
@@ -133,7 +133,7 @@ pure function xmtmconv(length,x,y)
 
 end function xmtmconv
 !=============================================================================80
-pure function ymtmconv(length,x,y)
+pure elemental function ymtmconv(length,x,y)
 
   use set_precision, only : prec
   use set_constants, only : pi, two, three, four, five
@@ -170,7 +170,7 @@ pure function ymtmconv(length,x,y)
 
 end function ymtmconv
 !=============================================================================80
-pure function energyconv(gamma, length,x,y)
+pure elemental function energyconv(gamma, length,x,y)
 
   use set_precision, only : prec
   use set_constants, only : pi, one, two, three, four, five, six
