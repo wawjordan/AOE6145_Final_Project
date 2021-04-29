@@ -4,8 +4,8 @@ module file_handling
   use set_constants, only : zero, one, two, half
   !use fluid_constants, only :
   use set_inputs, only : n_ghost
-  use set_inputs, only : i_low, i_high, ig_low, ig_high
-  use set_inputs, only : j_low, j_high, jg_low, jg_high
+  use set_inputs, only : imax, i_low, i_high, ig_low, ig_high
+  use set_inputs, only : jmax, j_low, j_high, jg_low, jg_high
   use grid_type,  only : grid_t, allocate_grid
   
   implicit none
@@ -21,9 +21,7 @@ subroutine grid_in(filename,grid)
   type(grid_t), intent(out) :: grid
   character(len=*), intent(in) :: filename
   integer :: fstat
-  integer :: i, j, k, imax, jmax, kmax, nzones
-  !integer :: i_low, i_high, ig_low, ig_high
-  !integer :: j_low, j_high, jg_low, jg_high
+  integer :: i, j, k, kmax, nzones
   real(prec) :: zztemp
   
   open(unit=12,file=filename,status='old',action='read',iostat=fstat)
@@ -81,7 +79,8 @@ subroutine grid_in(filename,grid)
     end if
   
   close(12)
-  
+  imax = i_high-i_low+2
+  jmax = j_high-j_low+2
   
 end subroutine grid_in
 
@@ -89,89 +88,92 @@ subroutine grid_out(filename,grid)
   
   type(grid_t), intent(in) :: grid
   character(len=*), intent(in) :: filename
-  !integer :: i_low, i_high, ig_low, ig_high
-  !integer :: j_low, j_high, jg_low, jg_high
-  integer :: i, j
+  integer :: i, j, funit
    
-  !i_low   = grid%i_low
-  !j_low   = grid%j_low
-  !i_high  = grid%i_high
-  !j_high  = grid%j_high
-  !ig_low  = grid%ig_low
-  !jg_low  = grid%jg_low
-  !ig_high = grid%ig_high
-  !jg_high = grid%jg_high
+  funit = 50
 
-
-  open(40,file=filename,status='unknown')
-  write(40,*) 'TITLE = "2D Curvilinear Mesh Data"'
-  write(40,*)'variables="x(m)","y(m)","n<sub><greek>x</greek>,x</sub>",&
+  open(unit=funit,file=filename,status='unknown')
+  write(funit,*) 'TITLE = "2D Curvilinear Mesh Data"'
+  write(funit,*)'variables="x(m)","y(m)","n<sub><greek>x</greek>,x</sub>",&
     & "n<sub><greek>x</greek>,y</sub>", "n<sub><greek>n</greek>,x</sub>",&
     & "n<sub><greek>n</greek>,y</sub>", "A<sub><greek>x</greek></sub>",&
     & "A<sub><greek>n</greek></sub>","V"'
 
-  write(40,*) 'ZONE'
-  write(40,*) 'T = "Meshy-Mesh"'
-  write(40,*) 'I=',i_high-i_low+2,' J=',j_high-j_low+2
-  write(40,*) 'DT = (DOUBLE, DOUBLE, DOUBLE, DOUBLE, DOUBLE,&
+  write(funit,*) 'ZONE'
+  write(funit,*) 'T = "Meshy-Mesh"'
+  write(funit,*) 'I=',i_high-i_low+2,' J=',j_high-j_low+2
+  write(funit,*) 'DT = (DOUBLE, DOUBLE, DOUBLE, DOUBLE, DOUBLE,&
                    & DOUBLE, DOUBLE, DOUBLE, DOUBLE)'
-  write(40,*) 'DATAPACKING = BLOCK'
-  write(40,*) 'VARLOCATION = ([7-9]=CELLCENTERED)'
-  do j=j_low,j_high+1
-    do i=i_low,i_high+1
-      write(40,*) grid%x(i,j)
-    end do
-  end do
+  write(funit,*) 'DATAPACKING = BLOCK'
+  write(funit,*) 'VARLOCATION = ([7-9]=CELLCENTERED)'
+  
+  
+  write(funit,*) ((grid%x(i,j),i=i_low,i_high+1), j=j_low,j_high+1)
+  write(funit,*) ((grid%y(i,j),i=i_low,i_high+1), j=j_low,j_high+1)
+  write(funit,*) ((grid%n_xi_x(i,j),i=i_low,i_high+1), j=j_low,j_high+1)
+  write(funit,*) ((grid%n_xi_y(i,j),i=i_low,i_high+1), j=j_low,j_high+1)
+  write(funit,*) ((grid%n_eta_x(i,j),i=i_low,i_high+1), j=j_low,j_high+1)
+  write(funit,*) ((grid%n_eta_y(i,j),i=i_low,i_high+1), j=j_low,j_high+1)
+  write(funit,*) ((grid%A_xi(i,j),i=i_low,i_high), j=j_low,j_high)
+  write(funit,*) ((grid%A_eta(i,j),i=i_low,i_high), j=j_low,j_high)
+  write(funit,*) ((grid%V(i,j),i=i_low,i_high), j=j_low,j_high)
+  
+  
+!  do j=j_low,j_high+1
+!    do i=i_low,i_high+1
+!      write(funit,*) grid%x(i,j)
+!    end do
+!  end do
+!
+!  do j=j_low,j_high+1
+!    do i=i_low,i_high+1
+!      write(funit,*) grid%y(i,j)
+!    end do
+!  end do
+!
+!  do j=j_low,j_high+1
+!    do i=i_low,i_high+1
+!      write(funit,*) grid%n_xi_x(i,j)
+!    end do
+!  end do
+!
+!  do j=j_low,j_high+1
+!    do i=i_low,i_high+1
+!      write(funit,*) grid%n_xi_y(i,j)
+!    end do
+!  end do
+!
+!  do j=j_low,j_high+1
+!    do i=i_low,i_high+1
+!      write(funit,*) grid%n_eta_x(i,j)
+!    end do
+!  end do
+!
+!  do j=j_low,j_high+1
+!    do i=i_low,i_high+1
+!      write(funit,*) grid%n_eta_y(i,j)
+!    end do
+!  end do
+!
+!  do j=j_low,j_high
+!    do i=i_low,i_high
+!      write(funit,*) grid%A_xi(i,j)
+!    end do
+!  end do
+!
+!  do j=j_low,j_high
+!    do i=i_low,i_high
+!      write(funit,*) grid%A_eta(i,j)
+!    end do
+!  end do
+!
+!  do j=j_low,j_high
+!    do i=i_low,i_high
+!      write(funit,*) grid%V(i,j)
+!    end do
+!  end do
 
-  do j=j_low,j_high+1
-    do i=i_low,i_high+1
-      write(40,*) grid%y(i,j)
-    end do
-  end do
-
-  do j=j_low,j_high+1
-    do i=i_low,i_high+1
-      write(40,*) grid%n_xi_x(i,j)
-    end do
-  end do
-
-  do j=j_low,j_high+1
-    do i=i_low,i_high+1
-      write(40,*) grid%n_xi_y(i,j)
-    end do
-  end do
-
-  do j=j_low,j_high+1
-    do i=i_low,i_high+1
-      write(40,*) grid%n_eta_x(i,j)
-    end do
-  end do
-
-  do j=j_low,j_high+1
-    do i=i_low,i_high+1
-      write(40,*) grid%n_eta_y(i,j)
-    end do
-  end do
-
-  do j=j_low,j_high
-    do i=i_low,i_high
-      write(40,*) grid%A_xi(i,j)
-    end do
-  end do
-
-  do j=j_low,j_high
-    do i=i_low,i_high
-      write(40,*) grid%A_eta(i,j)
-    end do
-  end do
-
-  do j=j_low,j_high
-    do i=i_low,i_high
-      write(40,*) grid%V(i,j)
-    end do
-  end do
-
-  close(40)
+  close(funit)
 
   end subroutine grid_out
 
