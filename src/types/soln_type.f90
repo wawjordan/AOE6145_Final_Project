@@ -10,7 +10,7 @@ module soln_type
   
   private
   
-  public :: soln_t, allocate_soln, deallocate_soln
+  public :: soln_t, allocate_soln, deallocate_soln, calc_mms
 
   type soln_t
     
@@ -20,6 +20,9 @@ module soln_type
     real(prec), allocatable, dimension(:,:,:) :: V ! primitive variables
     real(prec), allocatable, dimension(:,:,:) :: L ! eigenvalues
     real(prec), allocatable, dimension(:,:,:) :: R ! residuals
+    real(prec), allocatable, dimension(:,:,:) :: Umms ! MMS conserved variables
+    real(prec), allocatable, dimension(:,:,:) :: Vmms ! MMS primitive variables
+    real(prec), allocatable, dimension(:,:,:) :: Smms ! MMS source terms
     real(prec), allocatable, dimension(:,:,:) :: DE ! discretization error
     real(prec), allocatable, dimension(:,:)   :: asnd
     real(prec), allocatable, dimension(:,:)   :: mach
@@ -64,7 +67,9 @@ module soln_type
               soln%rinit( neq ) )
     
     if (isMMS) then
-      allocate( soln%DE( i_low:i_high,  j_low:j_high, neq ), &
+      allocate( soln%DE( i_low:i_high,  j_low:j_high, neq ),  &
+                soln%Vmms( i_low:i_high,  j_low:j_high, neq ),&
+                soln%Smms( i_low:i_high,  j_low:j_high, neq ),&
                 soln%DEnorm( neq ) )
       soln%DE     = zero
       soln%DEnorm = zero
@@ -118,9 +123,48 @@ module soln_type
                soln%rinit   )
     
     if (isMMS) then
-      deallocate( soln%DE, soln%DEnorm )
+      deallocate( soln%DE, soln%Vmms, soln%Smms, soln%DEnorm )
     end if
     
   end subroutine deallocate_soln
-
+  
+  subroutine calc_mms( grid, soln )
+    
+    use fluid_constants, only : gamma
+    use mms_functions
+    use grid_type, only : grid_t
+    
+    type(soln_t), intent(inout) :: soln
+    type(grid_t), intent(inout) :: grid
+    
+    !real(prec) :: L  = one
+    real(prec) :: L  = 0.306275854500063_prec
+    
+    soln%Vmms(:,:,1) = rho_mms(L,                        &
+                       grid%x(i_low:i_high,j_low:j_high),&
+                       grid%y(i_low:i_high,j_low:j_high))
+    soln%Vmms(:,:,2) = uvel_mms(L,                       &
+                       grid%x(i_low:i_high,j_low:j_high),&
+                       grid%y(i_low:i_high,j_low:j_high))
+    soln%Vmms(:,:,3) = vvel_mms(L,                       &
+                       grid%x(i_low:i_high,j_low:j_high),&
+                       grid%y(i_low:i_high,j_low:j_high))
+    soln%Vmms(:,:,4) = press_mms(L,                      &
+                       grid%x(i_low:i_high,j_low:j_high),&
+                       grid%y(i_low:i_high,j_low:j_high))
+    
+    soln%Smms(:,:,1) = rmassconv(L,                      &
+                       grid%x(i_low:i_high,j_low:j_high),&
+                       grid%y(i_low:i_high,j_low:j_high))
+    soln%Smms(:,:,2) = xmtmconv(L,                       &
+                       grid%x(i_low:i_high,j_low:j_high),&
+                       grid%y(i_low:i_high,j_low:j_high))
+    soln%Smms(:,:,3) = ymtmconv(L,                       &
+                       grid%x(i_low:i_high,j_low:j_high),&
+                       grid%y(i_low:i_high,j_low:j_high))
+    soln%Smms(:,:,4) = energyconv(gamma, L,              &
+                       grid%x(i_low:i_high,j_low:j_high),&
+                       grid%y(i_low:i_high,j_low:j_high))
+    
+  end subroutine calc_mms
 end module soln_type
