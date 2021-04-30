@@ -3,6 +3,7 @@ module time_integration
   use set_precision, only : prec
   use set_constants, only : one, half
   use set_inputs,    only : neq, i_low, i_high, ig_low, ig_high
+  use set_inputs,    only : j_low, j_high, jg_low, jg_high
   use grid_type
   use soln_type
   use variable_conversion
@@ -60,34 +61,52 @@ module time_integration
     
     type(grid_t), intent(in) :: grid
     
-    real(prec), dimension(ig_low:ig_high,neq), intent(inout) :: U
-    real(prec), dimension(i_low:i_high,neq),   intent(out)   :: R
-    real(prec), dimension(i_low-1:i_high,neq), intent(in)    :: F
-    real(prec), dimension(i_low:i_high)  ,   intent(in)    :: src, dt
+    real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq),&
+                                               intent(inout) :: U
+    real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
+                                               intent(out) :: R
+    real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq),&
+                                               intent(in) :: F
+    real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
+                                               intent(in) :: src
+    real(prec), dimension(i_low:i_high,j_low:j_high), intent(in) :: dt
     
-    !integer :: i
-    
-    R(i_low:i_high,1) = F(i_low:i_high,1)*grid%A_eta(1,i_low:i_high) &
-           - F(i_low-1:i_high-1,1)*grid%A_eta(1,i_low-1:i_high-1)
-    R(i_low:i_high,2) = F(i_low:i_high,2)*grid%A_eta(1,i_low:i_high) & 
-           - F(i_low-1:i_high-1,2)*grid%A_eta(1,i_low-1:i_high-1) &
-           - src(i_low:i_high)
-    R(i_low:i_high,3) = F(i_low:i_high,3)*grid%A_eta(1,i_low:i_high) &
-           - F(i_low-1:i_high-1,3)*grid%A_eta(1,i_low-1:i_high-1)
-    
-    
-    U(i_low:i_high,1) = U(i_low:i_high,1) & 
-                      - dt(i_low:i_high)/ &
-                        (grid%A_eta(1,i_low:i_high))*R(:,1)
-    U(i_low:i_high,2) = U(i_low:i_high,2) &
-                      - dt(i_low:i_high)/ &
-                        (grid%A_eta(1,i_low:i_high))*R(:,2)
-    U(i_low:i_high,3) = U(i_low:i_high,3) &
-                      - dt(i_low:i_high)/ &
-                        (grid%A_eta(1,i_low:i_high))*R(:,3)
+    integer :: i
     
   end subroutine explicit_euler
   
+  subroutine calc_residual(A_xi,A_eta,V,n_xi,n_eta,S,F,U,R)
+    
+    real(prec), dimension(ig_low:ig_high+1,jg_low:jg_high),&
+                                                  intent(in) :: A_xi
+    real(prec), dimension(ig_low:ig_high,jg_low:jg_high+1),&
+                                                  intent(in) :: A_eta
+    real(prec), dimension(i_low:i_high,j_low:j_high),&
+                                                  intent(in) :: V
+    real(prec), dimension(ig_low:ig_high+1,jg_low:jg_high,2),&
+                                                  intent(in) :: n_xi
+    real(prec), dimension(ig_low:ig_high,jg_low:jg_high+1,2),&
+                                                  intent(in) :: n_eta
+    real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
+                                                  intent(in) :: S
+    real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq),&
+                                                  intent(in) :: F
+    real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq),&
+                                               intent(inout) :: U
+    real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
+                                                 intent(out) :: R
+    
+    integer :: i,j
+    
+    do j = j_low,j_high
+    do i = i_low,i_high
+      R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:)  + A_xi(i,j)*F(i,j,:)  &
+               + A_eta(i,j+1)*F(i,j+1,:) + A_eta(i,j)*F(i,j,:) &
+               - V(i,j)*S(i,j,:)
+    end do
+    end do
+    
+  end subroutine calc_residual
   !============================= residual_norms ==============================80
   !>
   !! Description: 
