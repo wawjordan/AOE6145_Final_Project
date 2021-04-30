@@ -20,8 +20,9 @@ module grid_type
     
     real(prec), allocatable, dimension(:,:) :: x, y
     real(prec), allocatable, dimension(:,:) :: A_xi, A_eta
-    real(prec), allocatable, dimension(:,:) :: n_xi_x, n_xi_y
-    real(prec), allocatable, dimension(:,:) :: n_eta_x, n_eta_y
+    real(prec), allocatable, dimension(:,:,:) :: n_xi, n_eta
+    !real(prec), allocatable, dimension(:,:) :: n_xi_x, n_xi_y
+    !real(prec), allocatable, dimension(:,:) :: n_eta_x, n_eta_y
     real(prec), allocatable, dimension(:,:) :: V
     
   end type grid_t
@@ -47,11 +48,13 @@ module grid_type
               grid%y(       ig_low:ig_high+1,jg_low:jg_high+1), &
               grid%A_xi(    ig_low:ig_high+1,jg_low:jg_high), &
               grid%A_eta(   ig_low:ig_high,jg_low:jg_high+1), &
-              grid%n_xi_x(  ig_low:ig_high+1,jg_low:jg_high), &
-              grid%n_xi_y(  ig_low:ig_high+1,jg_low:jg_high), &
-              grid%n_eta_x( ig_low:ig_high,jg_low:jg_high+1), &
-              grid%n_eta_y( ig_low:ig_high,jg_low:jg_high+1), &
-              grid%V(     ig_low:ig_high  ,jg_low:jg_high)   )
+              grid%n_xi(    ig_low:ig_high+1,jg_low:jg_high,2),   &
+              grid%n_eta(   ig_low:ig_high,jg_low:jg_high+1,2),   &
+              !grid%n_xi_x(  ig_low:ig_high+1,jg_low:jg_high), &
+              !grid%n_xi_y(  ig_low:ig_high+1,jg_low:jg_high), &
+              !grid%n_eta_x( ig_low:ig_high,jg_low:jg_high+1), &
+              !grid%n_eta_y( ig_low:ig_high,jg_low:jg_high+1), &
+              grid%V(       ig_low:ig_high,jg_low:jg_high)   )
     
   end subroutine allocate_grid
    
@@ -131,10 +134,10 @@ module grid_type
                             + (grid%y(i,j+1)-grid%y(i,j))**2 )
       grid%A_eta(i,j) = sqrt( (grid%x(i+1,j)-grid%x(i,j))**2 &
                             + (grid%y(i+1,j)-grid%y(i,j))**2 )
-      grid%n_xi_x(i,j)   =  ( (grid%y(i,j+1)-grid%y(i,j)) )/grid%A_xi(i,j) 
-      grid%n_xi_y(i,j)   = -( (grid%x(i,j+1)-grid%x(i,j)) )/grid%A_xi(i,j)
-      grid%n_eta_x(i,j)  =  ( (grid%y(i+1,j)-grid%y(i,j)) )/grid%A_eta(i,j)
-      grid%n_eta_y(i,j)  = -( (grid%x(i+1,j)-grid%x(i,j)) )/grid%A_eta(i,j)
+      grid%n_xi(i,j,1)   = ( (grid%y(i,j+1)-grid%y(i,j)) )/grid%A_xi(i,j) 
+      grid%n_xi(i,j,2)   = ( (grid%x(i,j+1)-grid%x(i,j)) )/grid%A_xi(i,j)
+      grid%n_eta(i,j,1)  = ( (grid%y(i+1,j)-grid%y(i,j)) )/grid%A_eta(i,j)
+      grid%n_eta(i,j,2)  = ( (grid%x(i+1,j)-grid%x(i,j)) )/grid%A_eta(i,j)
       call cell_volume( (/ grid%x(i,j), grid%y(i,j) /), &
                     (/ grid%x(i+1,j), grid%y(i+1,j) /), &
                 (/ grid%x(i+1,j+1), grid%y(i+1,j+1) /), &
@@ -147,17 +150,26 @@ module grid_type
     do i = ig_low, ig_high
       grid%A_eta(i,j) = sqrt( (grid%x(i+1,j)-grid%x(i,j))**2 &
                             + (grid%y(i+1,j)-grid%y(i,j))**2 )
-      grid%n_eta_x(i,j)  =  ( (grid%y(i+1,j)-grid%y(i,j)) )/grid%A_eta(i,j)
-      grid%n_eta_y(i,j)  = -( (grid%x(i+1,j)-grid%x(i,j)) )/grid%A_eta(i,j)
+      grid%n_eta(i,j,1)  =  ( (grid%y(i+1,j)-grid%y(i,j)) )/grid%A_eta(i,j)
+      grid%n_eta(i,j,2)  = ( (grid%x(i+1,j)-grid%x(i,j)) )/grid%A_eta(i,j)
     end do
     
     i = ig_high+1
     do j = jg_low, jg_high
       grid%A_xi(i,j) = sqrt( (grid%x(i,j+1)-grid%x(i,j))**2 &
                            + (grid%y(i,j+1)-grid%y(i,j))**2 )
-      grid%n_xi_x(i,j) =   ( (grid%y(i,j+1)-grid%y(i,j)) )/grid%A_xi(i,j)
-      grid%n_xi_y(i,j) =  -( (grid%x(i,j+1)-grid%x(i,j)) )/grid%A_xi(i,j)
+      grid%n_xi(i,j,1) =   ( (grid%y(i,j+1)-grid%y(i,j)) )/grid%A_xi(i,j)
+      grid%n_xi(i,j,2) =  ( (grid%x(i,j+1)-grid%x(i,j)) )/grid%A_xi(i,j)
     end do
+    
+    !do j = jg_low, jg_high
+    !  do i = ig_low, ig_high
+    !    grid%n_xi(i,j,1) = half*(grid%n_xi_x(i+1,j)+grid%n_xi_x(i,j))
+    !    grid%n_xi(i,j,2) = half*(grid%n_xi_y(i+1,j)+grid%n_xi_y(i,j))
+    !    grid%n_eta(i,j,1) = half*(grid%n_eta_x(i,j+1)+grid%n_eta_x(i,j))
+    !    grid%n_eta(i,j,2) = half*(grid%n_eta_y(i,j+1)+grid%n_eta_y(i,j))
+    !  end do
+    !end do
   
   end subroutine cell_geometry
   
@@ -185,8 +197,8 @@ module grid_type
     
     type( grid_t ), intent( inout ) :: grid
     
-    deallocate( grid%x, grid%y, grid%A_xi, grid%A_eta, grid%V, &
-                grid%n_xi_x, grid%n_xi_y, grid%n_eta_x, grid%n_eta_y )
+    deallocate( grid%x, grid%y, grid%A_xi, grid%A_eta, grid%n_xi, grid%n_eta, &
+                grid%V )
     
   end subroutine deallocate_grid
   
