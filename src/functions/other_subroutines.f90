@@ -4,7 +4,7 @@ module other_subroutines
   use set_constants, only : zero, one, two, three, half, fourth
   use set_inputs, only : imax, neq, i_low, i_high, ig_low, ig_high
   use set_inputs, only : jmax, j_low, j_high, jg_low, jg_high
-  use set_inputs, only : epsM, kappaM, isMMS
+  use set_inputs, only : epsM, kappaM, isMMS, n_ghost
   use fluid_constants, only : gamma
   use variable_conversion
   use limiter_calc, only : limiter_fun, calc_consecutive_variations
@@ -15,7 +15,7 @@ module other_subroutines
   
   private
   
-  public :: output_file_headers, output_soln
+  public :: output_file_headers, output_soln, MUSCL_extrap
   
   contains
   
@@ -51,58 +51,37 @@ module other_subroutines
   !===========================================================================80
   subroutine MUSCL_extrap( V, left, right )
     
-    use set_inputs, only : limiter_freeze, psi_plus, psi_minus
-    real(prec), dimension(ig_low:ig_high,neq), intent(in)  :: V
-    real(prec), dimension(i_low-1:i_high,neq), intent(out) :: left, right
-    !real(prec), dimension(i_low-1:i_high,neq), intent(inout) :: psi_plus, psi_minus
-    !real(prec), dimension(i_low-1:i_high,neq) :: r_plus, r_minus
-    real(prec), dimension(ig_low:ig_high,neq)  :: r_plus, r_minus
-    !real(prec), dimension(neq) :: den
-    integer :: i
+    use set_inputs, only : limiter_freeze
+    real(prec), dimension(:,:), intent(in)  :: V
+    real(prec), dimension(:,:), intent(out) :: left, right
+    real(prec), dimension(lbound(V,1):ubound(V,1),neq) :: r_plus, r_minus
+    real(prec), dimension(lbound(V,1):ubound(V,1),neq):: psi_plus, psi_minus
+    integer :: i, low, high
     
-    !do i = i_low-1,i_high
-      !den = V(i+1,:) - V(i,:)
-      !den = sign(one,den)*max(abs(den),1e-6_prec)
-      !r_plus(i,:)   = ( V(i+2,:) - V(i+1,:) )/den
-      !r_minus(i,:)  = ( V(i,:) - V(i-1,:) )/den
-      !write(*,*) i, r_plus(i,1), r_plus(i,2), r_plus(i,3), &
-      !         &    r_minus(i,1),r_minus(i,2), r_minus(i,3)
-    !end do
+    low = lbound(V,1)+n_ghost
+    high = ubound(V,1)-n_ghost
+    
     if (limiter_freeze) then
       continue
     else
       call calc_consecutive_variations(V,r_plus,r_minus)
-      call limiter_fun(r_plus,psi_plus)
-      call limiter_fun(r_minus,psi_minus)
+      do i = lbound(V,1),ubound(V,1)
+        write(*,*) r_plus(i,1), r_minus(i,2)
+      end do
+      !call limiter_fun(r_plus,psi_plus)
+      !stop
+      !call limiter_fun(r_minus,psi_minus)
     end if
     
-    do i = i_low-1,i_high
-      left(i,:) = V(i,:) + fourth*epsM*( &
+    do i = low-1,high
+      j = i - low +2
+      left(j,:) = V(i,:) + fourth*epsM*( &
          & (one-kappaM)*psi_plus(i-1,:)*(V(i,:)-V(i-1,:)) + &
          & (one+kappaM)*psi_minus(i,:)*(V(i+1,:)-V(i,:)) )
-      right(i,:) = V(i+1,:) - fourth*epsM*( &
+      right(j,:) = V(i+1,:) - fourth*epsM*( &
          & (one+kappaM)*psi_minus(i+1,:)*(V(i+1,:)-V(i,:)) + &
          & (one-kappaM)*psi_plus(i,:)*(V(i+2,:)-V(i+1,:)) )
     end do
-    !left(i_low-1,:)  = two*left(i_low,:) - left(i_low+1,:)
-    !left(i_high,:)   = two*left(i_high-1,:) - left(i_high-2,:)
-    !right(i_low-1,:) = two*right(i_low,:) - right(i_low+1,:)
-    !right(i_high,:)  = two*right(i_high-1,:) - right(i_high-2,:)
-    !left(i_low-1,:)  = V(i_low-1,:)
-    !left(i_high,:)   = V(i_high,:)
-    !right(i_low-1,:) = V(i_low,:)
-    !right(i_high,:)  = V(i_high+1,:)
-    
-    !left(i_low-1,:)  = V(i_low-1,:)
-    !left(i_high,:)   = V(i_high,:)
-    !right(i_low-1,:) = V(i_low-1,:)
-    !right(i_high,:)  = V(i_high,:)
-    !call limit_primitives(left)
-    !call limit_primitives(right)
-    !write(*,*)
-    !do i = i_low-1,i_high
-    !  write(*,*) i, left(i,1), left(i,2), left(i,3), right(i,1), right(i,2), right(i,3)
-    !end do
 
   end subroutine MUSCL_extrap
   
