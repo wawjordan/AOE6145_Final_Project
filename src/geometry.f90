@@ -26,12 +26,17 @@ module geometry
   !===========================================================================80
   subroutine setup_geometry( grid, soln )
     
+    use set_inputs, only : cart_grid
     use file_handling, only : grid_in, grid_out
     
     type( soln_t ), intent(inout) :: soln
     type( grid_t ), intent(inout) :: grid
     
-    call grid_in(grid_name,grid)
+    if (cart_grid) then
+      call cartesian_grid(grid)
+    else
+      call grid_in(grid_name,grid)
+    end if
     call ghost_shape(grid)
     call cell_geometry(grid)
     call grid_out(geometry_file,grid)
@@ -59,5 +64,34 @@ module geometry
     call deallocate_soln( soln )
     
   end subroutine teardown_geometry
-
+  
+  subroutine cartesian_grid( grid )
+    
+    use set_precision, only : prec
+    use set_inputs, only : imax, jmax, xmin, xmax, ymin, ymax, n_ghost
+    use set_inputs, only : i_low, i_high, j_low, j_high
+    use set_inputs, only : ig_low, ig_high, jg_low, jg_high
+    
+    type( grid_t ), intent(inout) :: grid
+    integer :: i, j
+    
+    call allocate_grid(grid)
+    grid%i_low   = i_low
+    grid%j_low   = j_low
+    grid%i_high  = i_high
+    grid%j_high  = j_high
+    grid%ig_low  = ig_low
+    grid%jg_low  = jg_low
+    grid%ig_high = ig_high
+    grid%jg_high = jg_high
+    
+    do j = j_low,j_high+1
+      do i = i_low,i_high+1
+        grid%x(i,j) = xmin + real(i-1,prec)/real(imax-1,prec)*(xmax-xmin)
+        grid%y(i,j) = ymin + real(j-1,prec)/real(jmax-1,prec)*(ymax-ymin)
+      end do
+    end do
+    
+  end subroutine cartesian_grid
+  
 end module geometry
