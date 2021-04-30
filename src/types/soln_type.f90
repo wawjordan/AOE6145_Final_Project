@@ -137,8 +137,7 @@ module soln_type
     type(soln_t), intent(inout) :: soln
     type(grid_t), intent(inout) :: grid
     
-    !real(prec) :: L  = one
-    real(prec) :: L  = 0.306275854500063_prec
+    real(prec) :: L  = one
     
     soln%Vmms(:,:,1) = rho_mms(L,                        &
                        grid%x(i_low:i_high,j_low:j_high),&
