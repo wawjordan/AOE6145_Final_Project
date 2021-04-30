@@ -6,6 +6,7 @@ module flux_calc
   use set_inputs, only : neq, i_low, i_high, ig_low, ig_high, eps_roe
   use set_inputs, only : j_low, j_high, jg_low, jg_high
   use variable_conversion, only : cons2prim, speed_of_sound
+  use other_subroutines, only : MUSCL_extrap
   
   implicit none
   
@@ -40,19 +41,37 @@ module flux_calc
   
 contains
 
-  subroutine calc_flux_2D(left,right,nx,ny,F)
+  subroutine calc_flux_2D(V,nxi,neta,Fnormal)
     
-    real(prec), dimension(:,:,:), &
-                                      intent(in) :: left, right
-    real(prec), dimension(:,:), &
-                                      intent(in) :: nx, ny
-    real(prec), dimension(:,:,:), intent(out) :: F
+    real(prec), dimension(:,:,:), intent(in) :: V
+    real(prec), dimension(:,:,:), intent(in) :: nxi, neta
+    real(prec), dimension(:,:,:), intent(out) :: Fnormal
+    real(prec), dimension(i_low:i_high+1,neq) :: Lxi, Rxi, Fxi
+    real(prec), dimension(j_low:j_high+1,neq) :: Leta, Reta, Feta
+    real(prec) :: nx, ny
     integer :: i, j
     
     do j = j_low,j_high+1
+    call MUSCL_extrap(V(:,j,:),Lxi,Rxi)
     do i = i_low,i_high+1
-    call flux_fun(left(i,j,:),right(i,j,:),nx(i,j),ny(i,j),F(i,j,:))
+      write(*,*) Lxi(i,1), Rxi(i,1)
     end do
+    do i = i_low,i_high+1
+      nx = nxi(i,j,1)
+      ny = nxi(i,j,2)
+      call flux_fun(Lxi(i,:),Rxi(i,:),nx,ny,Fxi(i,:))
+    end do
+    Fnormal(:,j,:) = Fxi
+    end do
+    
+    do i = i_low,i_high+1
+    call MUSCL_extrap(V(i,:,:),Leta,Reta)
+    do j = j_low,j_high+1
+      nx = neta(i,j,1)
+      ny = neta(i,j,2)
+      call flux_fun(Leta(j,:),Reta(j,:),nx,ny,Feta(j,:))
+    end do
+    Fnormal(i,:,:) = Fnormal(i,:,:) + Feta
     end do
     
   end subroutine calc_flux_2D
