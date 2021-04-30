@@ -3,7 +3,7 @@ module limiter_calc
   use set_precision, only : prec
   use set_constants, only : zero, one, two, three, four, half, fourth
   use set_inputs, only : neq, imax, i_low, i_high, ig_low, ig_high
-  use set_inputs, only : beta_lim
+  use set_inputs, only : beta_lim, n_ghost
   
   implicit none
   
@@ -27,7 +27,7 @@ module limiter_calc
     
     import :: prec, i_low, i_high, neq
     real(prec), dimension(:,:), intent(in) :: r
-    real(prec), dimension(i_low-1:i_high,neq), intent(out) :: psi
+    real(prec), dimension(:,:), intent(out) :: psi
     
   end subroutine calc_limiter
     
@@ -64,24 +64,34 @@ contains
   
   subroutine calc_consecutive_variations(V,r_plus,r_minus)
     
-    real(prec), dimension(ig_low:ig_high,neq), intent(in)  :: V
-    !real(prec), dimension(i_low-1:i_high,neq), intent(out) :: r_plus, r_minus
-    real(prec), dimension(ig_low:ig_high,neq), intent(out)   :: r_plus, r_minus
+    real(prec), dimension(:,:), intent(in)  :: V
+    real(prec), dimension(:,:), intent(out) :: r_plus, r_minus
     real(prec), dimension(neq) :: den
-    integer :: i
-
-    do i = i_low-1,i_high
+    integer :: i, j, low, high
+    
+    low = lbound(V,1)+n_ghost
+    high = ubound(V,1)-n_ghost
+!    do i = i_low-1,i_high
+    do i = low-1,high
       den = V(i+1,:) - V(i,:)
       den = sign(one,den)*max(abs(den),1e-6_prec)
       r_plus(i,:)   = ( V(i+2,:) - V(i+1,:) )/den
       r_minus(i,:)  = ( V(i,:) - V(i-1,:) )/den
     end do
+    r_plus(low-2,:) = r_plus(low-1,:)
+    r_minus(low-2,:) = r_minus(low-1,:)
     
-    r_plus(i_low-2,:) = r_plus(i_low-1,:)
-    r_minus(i_low-2,:) = r_minus(i_low-1,:)
+    r_plus(high+1,:) = r_plus(high,:)
+    r_minus(high+1,:) = r_minus(high,:)
+    !do i = low-2,high+1
+    !write(*,*) r_plus(i,1),  r_minus(i,1)
+    !end do
     
-    r_plus(i_high+1,:) = r_plus(i_high,:)
-    r_minus(i_high+1,:) = r_minus(i_high,:)
+!    r_plus(i_low-2,:) = r_plus(i_low-1,:)
+!    r_minus(i_low-2,:) = r_minus(i_low-1,:)
+!    
+!    r_plus(i_high+1,:) = r_plus(i_high,:)
+!    r_minus(i_high+1,:) = r_minus(i_high,:)
     
   end subroutine calc_consecutive_variations
 
@@ -98,7 +108,7 @@ contains
     
     real(prec), dimension(:,:), intent(in) :: r
     !real(prec), dimension(i_low-1:i_high,neq), intent(out)   :: psi
-    real(prec), dimension(ig_low:ig_high,neq), intent(out)   :: psi
+    real(prec), dimension(:,:), intent(out)   :: psi
     
     psi = (r + abs(r))/(one + r)
     psi = half*(one+sign(one,r))*psi
@@ -118,7 +128,7 @@ contains
     
     real(prec), dimension(:,:), intent(in) :: r
     !real(prec), dimension(i_low-1:i_high,neq), intent(out)   :: psi
-    real(prec), dimension(ig_low:ig_high,neq), intent(out)   :: psi
+    real(prec), dimension(:,:), intent(out)   :: psi
     
     psi = (r**2 + r)/(one + r**2)
     psi = half*(one+sign(one,r))*psi
@@ -138,7 +148,7 @@ contains
     
     real(prec), dimension(:,:), intent(in) :: r
     !real(prec), dimension(i_low-1:i_high,neq), intent(out)   :: psi
-    real(prec), dimension(ig_low:ig_high,neq), intent(out)   :: psi
+    real(prec), dimension(:,:), intent(out)   :: psi
     
     psi = half*(one + sign(one,r))*min(r,one)
     
@@ -157,7 +167,7 @@ contains
     
     real(prec), dimension(:,:), intent(in) :: r
     !real(prec), dimension(i_low-1:i_high,neq), intent(out)   :: psi
-    real(prec), dimension(ig_low:ig_high,neq), intent(out)   :: psi
+    real(prec), dimension(:,:), intent(out)   :: psi
     
     psi = maxval((/ zero, min(beta_lim*r,one), min(r,beta_lim) /))
     psi = half*(one+sign(one,r))*psi
