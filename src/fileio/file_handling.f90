@@ -108,71 +108,33 @@ subroutine grid_out(filename,grid)
   write(funit,*) 'VARLOCATION = ([7-9]=CELLCENTERED)'
   
   
-  write(funit,*) ((grid%x(i,j),i=i_low,i_high+1), j=j_low,j_high+1)
-  write(funit,*) ((grid%y(i,j),i=i_low,i_high+1), j=j_low,j_high+1)
-  write(funit,*) ((grid%n_xi_x(i,j),i=i_low,i_high+1), j=j_low,j_high+1)
-  write(funit,*) ((grid%n_xi_y(i,j),i=i_low,i_high+1), j=j_low,j_high+1)
-  write(funit,*) ((grid%n_eta_x(i,j),i=i_low,i_high+1), j=j_low,j_high+1)
-  write(funit,*) ((grid%n_eta_y(i,j),i=i_low,i_high+1), j=j_low,j_high+1)
-  write(funit,*) ((grid%A_xi(i,j),i=i_low,i_high), j=j_low,j_high)
-  write(funit,*) ((grid%A_eta(i,j),i=i_low,i_high), j=j_low,j_high)
-  write(funit,*) ((grid%V(i,j),i=i_low,i_high), j=j_low,j_high)
+  write(funit,*) ((grid%x(i,j),i=i_low,i_high+1),      &
+                 NEW_LINE('a'),  j=j_low,j_high+1)
+  write(funit,*) ((grid%y(i,j),i=i_low,i_high+1),      &
+                 NEW_LINE('a'), j=j_low,j_high+1)
+  write(funit,*) ((grid%n_xi(i,j,1),i=i_low,i_high+1), &
+                 NEW_LINE('a'),  j=j_low,j_high+1)
+  write(funit,*) ((grid%n_xi(i,j,2),i=i_low,i_high+1), &
+                 NEW_LINE('a'),  j=j_low,j_high+1)
+  write(funit,*) ((grid%n_eta(i,j,1),i=i_low,i_high+1),&
+                 NEW_LINE('a'),  j=j_low,j_high+1)
+  write(funit,*) ((grid%n_eta(i,j,2),i=i_low,i_high+1),&
+                 NEW_LINE('a'),  j=j_low,j_high+1)
+!  write(funit,*) ((grid%n_xi_x(i,j),i=i_low,i_high), &
+!                 NEW_LINE('a'),  j=j_low,j_high)
+!  write(funit,*) ((grid%n_xi_y(i,j),i=i_low,i_high), &
+!                 NEW_LINE('a'),  j=j_low,j_high)
+!  write(funit,*) ((grid%n_eta_x(i,j),i=i_low,i_high),&
+!                 NEW_LINE('a'),  j=j_low,j_high)
+!  write(funit,*) ((grid%n_eta_y(i,j),i=i_low,i_high),&
+!                 NEW_LINE('a'),  j=j_low,j_high)
+  write(funit,*) ((grid%A_xi(i,j),i=i_low,i_high),     &
+                 NEW_LINE('a'),  j=j_low,j_high)
+  write(funit,*) ((grid%A_eta(i,j),i=i_low,i_high),    &
+                 NEW_LINE('a'),  j=j_low,j_high)
+  write(funit,*) ((grid%V(i,j),i=i_low,i_high),        &
+                 NEW_LINE('a'),  j=j_low,j_high)
   
-  
-!  do j=j_low,j_high+1
-!    do i=i_low,i_high+1
-!      write(funit,*) grid%x(i,j)
-!    end do
-!  end do
-!
-!  do j=j_low,j_high+1
-!    do i=i_low,i_high+1
-!      write(funit,*) grid%y(i,j)
-!    end do
-!  end do
-!
-!  do j=j_low,j_high+1
-!    do i=i_low,i_high+1
-!      write(funit,*) grid%n_xi_x(i,j)
-!    end do
-!  end do
-!
-!  do j=j_low,j_high+1
-!    do i=i_low,i_high+1
-!      write(funit,*) grid%n_xi_y(i,j)
-!    end do
-!  end do
-!
-!  do j=j_low,j_high+1
-!    do i=i_low,i_high+1
-!      write(funit,*) grid%n_eta_x(i,j)
-!    end do
-!  end do
-!
-!  do j=j_low,j_high+1
-!    do i=i_low,i_high+1
-!      write(funit,*) grid%n_eta_y(i,j)
-!    end do
-!  end do
-!
-!  do j=j_low,j_high
-!    do i=i_low,i_high
-!      write(funit,*) grid%A_xi(i,j)
-!    end do
-!  end do
-!
-!  do j=j_low,j_high
-!    do i=i_low,i_high
-!      write(funit,*) grid%A_eta(i,j)
-!    end do
-!  end do
-!
-!  do j=j_low,j_high
-!    do i=i_low,i_high
-!      write(funit,*) grid%V(i,j)
-!    end do
-!  end do
-
   close(funit)
 
   end subroutine grid_out
