@@ -33,7 +33,7 @@ set(
   USER_DEBUG_FLAGS
   "-O0 -fopenmp -Wall -Wextra -fimplicit-none -fcheck=all \
    -ffpe-trap=zero,underflow,overflow,invalid --coverage -g -fbacktrace \
-   -fstack-protector -fbounds-check"
+   -fstack-protector -fbounds-check -frealloc-lhs"
 )
 set( USER_RELEASE_FLAGS "-O3 -march=native -fopenmp" )
 
