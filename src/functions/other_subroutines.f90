@@ -24,18 +24,29 @@ module other_subroutines
   !! Description: 
   !!
   !! Inputs:      V  : 
-  !!              dA : 
+  !!              y  : 
   !!
   !! Outputs:     S  : 
   !<
   !===========================================================================80
-  subroutine calculate_sources(P,dA,S)
+  subroutine calculate_sources(V,y,S)
     
-    real(prec), dimension(i_low:i_high),   intent(in) :: dA
-    real(prec), dimension(ig_low:ig_high),   intent(in) :: P
-    real(prec), dimension(i_low:i_high),   intent(out) :: S
+    use set_inputs, only : isAxi
     
-    S(i_low:i_high) = P(i_low:i_high)*dA(i_low:i_high)
+    real(prec), dimension(:),   intent(in) :: V
+    real(prec), dimension(:),   intent(out) :: S
+    real(prec), intent(in) :: y
+    real(prec) :: rho, uvel, vvel, p, a, ht
+    
+    rho  = V(1)
+    uvel = V(2)
+    vvel = V(3)
+    p    = V(4)
+    call speed_of_sound(p,rho,a)
+    ht   = a**2/(gamma-one) + half*(uvel**2 + vvel**2)
+    
+    S = (/ rho*vvel, rho*uvel*vvel, rho*vvel**2, rho*vvel*ht /)
+    S = merge(-one,zero,isAxi)/merge(y,1.0e-6_prec,(y>zero))*S
     
   end subroutine calculate_sources
   
@@ -65,16 +76,17 @@ module other_subroutines
       continue
     else
       call calc_consecutive_variations(V,r_plus,r_minus)
-      do i = lbound(V,1),ubound(V,1)
-        write(*,*) r_plus(i,1), r_minus(i,2)
-        write(*,*) V(i,1), V(i,2)
-      end do
+      !do i = lbound(V,1),ubound(V,1)
+      !  write(*,*) r_plus(i,1), r_minus(i,2)
+      !  write(*,*) V(i,1), V(i,2)
+      !end do
+      stop
       call limiter_fun(r_plus,psi_plus)
       !stop
       call limiter_fun(r_minus,psi_minus)
     end if
-    
-    do i = low-1,high
+    !stop
+    do i = low,high+1
       j = i - low +2
       left(j,:) = V(i,:) + fourth*epsM*( &
          & (one-kappaM)*psi_plus(i-1,:)*(V(i,:)-V(i-1,:)) + &
