@@ -43,35 +43,39 @@ contains
 
   subroutine calc_flux_2D(V,nxi,neta,Fnormal)
     
-    real(prec), dimension(:,:,:), intent(in) :: V
-    real(prec), dimension(:,:,:), intent(in) :: nxi, neta
-    real(prec), dimension(:,:,:), intent(out) :: Fnormal
+    real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq), &
+                                                  intent(in) :: V
+    real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq), &
+                                                  intent(in) :: nxi, neta
+    real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq), &
+                                                  intent(out) :: Fnormal
     real(prec), dimension(i_low:i_high+1,neq) :: Lxi, Rxi, Fxi
     real(prec), dimension(j_low:j_high+1,neq) :: Leta, Reta, Feta
     real(prec) :: nx, ny
     integer :: i, j
     
     do j = j_low,j_high+1
-    call MUSCL_extrap(V(:,j,:),Lxi,Rxi)
+    write(*,*)'V',j,V(i_low,j,:)
+!    call MUSCL_extrap(V(:,j,:),Lxi,Rxi)
     !do i = i_low,i_high+1
       !write(*,*) Lxi(i,1), Rxi(i,1)
     !end do
-    do i = i_low,i_high+1
-      nx = nxi(i,j,1)
-      ny = nxi(i,j,2)
-      call flux_fun(Lxi(i,:),Rxi(i,:),nx,ny,Fxi(i,:))
-    end do
-    Fnormal(:,j,:) = Fxi
-    end do
-    
-    do i = i_low,i_high+1
-    call MUSCL_extrap(V(i,:,:),Leta,Reta)
-    do j = j_low,j_high+1
-      nx = neta(i,j,1)
-      ny = neta(i,j,2)
-      call flux_fun(Leta(j,:),Reta(j,:),nx,ny,Feta(j,:))
-    end do
-    Fnormal(i,:,:) = Fnormal(i,:,:) + Feta
+!    do i = i_low,i_high+1
+!      nx = nxi(i,j,1)
+!      ny = nxi(i,j,2)
+!      call flux_fun(Lxi(i,:),Rxi(i,:),nx,ny,Fxi(i,:))
+!    end do
+!    Fnormal(:,j,:) = Fxi
+!    end do
+!    
+!    do i = i_low,i_high+1
+!    call MUSCL_extrap(V(i,:,:),Leta,Reta)
+!    do j = j_low,j_high+1
+!      nx = neta(i,j,1)
+!      ny = neta(i,j,2)
+!      call flux_fun(Leta(j,:),Reta(j,:),nx,ny,Feta(j,:))
+!    end do
+!    Fnormal(i,:,:) = Fnormal(i,:,:) + Feta
     end do
     
   end subroutine calc_flux_2D
