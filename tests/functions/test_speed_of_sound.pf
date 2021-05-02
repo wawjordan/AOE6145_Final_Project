@@ -16,6 +16,8 @@ module test_speed_of_sound
       
       real(prec) :: a(1), a_expected(1), pressure(1), rho(1)
       
+      gamma = 1.4_prec
+      
       pressure   = 101325.0_prec
       rho        = 1.225_prec
       a_expected = 340.29399054347107_prec
@@ -26,7 +28,7 @@ module test_speed_of_sound
       write(*,*) 'a        = ', a
       write(*,*) 'a_exp    = ', a_expected
       @assertequal(1.0_prec,a/a_expected,toler)
-      write(*,*) 'toler    = ', toler
+      write(*,*) 'rel tol  = ', toler
       
     end subroutine speed_of_sound_test
     
