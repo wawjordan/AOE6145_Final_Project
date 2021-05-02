@@ -25,7 +25,7 @@ module limiter_calc
   !===========================================================================80  
   subroutine calc_limiter( r, psi )
     
-    import :: prec, i_low, i_high, neq
+    import :: prec
     real(prec), dimension(:,:), intent(in) :: r
     real(prec), dimension(:,:), intent(out) :: psi
     
@@ -68,11 +68,15 @@ contains
     real(prec), dimension(:,:), intent(out) :: r_plus, r_minus
     real(prec), dimension(neq) :: den
     integer :: i, j, low, high
-    
+
+    write(*,*) lbound(V)
+    write(*,*) ubound(V)
+    write(*,*)
+    write(*,*) lbound(r_plus)
+    write(*,*) ubound(r_minus)
     low = lbound(V,1)+n_ghost
     high = ubound(V,1)-n_ghost
-!    do i = i_low-1,i_high
-    do i = low-1,high
+    do i = low,high
       den = V(i+1,:) - V(i,:)
       den = sign(one,den)*max(abs(den),1e-6_prec)
       r_plus(i,:)   = ( V(i+2,:) - V(i+1,:) )/den
@@ -83,9 +87,30 @@ contains
     
     r_plus(high+1,:) = r_plus(high,:)
     r_minus(high+1,:) = r_minus(high,:)
-    !do i = low-2,high+1
-    !write(*,*) r_plus(i,1),  r_minus(i,1)
-    !end do
+    do i = lbound(V,1),ubound(V,1)
+      write(*,*) V(i,1), V(i,2), V(i,3), V(i,4)
+    end do
+    write(*,*) 'r_plus'
+    do i = lbound(V,1),ubound(V,1)
+      write(*,*) r_plus(i,1), r_plus(i,2), r_plus(i,3), r_plus(i,4)
+    end do
+    write(*,*) 'r_minus'
+    do i = lbound(V,1),ubound(V,1)
+      write(*,*) r_minus(i,1), r_minus(i,2), r_minus(i,3), r_minus(i,4)
+    end do
+!    low = lbound(V,1)+n_ghost
+!    high = ubound(V,1)-n_ghost
+!    do i = low,high
+!      den = V(i+1,:) - V(i,:)
+!      den = sign(one,den)*max(abs(den),1e-6_prec)
+!      r_plus(i,:)   = ( V(i+2,:) - V(i+1,:) )/den
+!      r_minus(i,:)  = ( V(i,:) - V(i-1,:) )/den
+!    end do
+!    r_plus(low-2,:) = r_plus(low-1,:)
+!    r_minus(low-2,:) = r_minus(low-1,:)
+!    
+!    r_plus(high+1,:) = r_plus(high,:)
+!    r_minus(high+1,:) = r_minus(high,:)
     
 !    r_plus(i_low-2,:) = r_plus(i_low-1,:)
 !    r_minus(i_low-2,:) = r_minus(i_low-1,:)
