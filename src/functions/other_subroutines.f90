@@ -56,7 +56,7 @@ module other_subroutines
     real(prec), dimension(:,:), intent(out) :: left, right
     real(prec), dimension(lbound(V,1):ubound(V,1),neq) :: r_plus, r_minus
     real(prec), dimension(lbound(V,1):ubound(V,1),neq):: psi_plus, psi_minus
-    integer :: i, low, high
+    integer :: i,j, low, high
     
     low = lbound(V,1)+n_ghost
     high = ubound(V,1)-n_ghost
@@ -67,10 +67,11 @@ module other_subroutines
       call calc_consecutive_variations(V,r_plus,r_minus)
       do i = lbound(V,1),ubound(V,1)
         write(*,*) r_plus(i,1), r_minus(i,2)
+        write(*,*) V(i,1), V(i,2)
       end do
-      !call limiter_fun(r_plus,psi_plus)
+      call limiter_fun(r_plus,psi_plus)
       !stop
-      !call limiter_fun(r_minus,psi_minus)
+      call limiter_fun(r_minus,psi_minus)
     end if
     
     do i = low-1,high
