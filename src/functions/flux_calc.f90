@@ -53,9 +53,9 @@ contains
     
     do j = j_low,j_high+1
     call MUSCL_extrap(V(:,j,:),Lxi,Rxi)
-    do i = i_low,i_high+1
-      write(*,*) Lxi(i,1), Rxi(i,1)
-    end do
+    !do i = i_low,i_high+1
+      !write(*,*) Lxi(i,1), Rxi(i,1)
+    !end do
     do i = i_low,i_high+1
       nx = nxi(i,j,1)
       ny = nxi(i,j,2)
@@ -121,20 +121,21 @@ contains
     
     rhoL = left(1)
     uL   = left(2)
-    vL   = left(2)
+    vL   = left(3)
     pL   = left(4)
     call speed_of_sound(pL,rhoL,aL)
-    htL = aL**2/(gamma-one) + half*uL**2
     
     rhoR = right(1)
     uR   = right(2)
-    vR   = right(2)
+    vR   = right(3)
     pR   = right(4)
     call speed_of_sound(pR,rhoR,aR)
-    htR = aR**2/(gamma-one) + half*uR**2
     
     unL = uL*nx + vL*ny
     unR = uR*nx + vR*ny
+    
+    htL = aL**2/(gamma-one) + half*unL**2
+    htR = aR**2/(gamma-one) + half*unR**2
     
     ML = unL/aL
     MR = unR/aR
@@ -181,25 +182,26 @@ contains
     real(prec), dimension(size(left)) :: lambda, FL, FR
     real(prec) :: rhoL, uL, vL, pL, aL, htL, unL
     real(prec) :: rhoR, uR, vR, pR, aR, htR, unR
-    real(prec) :: rho2, u2, v2, p2, a2, ht2, un2
+    real(prec) :: rho2, u2, v2, a2, ht2, un2
     real(prec) :: dw1, dw2, dw3, dw4, R
     
     rhoL = left(1)
     uL   = left(2)
-    vL   = left(2)
+    vL   = left(3)
     pL   = left(4)
     call speed_of_sound(pL,rhoL,aL)
-    htL = aL**2/(gamma-one) + half*uL**2
     
     rhoR = right(1)
     uR   = right(2)
-    vR   = right(2)
+    vR   = right(3)
     pR   = right(4)
     call speed_of_sound(pR,rhoR,aR)
-    htR = aR**2/(gamma-one) + half*uR**2
     
     unL = uL*nx + vL*ny
     unR = uR*nx + vR*ny
+    
+    htL = aL**2/(gamma-one) + half*unL**2
+    htR = aR**2/(gamma-one) + half*unR**2
     
     R = sqrt(rhoR/rhoL)
     rho2 = R*rhoL
@@ -214,7 +216,7 @@ contains
     rvec3 = half*(rho2/a2)*(/ one, u2+nx*a2, v2+ny*a2, ht2+un2*a2 /)
     rvec4 = half*(rho2/a2)*(/ one, u2-nx*a2, v2-ny*a2, ht2-un2*a2 /)
     lambda = (/ un2, un2, un2 + a2, un2 - a2 /)
-      
+     
     lambda = abs(lambda)
     lambda = half*(one+sign(one,lambda-two*eps_roe*a2))*lambda &
            & + half*(one-sign(one,lambda-two*eps_roe*a2))*&
