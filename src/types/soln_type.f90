@@ -78,7 +78,7 @@ module soln_type
     soln%U     = one
     soln%F     = one
     soln%S     = one
-    soln%V     = one
+    soln%V     = zero
     soln%L     = one
     soln%R     = one
     soln%asnd  = one
