@@ -74,7 +74,7 @@ module variable_conversion
     U(:,:,1) = V(:,:,1)
     U(:,:,2) = V(:,:,1)*V(:,:,2)
     U(:,:,3) = V(:,:,1)*V(:,:,3)
-    U(:,:,4) = V(:,:,3)/( gamma - one ) + half*V(:,:,1)*&
+    U(:,:,4) = V(:,:,4)/( gamma - one ) + half*V(:,:,1)*&
              & ( V(:,:,2)**2 + V(:,:,3)**2 )
     
   end subroutine prim2cons
