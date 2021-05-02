@@ -28,6 +28,7 @@ program main_program
   call set_derived_inputs
   call setup_geometry(grid,soln)
   call calc_mms(grid,soln)
+  soln%V(i_low:i_high,j_low:j_high,:) = soln%Vmms
   !call output_file_headers
   !call output_soln(grid,soln,1)
   !! flux at i-1/2 & i+1/2
