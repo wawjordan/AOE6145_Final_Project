@@ -23,19 +23,23 @@ module time_integration
   !!              dt     : 
   !<
   !===========================================================================80
-  subroutine calc_time_step( dx, V, asnd, lambda, dt )
+  subroutine calc_time_step( A_xi, A_eta, n_xi_avg, n_eta_avg, vol, V, dt )
     
     use set_inputs,          only : CFL
     
-    real(prec), dimension(ig_low:ig_high,neq), intent(in)  :: V
-    real(prec), intent(in) :: dx
-    real(prec), dimension(ig_low:ig_high),   intent(out) :: lambda
-    real(prec), dimension(i_low:i_high),   intent(out) :: dt
+    real(prec), dimension(:,:,:), intent(in)  :: V
+    real(prec), dimension(:,:), intent(in)    :: A_xi, A_eta, vol
+    real(prec), dimension(:,:,:), intent(in)  :: n_xi_avg, n_eta_avg
+    real(prec), dimension(lbound(V,1):ubound(V,1),lbound(V,2):ubound(V,2)) &
+                                         :: asnd, lambda_xi, lambda_eta
+    real(prec), dimension(:,:),   intent(out) :: dt
     
-    real(prec), dimension(ig_low:ig_high), intent(in)    :: asnd
-    
-    lambda(:) = abs(V(:,2)) + asnd
-    dt(:) = CFL*dx/lambda(i_low:i_high)
+    call speed_of_sound(V(:,:,4),V(:,:,1),asnd)
+    lambda_xi  = abs(V(:,:,2)*n_xi_avg(:,:,1) + &
+                     V(:,:,3)*n_xi_avg(:,:,2)) + asnd
+    lambda_eta = abs(V(:,:,2)*n_eta_avg(:,:,1) + &
+                     V(:,:,3)*n_eta_avg(:,:,2)) + asnd
+    dt = CFL*vol/(lambda_xi*A_xi +lambda_eta*A_eta)
     !dt(:) = minval(CFL*dx/lambda(i_low:i_high))
     
   end subroutine calc_time_step
