@@ -56,26 +56,27 @@ contains
     
     do j = j_low,j_high+1
     write(*,*)'V',j,V(i_low,j,:)
-!    call MUSCL_extrap(V(:,j,:),Lxi,Rxi)
-    !do i = i_low,i_high+1
-      !write(*,*) Lxi(i,1), Rxi(i,1)
-    !end do
-!    do i = i_low,i_high+1
-!      nx = nxi(i,j,1)
-!      ny = nxi(i,j,2)
-!      call flux_fun(Lxi(i,:),Rxi(i,:),nx,ny,Fxi(i,:))
-!    end do
-!    Fnormal(:,j,:) = Fxi
-!    end do
-!    
-!    do i = i_low,i_high+1
-!    call MUSCL_extrap(V(i,:,:),Leta,Reta)
-!    do j = j_low,j_high+1
-!      nx = neta(i,j,1)
-!      ny = neta(i,j,2)
-!      call flux_fun(Leta(j,:),Reta(j,:),nx,ny,Feta(j,:))
-!    end do
-!    Fnormal(i,:,:) = Fnormal(i,:,:) + Feta
+    call MUSCL_extrap(V(:,j,:),Lxi,Rxi)
+    do i = i_low,i_high+1
+      write(*,*) Lxi(i,1), Rxi(i,1)
+    end do
+    stop
+    do i = i_low,i_high+1
+      nx = nxi(i,j,1)
+      ny = nxi(i,j,2)
+      call flux_fun(Lxi(i,:),Rxi(i,:),nx,ny,Fxi(i,:))
+    end do
+    Fnormal(:,j,:) = Fxi
+    end do
+    
+    do i = i_low,i_high+1
+    call MUSCL_extrap(V(i,:,:),Leta,Reta)
+    do j = j_low,j_high+1
+      nx = neta(i,j,1)
+      ny = neta(i,j,2)
+      call flux_fun(Leta(j,:),Reta(j,:),nx,ny,Feta(j,:))
+    end do
+    Fnormal(i,:,:) = Fnormal(i,:,:) + Feta
     end do
     
   end subroutine calc_flux_2D
