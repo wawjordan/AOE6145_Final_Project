@@ -19,8 +19,8 @@ module set_inputs
   public :: leftV, rightV, leftU, rightU, limiter_freeze, psi_plus, psi_minus
   public :: grid_name, geometry_file
    
-  integer :: imax    = 9
-  integer :: jmax    = 9
+  integer :: imax    = 5
+  integer :: jmax    = 5
   integer :: i_low   = 0
   integer :: i_high  = 0
   integer :: ig_low  = 0
