@@ -80,14 +80,15 @@ module other_subroutines
       !  write(*,*) r_plus(i,1), r_minus(i,2)
       !  write(*,*) V(i,1), V(i,2)
       !end do
-      stop
       call limiter_fun(r_plus,psi_plus)
-      !stop
       call limiter_fun(r_minus,psi_minus)
     end if
-    !stop
-    do i = low,high+1
-      j = i - low +2
+    !write(*,*) lbound(V,1), ubound(V,1)
+    !write(*,*) lbound(r_plus,1), ubound(r_plus,1)
+    !write(*,*) lbound(left,1), ubound(left,1)
+    !do i = low,high+1
+    do i = low-1,high
+      j = i-low+2
       left(j,:) = V(i,:) + fourth*epsM*( &
          & (one-kappaM)*psi_plus(i-1,:)*(V(i,:)-V(i-1,:)) + &
          & (one+kappaM)*psi_minus(i,:)*(V(i+1,:)-V(i,:)) )
