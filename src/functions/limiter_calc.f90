@@ -69,11 +69,11 @@ contains
     real(prec), dimension(neq) :: den
     integer :: i, j, low, high
 
-    write(*,*) lbound(V)
-    write(*,*) ubound(V)
-    write(*,*)
-    write(*,*) lbound(r_plus)
-    write(*,*) ubound(r_minus)
+   ! write(*,*) lbound(V)
+   ! write(*,*) ubound(V)
+   ! write(*,*)
+   ! write(*,*) lbound(r_plus)
+   ! write(*,*) ubound(r_minus)
     low = lbound(V,1)+n_ghost
     high = ubound(V,1)-n_ghost
     do i = low,high
@@ -87,17 +87,17 @@ contains
     
     r_plus(high+1,:) = r_plus(high,:)
     r_minus(high+1,:) = r_minus(high,:)
-    do i = lbound(V,1),ubound(V,1)
-      write(*,*) V(i,1), V(i,2), V(i,3), V(i,4)
-    end do
-    write(*,*) 'r_plus'
-    do i = lbound(V,1),ubound(V,1)
-      write(*,*) r_plus(i,1), r_plus(i,2), r_plus(i,3), r_plus(i,4)
-    end do
-    write(*,*) 'r_minus'
-    do i = lbound(V,1),ubound(V,1)
-      write(*,*) r_minus(i,1), r_minus(i,2), r_minus(i,3), r_minus(i,4)
-    end do
+!    do i = lbound(V,1),ubound(V,1)
+!      write(*,*) V(i,1), V(i,2), V(i,3), V(i,4)
+!    end do
+!    write(*,*) 'r_plus'
+!    do i = lbound(V,1),ubound(V,1)
+!      write(*,*) r_plus(i,1), r_plus(i,2), r_plus(i,3), r_plus(i,4)
+!    end do
+!    write(*,*) 'r_minus'
+!    do i = lbound(V,1),ubound(V,1)
+!      write(*,*) r_minus(i,1), r_minus(i,2), r_minus(i,3), r_minus(i,4)
+!    end do
 !    low = lbound(V,1)+n_ghost
 !    high = ubound(V,1)-n_ghost
 !    do i = low,high
