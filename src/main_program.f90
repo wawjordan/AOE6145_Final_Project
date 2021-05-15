@@ -87,33 +87,32 @@ end do
 !  write(*,*)'ind4', ind4(i,1),ind4(i,2)
 !  end do
   
-  call bndry1%init_mms_bc(ind1,grid)
+  call bndry1%init_mms_bc(ind1,grid) 
+  call bndry2%init_mms_bc(ind2,grid)
+  call bndry3%init_mms_bc(ind3,grid)
+  call bndry4%init_mms_bc(ind4,grid)
   
-  !call bndry2%init_mms_bc(ind2,grid)
-  !call bndry3%init_mms_bc(ind3,grid)
-  !call bndry4%init_mms_bc(ind4,grid)
-  
-  !call bndry1%enforce(soln)
-  !call bndry2%enforce(soln)
-  !call bndry3%enforce(soln)
-  !call bndry4%enforce(soln)
+  call bndry1%enforce(soln)
+  call bndry2%enforce(soln)
+  call bndry3%enforce(soln)
+  call bndry4%enforce(soln)
   
   call calc_mms(grid,soln)
   
   soln%V(i_low:i_high,j_low:j_high,:) = soln%Vmms
   
- ! call calc_flux_2D(soln%V,grid%n_xi,grid%n_eta,soln%F)
+  !call calc_flux_2D(soln%V,grid%n_xi,grid%n_eta,soln%F)
   !write(*,*)'Vmms', soln%Vmms(i_low,j_low,:)
-  write(*,*) 'i', (i,i=ig_low,ig_high)
-  do j = jg_low, jg_high
-  write(*,*)'j', j
-  end do
-  write(*,*)
-  do j = jg_low, jg_high
-  write(*,*)'V', soln%V(:,j,1)
-  end do
-  !call output_file_headers
-  !call output_soln(grid,soln,1)
+  !write(*,*) 'i', (i,i=ig_low,ig_high)
+  !do j = jg_low, jg_high
+  !write(*,*)'j', j
+  !end do
+  !write(*,*)
+  !do j = jg_low, jg_high
+  !write(*,*)'V', soln%V(:,j,1)
+  !end do
+  call output_file_headers
+  call output_soln(grid,soln,1)
   
   deallocate(ind1,ind2,ind3,ind4)
   call grid_out(geometry_file,grid)
