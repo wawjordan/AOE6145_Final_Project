@@ -84,6 +84,10 @@ module bc_type
     write(*,*)  grid%x(ind(:,1),1)
     write(*,*) lbound(grid%x,1), ubound(grid%x,1)
     write(*,*) lbound(grid%x,2), ubound(grid%x,2)
+    do i = 1,s1
+      x(i,1) = grid%x(ind(i,1),ind(i,2))
+      y(i,1) = grid%y(ind(i,1),ind(i,2))
+    end do
     !x = grid%x(ind(:,1),ind(:,2))
     !y = grid%y(ind(:,1),ind(:,2))
     !write(*,*) s1
@@ -91,10 +95,10 @@ module bc_type
     !  write(*,*) 'x= ',x(i,1),'  y= ',y(i,1)
     !end do
     
-    !this%Vspec(:,:,1) = rho_mms(this%length,x,y)
-    !this%Vspec(:,:,2) = uvel_mms(this%length,x,y)
-    !this%Vspec(:,:,3) = vvel_mms(this%length,x,y)
-    !this%Vspec(:,:,4) = press_mms(this%length,x,y)
+    this%Vspec(:,:,1) = rho_mms(this%length,x,y)
+    this%Vspec(:,:,2) = uvel_mms(this%length,x,y)
+    this%Vspec(:,:,3) = vvel_mms(this%length,x,y)
+    this%Vspec(:,:,4) = press_mms(this%length,x,y)
     
   end subroutine init_mms_bc
   
