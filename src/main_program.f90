@@ -112,7 +112,7 @@ program main_program
   
   call calc_mms(grid,soln)
   
-  soln%V(i_low:i_high,j_low:j_high,:) = soln%Vmms
+  soln%V(i_low:i_high,j_low:j_high,:) = soln%Vmms(i_low:i_high,j_low:j_high,:)
   
   !call calc_flux_2D(soln%V,grid%n_xi,grid%n_eta,soln%F)
   !write(*,*)'Vmms', soln%Vmms(i_low,j_low,:)
