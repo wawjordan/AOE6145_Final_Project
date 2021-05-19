@@ -66,6 +66,7 @@ contains
       ny = nxi(i,j,2)
       call flux_fun(Lxi(i,:),Rxi(i,:),nx,ny,Fxi(i,:))
     end do
+    stop
     Fnormal(:,j,:) = Fxi
     end do
     
