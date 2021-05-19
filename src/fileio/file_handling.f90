@@ -101,42 +101,88 @@ subroutine grid_out(filename,grid)
 
   write(funit,*) 'ZONE'
   write(funit,*) 'T = "Meshy-Mesh"'
-  write(funit,*) 'I=',i_high-i_low+2,' J=',j_high-j_low+2
+  write(funit,*) 'I=',ig_high-ig_low+2,' J=',jg_high-jg_low+2
   write(funit,*) 'DT = (DOUBLE, DOUBLE, DOUBLE, DOUBLE, DOUBLE,&
                    & DOUBLE, DOUBLE, DOUBLE, DOUBLE)'
   write(funit,*) 'DATAPACKING = BLOCK'
-  write(funit,*) 'VARLOCATION = ([7-9]=CELLCENTERED)'
+  write(funit,*) 'VARLOCATION = ([3-9]=CELLCENTERED)'
   
   
-  write(funit,*) ((grid%x(i,j),i=i_low,i_high+1),      &
-                 NEW_LINE('a'),  j=j_low,j_high+1)
-  write(funit,*) ((grid%y(i,j),i=i_low,i_high+1),      &
-                 NEW_LINE('a'), j=j_low,j_high+1)
-  write(funit,*) ((grid%n_xi(i,j,1),i=i_low,i_high+1), &
-                 NEW_LINE('a'),  j=j_low,j_high+1)
-  write(funit,*) ((grid%n_xi(i,j,2),i=i_low,i_high+1), &
-                 NEW_LINE('a'),  j=j_low,j_high+1)
-  write(funit,*) ((grid%n_eta(i,j,1),i=i_low,i_high+1),&
-                 NEW_LINE('a'),  j=j_low,j_high+1)
-  write(funit,*) ((grid%n_eta(i,j,2),i=i_low,i_high+1),&
-                 NEW_LINE('a'),  j=j_low,j_high+1)
-!  write(funit,*) ((grid%n_xi_x(i,j),i=i_low,i_high), &
-!                 NEW_LINE('a'),  j=j_low,j_high)
-!  write(funit,*) ((grid%n_xi_y(i,j),i=i_low,i_high), &
-!                 NEW_LINE('a'),  j=j_low,j_high)
-!  write(funit,*) ((grid%n_eta_x(i,j),i=i_low,i_high),&
-!                 NEW_LINE('a'),  j=j_low,j_high)
-!  write(funit,*) ((grid%n_eta_y(i,j),i=i_low,i_high),&
-!                 NEW_LINE('a'),  j=j_low,j_high)
-  write(funit,*) ((grid%A_xi(i,j),i=i_low,i_high),     &
-                 NEW_LINE('a'),  j=j_low,j_high)
-  write(funit,*) ((grid%A_eta(i,j),i=i_low,i_high),    &
-                 NEW_LINE('a'),  j=j_low,j_high)
-  write(funit,*) ((grid%V(i,j),i=i_low,i_high),        &
-                 NEW_LINE('a'),  j=j_low,j_high)
+  write(funit,*) ((grid%x(i,j),i=ig_low,ig_high+1),      &
+                 NEW_LINE('a'),  j=jg_low,jg_high+1)
+  write(funit,*) ((grid%y(i,j),i=ig_low,ig_high+1),      &
+                 NEW_LINE('a'), j=jg_low,jg_high+1)
+  write(funit,*) ((grid%n_xi(i,j,1),i=ig_low,ig_high), &
+                 NEW_LINE('a'),  j=jg_low,jg_high)
+  write(funit,*) ((grid%n_xi(i,j,2),i=ig_low,ig_high), &
+                 NEW_LINE('a'),  j=jg_low,jg_high)
+  write(funit,*) ((grid%n_eta(i,j,1),i=ig_low,ig_high),&
+                 NEW_LINE('a'),  j=jg_low,jg_high)
+  write(funit,*) ((grid%n_eta(i,j,2),i=ig_low,ig_high),&
+                 NEW_LINE('a'),  j=jg_low,jg_high)
+  write(funit,*) ((grid%A_xi(i,j),i=ig_low,ig_high),     &
+                 NEW_LINE('a'),  j=jg_low,jg_high)
+  write(funit,*) ((grid%A_eta(i,j),i=ig_low,ig_high),    &
+                 NEW_LINE('a'),  j=jg_low,jg_high)
+  write(funit,*) ((grid%V(i,j),i=ig_low,ig_high),        &
+                 NEW_LINE('a'),  j=jg_low,jg_high)
   
   close(funit)
 
   end subroutine grid_out
+!subroutine grid_out(filename,grid)
+!  
+!  type(grid_t), intent(in) :: grid
+!  character(len=*), intent(in) :: filename
+!  integer :: i, j, funit
+!   
+!  funit = 50
+!
+!  open(unit=funit,file=filename,status='unknown')
+!  write(funit,*) 'TITLE = "2D Curvilinear Mesh Data"'
+!  write(funit,*)'variables="x(m)","y(m)","n<sub><greek>x</greek>,x</sub>",&
+!    & "n<sub><greek>x</greek>,y</sub>", "n<sub><greek>n</greek>,x</sub>",&
+!    & "n<sub><greek>n</greek>,y</sub>", "A<sub><greek>x</greek></sub>",&
+!    & "A<sub><greek>n</greek></sub>","V"'
+!
+!  write(funit,*) 'ZONE'
+!  write(funit,*) 'T = "Meshy-Mesh"'
+!  write(funit,*) 'I=',i_high-i_low+2,' J=',j_high-j_low+2
+!  write(funit,*) 'DT = (DOUBLE, DOUBLE, DOUBLE, DOUBLE, DOUBLE,&
+!                   & DOUBLE, DOUBLE, DOUBLE, DOUBLE)'
+!  write(funit,*) 'DATAPACKING = BLOCK'
+!  write(funit,*) 'VARLOCATION = ([7-9]=CELLCENTERED)'
+!  
+!  
+!  write(funit,*) ((grid%x(i,j),i=i_low,i_high+1),      &
+!                 NEW_LINE('a'),  j=j_low,j_high+1)
+!  write(funit,*) ((grid%y(i,j),i=i_low,i_high+1),      &
+!                 NEW_LINE('a'), j=j_low,j_high+1)
+!  write(funit,*) ((grid%n_xi(i,j,1),i=i_low,i_high+1), &
+!                 NEW_LINE('a'),  j=j_low,j_high+1)
+!  write(funit,*) ((grid%n_xi(i,j,2),i=i_low,i_high+1), &
+!                 NEW_LINE('a'),  j=j_low,j_high+1)
+!  write(funit,*) ((grid%n_eta(i,j,1),i=i_low,i_high+1),&
+!                 NEW_LINE('a'),  j=j_low,j_high+1)
+!  write(funit,*) ((grid%n_eta(i,j,2),i=i_low,i_high+1),&
+!                 NEW_LINE('a'),  j=j_low,j_high+1)
+!!  write(funit,*) ((grid%n_xi_x(i,j),i=i_low,i_high), &
+!!                 NEW_LINE('a'),  j=j_low,j_high)
+!!  write(funit,*) ((grid%n_xi_y(i,j),i=i_low,i_high), &
+!!                 NEW_LINE('a'),  j=j_low,j_high)
+!!  write(funit,*) ((grid%n_eta_x(i,j),i=i_low,i_high),&
+!!                 NEW_LINE('a'),  j=j_low,j_high)
+!!  write(funit,*) ((grid%n_eta_y(i,j),i=i_low,i_high),&
+!!                 NEW_LINE('a'),  j=j_low,j_high)
+!  write(funit,*) ((grid%A_xi(i,j),i=i_low,i_high),     &
+!                 NEW_LINE('a'),  j=j_low,j_high)
+!  write(funit,*) ((grid%A_eta(i,j),i=i_low,i_high),    &
+!                 NEW_LINE('a'),  j=j_low,j_high)
+!  write(funit,*) ((grid%V(i,j),i=i_low,i_high),        &
+!                 NEW_LINE('a'),  j=j_low,j_high)
+!  
+!  close(funit)
+!
+!  end subroutine grid_out
 
 end module file_handling
