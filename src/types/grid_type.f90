@@ -61,6 +61,7 @@ module grid_type
   subroutine ghost_shape(grid)
     
     type(grid_t), intent(inout) :: grid
+    real(prec) :: x1, x2, x3, x4, y1, y2, y3, y4, m1, m2
     integer :: i, j
     
     ! extrapolate coordinates to form ghost cells
@@ -94,33 +95,98 @@ module grid_type
    !!!! 
     do j = j_low-1, jg_low,-1
     do i = i_low-1, ig_low,-1
-      grid%x(i,j) = grid%x(i+1,j+1)
-      grid%y(i,j) = grid%y(i+1,j+1)
+      x1 = grid%x(i+2,j)
+      x2 = grid%x(i+1,j)
+      x3 = grid%x(i,j+2)
+      x4 = grid%x(i,j+1)
+      
+      y1 = grid%y(i+2,j)
+      y2 = grid%y(i+1,j)
+      y3 = grid%y(i,j+2)
+      y4 = grid%y(i,j+1)
+      
+      call extrap_corner( (/x1,y1/), (/x2,y2/), (/x3,y3/), (/x4,y4/), &
+                          grid%x(i,j), grid%y(i,j) )
     end do
     end do
     
     do j = j_high+2, jg_high+1
     do i = i_low-1, ig_low,-1
-      grid%x(i,j) = grid%x(i+1,j-1)
-      grid%y(i,j) = grid%y(i+1,j-1)
+      x1 = grid%x(i+2,j)
+      x2 = grid%x(i+1,j)
+      x3 = grid%x(i,j-2)
+      x4 = grid%x(i,j-1)
+      
+      y1 = grid%y(i+2,j)
+      y2 = grid%y(i+1,j)
+      y3 = grid%y(i,j-2)
+      y4 = grid%y(i,j-1)
+      
+      call extrap_corner( (/x1,y1/), (/x2,y2/), (/x3,y3/), (/x4,y4/), &
+                          grid%x(i,j), grid%y(i,j) )
     end do
     end do
    !! 
     do j = j_low-1, jg_low,-1
     do i = i_high+2, ig_high+1
-      grid%x(i,j) = grid%x(i-1,j+1)
-      grid%y(i,j) = grid%y(i-1,j+1)
+      x1 = grid%x(i-2,j)
+      x2 = grid%x(i-1,j)
+      x3 = grid%x(i,j+2)
+      x4 = grid%x(i,j+1)
+      
+      y1 = grid%y(i-2,j)
+      y2 = grid%y(i-1,j)
+      y3 = grid%y(i,j+2)
+      y4 = grid%y(i,j+1)
+      
+      call extrap_corner( (/x1,y1/), (/x2,y2/), (/x3,y3/), (/x4,y4/), &
+                          grid%x(i,j), grid%y(i,j) )
     end do
     end do
     
     do j = j_high+2, jg_high+1
     do i = i_high+2, ig_high+1
-      grid%x(i,j) = grid%x(i-1,j-1)
-      grid%y(i,j) = grid%y(i-1,j-1)
+      x1 = grid%x(i-2,j)
+      x2 = grid%x(i-1,j)
+      x3 = grid%x(i,j-2)
+      x4 = grid%x(i,j-1)
+      
+      y1 = grid%y(i-2,j)
+      y2 = grid%y(i-1,j)
+      y3 = grid%y(i,j-2)
+      y4 = grid%y(i,j-1)
+      
+      call extrap_corner( (/x1,y1/), (/x2,y2/), (/x3,y3/), (/x4,y4/), &
+                          grid%x(i,j), grid%y(i,j) )
+      
     end do
     end do
+    
 
   end subroutine ghost_shape
+  
+  subroutine extrap_corner(P1,P2,P3,P4,x,y)
+    
+    real(prec), dimension(2), intent(in) :: P1,P2,P3,P4
+    real(prec), intent(out) :: x,y
+    real(prec) :: D, x1,x2,x3,x4, y1,y2,y3,y4
+    
+    x1 = P1(1)
+    x2 = P2(1)
+    x3 = P3(1)
+    x4 = P4(1)
+    
+    y1 = P1(2)
+    y2 = P2(2)
+    y3 = P3(2)
+    y4 = P4(2)
+    
+    D = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)
+    
+    x = ((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4))/D
+    y = ((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4))/D
+    
+  end subroutine extrap_corner
 
   subroutine cell_geometry(grid)
     
