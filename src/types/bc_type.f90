@@ -66,12 +66,11 @@ module bc_type
     integer, dimension(:,:) :: ind
     type(grid_t) :: grid
     real(prec), optional :: length
-    real(prec), dimension(size(ind,1),size(ind,2)) :: x,y
-    integer :: i, s1, s2
+    real(prec), dimension(size(ind,1),1) :: x,y
+    integer :: i, j, s1, s2
     s1 = size(ind,1)
-    s2 = size(ind,2)
     
-    allocate(this%ind(s1,s2), this%Vspec(s1,s2,neq))
+    allocate(this%ind(s1,2), this%Vspec(s1,1,neq))
     
     this%ind = ind
     
@@ -80,13 +79,13 @@ module bc_type
     else
       this%length = one
     end if
-    write(*,*) ind(:,1)
-    write(*,*)  grid%x(ind(:,1),1)
-    write(*,*) lbound(grid%x,1), ubound(grid%x,1)
-    write(*,*) lbound(grid%x,2), ubound(grid%x,2)
+    !write(*,*) lbound(ind,1), ubound(ind,1)
+    !write(*,*)
     do i = 1,s1
       x(i,1) = grid%x(ind(i,1),ind(i,2))
       y(i,1) = grid%y(ind(i,1),ind(i,2))
+      write(*,*) ind(i,1),ind(i,2)
+      !write(*,*) 'i=',ind(i,1),' j=',ind(i,2),' x=',x(i,1),' y=',y(i,1)
     end do
     !x = grid%x(ind(:,1),ind(:,2))
     !y = grid%y(ind(:,1),ind(:,2))
