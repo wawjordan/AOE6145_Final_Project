@@ -1,11 +1,81 @@
 module mms_functions
+
+
+use set_precision, only : prec
+use set_constants, only : pi, one, two, three, four, five, six
+
 contains
+
+function wrap_rho_mms(x, y)
+  use set_inputs, only : Lmms
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec) :: wrap_rho_mms
+  wrap_rho_mms = rho_mms(Lmms,x,y)
+end function wrap_rho_mms
+
+function wrap_uvel_mms(x, y)
+  use set_inputs, only : Lmms
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec) :: wrap_uvel_mms
+  wrap_uvel_mms = uvel_mms(Lmms,x,y)
+end function wrap_uvel_mms
+
+function wrap_vvel_mms(x, y)
+  use set_inputs, only : Lmms
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec) :: wrap_vvel_mms
+  wrap_vvel_mms = vvel_mms(Lmms,x,y)
+end function wrap_vvel_mms
+
+function wrap_press_mms(x, y)
+  use set_inputs, only : Lmms
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec) :: wrap_press_mms
+  wrap_press_mms = press_mms(Lmms,x,y)
+end function wrap_press_mms
+
+
+function wrap_rmassconv(x, y)
+  use set_inputs, only : Lmms
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec) :: wrap_rmassconv
+  wrap_rmassconv = rmassconv(Lmms,x,y)
+end function wrap_rmassconv
+
+function wrap_xmtmconv(x, y)
+  use set_inputs, only : Lmms
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec) :: wrap_xmtmconv
+  wrap_xmtmconv = xmtmconv(Lmms,x,y)
+end function wrap_xmtmconv
+
+function wrap_ymtmconv(x, y)
+  use set_inputs, only : Lmms
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec) :: wrap_ymtmconv
+  wrap_ymtmconv = ymtmconv(Lmms,x,y)
+end function wrap_ymtmconv
+
+function wrap_energyconv(x, y)
+  use set_inputs, only : Lmms
+  use fluid_constants, only : gamma
+  real(prec), intent(in) :: x
+  real(prec), intent(in) :: y
+  real(prec) :: wrap_energyconv
+  wrap_energyconv = energyconv(gamma,Lmms,x,y)
+end function wrap_energyconv
+
 !=============================================================================80
 !!!!MMS functions
 pure elemental function rho_mms(length, x, y)
 
-  use set_precision, only : prec
-  use set_constants, only : pi, two
   use mms_constants, only : rho0, rhox, rhoy
   
   implicit none
@@ -21,8 +91,6 @@ end function rho_mms
 !=============================================================================80
 pure elemental function uvel_mms(length, x, y)
 
-  use set_precision, only : prec
-  use set_constants, only : pi, two, three, five
   use mms_constants, only : uvel0, uvelx, uvely
   
   implicit none
@@ -39,8 +107,6 @@ end function uvel_mms
 !=============================================================================80
 pure elemental function vvel_mms(length,x,y)
 
-  use set_precision, only : prec
-  use set_constants, only : pi, two, three
   use mms_constants, only : vvel0, vvelx, vvely
   
   implicit none
@@ -56,8 +122,6 @@ end function vvel_mms
 !=============================================================================80
 pure elemental function press_mms(length,x,y)
 
-  use set_precision, only : prec
-  use set_constants, only : pi, two
   use mms_constants, only : press0, pressx, pressy
   
   implicit none
@@ -73,10 +137,10 @@ end function press_mms
 !=============================================================================80
 pure elemental function rmassconv(length,x,y)
 
-  use set_precision, only : prec
-  use set_constants, only : pi, two, three, five
+  !use mms_constants, only : rho0, rhox, rhoy, uvel0, uvelx, uvely,             &
+  !                          vvel0, vvelx, vvely, press0, pressx, pressy
   use mms_constants, only : rho0, rhox, rhoy, uvel0, uvelx, uvely,             &
-                            vvel0, vvelx, vvely, press0, pressx, pressy
+                            vvel0, vvelx, vvely
   
   implicit none
 
@@ -99,10 +163,10 @@ end function rmassconv
 !=============================================================================80
 pure elemental function xmtmconv(length,x,y)
 
-  use set_precision, only : prec
-  use set_constants, only : pi, two, three, five
+  !use mms_constants, only : rho0, rhox, rhoy, uvel0, uvelx, uvely,             &
+  !                          vvel0, vvelx, vvely, press0, pressx, pressy
   use mms_constants, only : rho0, rhox, rhoy, uvel0, uvelx, uvely,             &
-                            vvel0, vvelx, vvely, press0, pressx, pressy
+                            vvel0, vvelx, vvely, pressx
   
   implicit none
 
@@ -135,10 +199,10 @@ end function xmtmconv
 !=============================================================================80
 pure elemental function ymtmconv(length,x,y)
 
-  use set_precision, only : prec
-  use set_constants, only : pi, two, three, four, five
+  !use mms_constants, only : rho0, rhox, rhoy, uvel0, uvelx, uvely,             &
+  !                          vvel0, vvelx, vvely, press0, pressx, pressy
   use mms_constants, only : rho0, rhox, rhoy, uvel0, uvelx, uvely,             &
-                            vvel0, vvelx, vvely, press0, pressx, pressy
+                            vvel0, vvelx, vvely, pressy
   
   implicit none
 
@@ -172,10 +236,11 @@ end function ymtmconv
 !=============================================================================80
 pure elemental function energyconv(gamma, length,x,y)
 
-  use set_precision, only : prec
-  use set_constants, only : pi, one, two, three, four, five, six
+!  use mms_constants, only : rho0, rhox, rhoy, uvel0, uvelx, uvely,             &
+!                            vvel0, vvelx, vvely, wvel0, wvelx, wvely,          &
+!                            press0, pressx, pressy
   use mms_constants, only : rho0, rhox, rhoy, uvel0, uvelx, uvely,             &
-                            vvel0, vvelx, vvely, wvel0, wvelx, wvely,          &
+                            vvel0, vvelx, vvely, wvel0,         &
                             press0, pressx, pressy
   
   implicit none
@@ -254,3 +319,78 @@ pure elemental function energyconv(gamma, length,x,y)
 end function energyconv
 
 end module mms_functions
+
+!module mms_wrappers
+!
+!use mms_functions
+!use set_precision, only : prec
+!
+!contains
+!
+!function wrap_rho_mms(x, y)
+!  use set_inputs, only : Lmms
+!  real(prec), intent(in) :: x
+!  real(prec), intent(in) :: y
+!  real(prec) :: wrap_rho_mms
+!  wrap_rho_mms = rho_mms(Lmms,x,y)
+!end function wrap_rho_mms
+!
+!function wrap_uvel_mms(x, y)
+!  use set_inputs, only : Lmms
+!  real(prec), intent(in) :: x
+!  real(prec), intent(in) :: y
+!  real(prec) :: wrap_uvel_mms
+!  wrap_uvel_mms = uvel_mms(Lmms,x,y)
+!end function wrap_uvel_mms
+!
+!function wrap_vvel_mms(x, y)
+!  use set_inputs, only : Lmms
+!  real(prec), intent(in) :: x
+!  real(prec), intent(in) :: y
+!  real(prec) :: wrap_vvel_mms
+!  wrap_vvel_mms = vvel_mms(Lmms,x,y)
+!end function wrap_vvel_mms
+!
+!function wrap_press_mms(x, y)
+!  use set_inputs, only : Lmms
+!  real(prec), intent(in) :: x
+!  real(prec), intent(in) :: y
+!  real(prec) :: wrap_press_mms
+!  wrap_press_mms = press_mms(Lmms,x,y)
+!end function wrap_press_mms
+!
+!
+!function wrap_rmassconv(x, y)
+!  use set_inputs, only : Lmms
+!  real(prec), intent(in) :: x
+!  real(prec), intent(in) :: y
+!  real(prec) :: wrap_rmassconv
+!  wrap_rmassconv = rmassconv(Lmms,x,y)
+!end function wrap_rmassconv
+!
+!function wrap_xmtmconv(x, y)
+!  use set_inputs, only : Lmms
+!  real(prec), intent(in) :: x
+!  real(prec), intent(in) :: y
+!  real(prec) :: wrap_xmtmconv
+!  wrap_xmtmconv = xmtmconv(Lmms,x,y)
+!end function wrap_xmtmconv
+!
+!function wrap_ymtmconv(x, y)
+!  use set_inputs, only : Lmms
+!  real(prec), intent(in) :: x
+!  real(prec), intent(in) :: y
+!  real(prec) :: wrap_ymtmconv
+!  wrap_ymtmconv = ymtmconv(Lmms,x,y)
+!end function wrap_ymtmconv
+!
+!function wrap_energyconv(x, y)
+!  use set_inputs, only : Lmms
+!  use fluid_constants, only : gamma
+!  real(prec), intent(in) :: x
+!  real(prec), intent(in) :: y
+!  real(prec) :: wrap_energyconv
+!  wrap_energyconv = energyconv(gamma,Lmms,x,y)
+!end function wrap_energyconv
+!
+!end module mms_wrappers
