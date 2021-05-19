@@ -14,13 +14,13 @@ module set_inputs
   public :: CFL, k2, k4, eps, tol, eps_roe, beta_lim, epsM, kappaM
   public :: max_iter, max_newton_iter, newton_tol, counter
   public :: isMMS, isAxi, cart_grid, soln_save, res_save, res_out
-  public :: p0, T0, a0, rho0, pb, p_ratio
+  public :: p0, T0, a0, rho0, pb, p_ratio, Lmms
   public :: set_derived_inputs, flux_scheme, limiter_scheme, cons
   public :: leftV, rightV, leftU, rightU, limiter_freeze, psi_plus, psi_minus
   public :: grid_name, geometry_file
    
-  integer :: imax    = 5
-  integer :: jmax    = 5
+  integer :: imax    = 129
+  integer :: jmax    = 129
   integer :: i_low   = 0
   integer :: i_high  = 0
   integer :: ig_low  = 0
@@ -54,6 +54,7 @@ module set_inputs
   integer :: flux_scheme   = 1
   integer :: limiter_scheme = 2
   real(prec) :: beta_lim = 2
+  real(prec) :: Lmms = one
   integer :: soln_save     = 150000
   integer :: res_save      = 10
   integer :: res_out       = 1000
@@ -63,7 +64,7 @@ module set_inputs
   logical :: limiter_freeze = .false.
   logical :: cons           = .true.
   logical :: isMMS = .true.
-  logical :: cart_grid = .false.
+  logical :: cart_grid = .true.
   logical :: isAxi = .false.
 
   real(prec), dimension(:,:), allocatable :: leftV, rightV, leftU, rightU
