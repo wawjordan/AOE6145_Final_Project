@@ -6,4 +6,5 @@ add_lib_sources(
      limiter_calc.f90
      other_subroutines.f90
      mms_functions.f90
+     quadrature.f90
 )
