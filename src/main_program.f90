@@ -113,8 +113,14 @@ program main_program
   
   !soln%V(i_low:i_high,j_low:j_high,:) = soln%Vmms(i_low:i_high,j_low:j_high,:)
   soln%V = soln%Vmms
-  
+  do i = 1,20
+  call prim2cons(soln%U,soln%V)
   call calc_flux_2D(soln,grid,soln%F)
+  call calc_time_step(grid%A_xi,grid%A_eta,grid%n_xi_avg, &
+                      grid%n_eta_avg,grid%V,soln%V,soln%dt)
+  call explicit_RK(grid,soln%S,soln%dt,soln%F,soln%U,soln%R,1)
+  call update_states(soln)
+  end do
   !write(*,*)'Vmms', soln%Vmms(i_low,j_low,:)
   !write(*,*) 'i', (i,i=ig_low,ig_high)
   !do j = jg_low, jg_high
@@ -124,8 +130,8 @@ program main_program
   !do j = jg_low, jg_high
   !write(*,*)'V', soln%V(:,j,1)
   !end do
-  !call output_file_headers
-  !call output_soln(grid,soln,1)
+  call output_file_headers
+  call output_soln(grid,soln,1)
   
   !deallocate(ind1,ind2,ind3,ind4)
   !call grid_out(geometry_file,grid)
