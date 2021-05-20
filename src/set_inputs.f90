@@ -64,13 +64,13 @@ module set_inputs
   logical :: limiter_freeze = .false.
   logical :: cons           = .true.
   logical :: isMMS = .true.
-  logical :: cart_grid = .true.
+  logical :: cart_grid = .false.
   logical :: isAxi = .false.
 
   real(prec), dimension(:,:), allocatable :: leftV, rightV, leftU, rightU
   real(prec), dimension(:,:), allocatable :: psi_plus, psi_minus
   integer :: counter = 1
-  character(64) :: grid_name = "../grids/curvilinear-grids/curv2d9.grd"
+  character(64) :: grid_name = "../grids/curvilinear-grids/curv2d257.grd"
   !character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.extra-coarse.27x14.grd"
   !character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.fine.385x105.grd"
   character(64) :: geometry_file = "example.dat"
