@@ -24,8 +24,8 @@ program main_program
   type( grid_t )      :: grid
   type( soln_t )      :: soln
   type( subsonic_mms_bc ) :: bndry1, bndry2, bndry3, bndry4
-  real(prec), dimension(3) :: xi, w
-  integer, dimension(:,:), allocatable :: ind1, ind2, ind3, ind4
+  !real(prec), dimension(3) :: xi, w
+  !integer, dimension(:,:), allocatable :: ind1, ind2, ind3, ind4
   
   !r_plus = zero
   !r_minus =  zero
@@ -38,7 +38,6 @@ program main_program
   !call read_namelist('input.nml')
   call set_derived_inputs
   call setup_geometry(grid,soln)
-  call gauss_pts(xi,w,3)
 !  allocate(ind1(n_ghost*(i_high-i_low+1),2))
 !  allocate(ind2(n_ghost*(i_high-i_low+1),2))
 !  allocate(ind3(n_ghost*(j_high-j_low+1),2))
@@ -112,9 +111,10 @@ program main_program
   
   call calc_mms(grid,soln)
   
-  soln%V(i_low:i_high,j_low:j_high,:) = soln%Vmms(i_low:i_high,j_low:j_high,:)
+  !soln%V(i_low:i_high,j_low:j_high,:) = soln%Vmms(i_low:i_high,j_low:j_high,:)
+  soln%V = soln%Vmms
   
-  !call calc_flux_2D(soln%V,grid%n_xi,grid%n_eta,soln%F)
+  call calc_flux_2D(soln,grid,soln%F)
   !write(*,*)'Vmms', soln%Vmms(i_low,j_low,:)
   !write(*,*) 'i', (i,i=ig_low,ig_high)
   !do j = jg_low, jg_high
@@ -124,11 +124,11 @@ program main_program
   !do j = jg_low, jg_high
   !write(*,*)'V', soln%V(:,j,1)
   !end do
-  call output_file_headers
-  call output_soln(grid,soln,1)
+  !call output_file_headers
+  !call output_soln(grid,soln,1)
   
   !deallocate(ind1,ind2,ind3,ind4)
-  call grid_out(geometry_file,grid)
+  !call grid_out(geometry_file,grid)
   call teardown_geometry(grid,soln)
   close(50)
 end program main_program
