@@ -60,42 +60,54 @@ module other_subroutines
   !!              right :
   !<
   !===========================================================================80
-  subroutine MUSCL_extrap( V, left, right )
+  subroutine MUSCL_extrap( V, psi_plus, psi_minus, left, right, i, j )
     
     use set_inputs, only : limiter_freeze
-    real(prec), dimension(:,:), intent(in)  :: V
-    real(prec), dimension(:,:), intent(out) :: left, right
-    real(prec), dimension(lbound(V,1):ubound(V,1),neq) :: r_plus, r_minus
-    real(prec), dimension(lbound(V,1):ubound(V,1),neq):: psi_plus, psi_minus
-    integer :: i,j, low, high
+    real(prec), dimension(:,:,:), intent(in)  :: V
+    real(prec), dimension(:,:,:,:), intent(inout)  :: psi_plus, psi_minus
+    real(prec), dimension(:,:,:,:), intent(out) :: left, right
+    real(prec), dimension(lbound(V,1):ubound(V,1), &
+                          lbound(V,2):ubound(V,2),neq) :: r_plus, r_minus
+    integer, dimension(:), intent(in) :: i,j
+    !integer :: i,j, low, high
     
-    low = lbound(V,1)+n_ghost
-    high = ubound(V,1)-n_ghost
+    !low = lbound(V,1)+n_ghost
+    !high = ubound(V,1)-n_ghost
     
     if (limiter_freeze) then
       continue
     else
-      call calc_consecutive_variations(V,r_plus,r_minus)
-      !do i = lbound(V,1),ubound(V,1)
-      !  write(*,*) r_plus(i,1), r_minus(i,2)
-      !  write(*,*) V(i,1), V(i,2)
-      !end do
-      call limiter_fun(r_plus,psi_plus)
-      call limiter_fun(r_minus,psi_minus)
+      call calc_consecutive_variations(V,r_plus,r_minus,1)
+      call limiter_fun(r_plus,psi_plus(:,:,:,1))
+      call limiter_fun(r_minus,psi_minus(:,:,:,1))
+      
+      call calc_consecutive_variations(V,r_plus,r_minus,2)
+      call limiter_fun(r_plus,psi_plus(:,:,:,2))
+      call limiter_fun(r_minus,psi_minus(:,:,:,2))
     end if
-    !write(*,*) lbound(V,1), ubound(V,1)
-    !write(*,*) lbound(r_plus,1), ubound(r_plus,1)
-    !write(*,*) lbound(left,1), ubound(left,1)
-    !do i = low,high+1
-    do i = low-1,high
-      j = i-low+2
-      left(j,:) = V(i,:) + fourth*epsM*( &
-         & (one-kappaM)*psi_plus(i-1,:)*(V(i,:)-V(i-1,:)) + &
-         & (one+kappaM)*psi_minus(i,:)*(V(i+1,:)-V(i,:)) )
-      right(j,:) = V(i+1,:) - fourth*epsM*( &
-         & (one+kappaM)*psi_minus(i+1,:)*(V(i+1,:)-V(i,:)) + &
-         & (one-kappaM)*psi_plus(i,:)*(V(i+2,:)-V(i+1,:)) )
-    end do
+    
+    left(:,:,:,1)  = V(i,j,:) + fourth*epsM*( &
+         & (one-kappaM)*psi_plus(i-1,j,:,1)*(V(i,j,:)-V(i-1,j,:)) + &
+         & (one+kappaM)*psi_minus(i,j,:,1)*(V(i+1,j,:)-V(i,j,:)) )
+    right(:,:,:,1) = V(i+1,j,:) - fourth*epsM*( &
+         & (one+kappaM)*psi_minus(i+1,j,:,1)*(V(i+1,j,:)-V(i,j,:)) + &
+         & (one-kappaM)*psi_plus(i,j,:,1)*(V(i+2,j,:)-V(i+1,j,:)) )
+    
+    left(:,:,:,2)  = V(i,j,:) + fourth*epsM*( &
+         & (one-kappaM)*psi_plus(i,j-1,:,2)*(V(i,j,:)-V(i,j-1,:)) + &
+         & (one+kappaM)*psi_minus(i,j,:,2)*(V(i,j+1,:)-V(i,j,:)) )
+    right(:,:,:,2) = V(i,j+1,:) - fourth*epsM*( &
+         & (one+kappaM)*psi_minus(i,j+1,:,2)*(V(i,j+1,:)-V(i,j,:)) + &
+         & (one-kappaM)*psi_plus(i,j,:,2)*(V(i,j+2,:)-V(i,j+1,:)) )
+!    do i = low-1,high
+!      j = i-low+2
+!      left(j,:) = V(i,:) + fourth*epsM*( &
+!         & (one-kappaM)*psi_plus(i-1,:)*(V(i,:)-V(i-1,:)) + &
+!         & (one+kappaM)*psi_minus(i,:)*(V(i+1,:)-V(i,:)) )
+!      right(j,:) = V(i+1,:) - fourth*epsM*( &
+!         & (one+kappaM)*psi_minus(i+1,:)*(V(i+1,:)-V(i,:)) + &
+!         & (one-kappaM)*psi_plus(i,:)*(V(i+2,:)-V(i+1,:)) )
+!    end do
 
   end subroutine MUSCL_extrap
   
