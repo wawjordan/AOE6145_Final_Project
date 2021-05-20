@@ -64,7 +64,7 @@ module set_inputs
   logical :: limiter_freeze = .false.
   logical :: cons           = .true.
   logical :: isMMS = .true.
-  logical :: cart_grid = .false.
+  logical :: cart_grid = .true.
   logical :: isAxi = .false.
 
   real(prec), dimension(:,:), allocatable :: leftV, rightV, leftU, rightU
