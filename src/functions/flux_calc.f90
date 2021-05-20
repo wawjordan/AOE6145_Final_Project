@@ -4,9 +4,11 @@ module flux_calc
   use set_constants, only : zero, one, two, three, four, half, fourth
   use fluid_constants, only : gamma
   use set_inputs, only : neq, i_low, i_high, ig_low, ig_high, eps_roe
-  use set_inputs, only : j_low, j_high, jg_low, jg_high
+  use set_inputs, only : j_low, j_high, jg_low, jg_high, n_ghost
   use variable_conversion, only : cons2prim, speed_of_sound
   use other_subroutines, only : MUSCL_extrap
+  use soln_type, only : soln_t
+  use grid_type, only : grid_t
   
   implicit none
   
@@ -41,46 +43,119 @@ module flux_calc
   
 contains
 
-  subroutine calc_flux_2D(V,nxi,neta,Fnormal)
-    
-    real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq), &
-                                                  intent(in) :: V
-    real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq), &
-                                                  intent(in) :: nxi, neta
-    real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq), &
+subroutine calc_flux_2D(soln,grid,Fnormal)
+
+  type(soln_t), intent(inout) :: soln
+  type(grid_t), intent(in) :: grid
+  real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2), &
                                                   intent(out) :: Fnormal
-    real(prec), dimension(i_low:i_high+1,neq) :: Lxi, Rxi, Fxi
-    real(prec), dimension(j_low:j_high+1,neq) :: Leta, Reta, Feta
-    real(prec) :: nx, ny
-    integer :: i, j
-    
-    do j = j_low,j_high+1
-    write(*,*)'V',j,V(i_low,j,:)
-    call MUSCL_extrap(V(:,j,:),Lxi,Rxi)
-    do i = i_low,i_high+1
-      write(*,*) Lxi(i,1), Rxi(i,1)
-    end do
-    stop
-    do i = i_low,i_high+1
-      nx = nxi(i,j,1)
-      ny = nxi(i,j,2)
-      call flux_fun(Lxi(i,:),Rxi(i,:),nx,ny,Fxi(i,:))
-    end do
-    stop
-    Fnormal(:,j,:) = Fxi
-    end do
-    
-    do i = i_low,i_high+1
-    call MUSCL_extrap(V(i,:,:),Leta,Reta)
-    do j = j_low,j_high+1
-      nx = neta(i,j,1)
-      ny = neta(i,j,2)
-      call flux_fun(Leta(j,:),Reta(j,:),nx,ny,Feta(j,:))
-    end do
-    Fnormal(i,:,:) = Fnormal(i,:,:) + Feta
-    end do
-    
-  end subroutine calc_flux_2D
+  real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2) &
+                                                   :: left, right
+  integer, dimension(i_low:i_high+1) :: ind1
+  integer, dimension(j_low:j_high+1) :: ind2
+  real(prec), dimension(neq) :: left1, right1, Fxi, Feta
+  real(prec) :: nx, ny
+  integer :: i,j
+  
+  Fnormal(:,:,:,:) = zero
+  
+  do i = i_low,i_high+1
+    ind1(i) = i+n_ghost-1
+  end do
+  do j = j_low,j_high+1
+    ind2(j) = j+n_ghost-1
+  end do
+  !write(*,*) i_low,i_high,j_low,j_high 
+  call MUSCL_extrap(soln%V,soln%psi_plus,soln%psi_minus,left,right,ind1,ind2)
+  
+!  write(*,*) left(1,1,:,1)
+  do j = j_low,j_high+1
+  do i = i_low+1,i_high+1
+    nx = grid%n_xi(i,j,1)
+    ny = grid%n_xi(i,j,2)
+    left1 = left(i,j,:,1)
+    right1 = right(i,j,:,1)
+    call flux_fun(left1,right1,nx,ny,Fxi)
+    Fnormal(i,j,:,1) = Fnormal(i,j,:,1) + Fxi
+  end do
+  end do
+  
+  do j = j_low,j_high+1
+  do i = i_low,i_high
+    nx = -grid%n_xi(i,j,1)
+    ny = -grid%n_xi(i,j,2)
+    left1 = left(i,j,:,1)
+    right1 = right(i,j,:,1)
+    call flux_fun(left1,right1,nx,ny,Fxi)
+    Fnormal(i,j,:,1) = Fnormal(i,j,:,1) + Fxi
+  end do
+  end do
+  
+  do j = j_low+1,j_high+1
+  do i = i_low,i_high+1
+    nx = grid%n_eta(i,j,1)
+    ny = grid%n_eta(i,j,2)
+    left1 = left(i,j,:,1)
+    right1 = right(i,j,:,1)
+    call flux_fun(left1,right1,nx,ny,Feta)
+    Fnormal(i,j,:,2) = Fnormal(i,j,:,2) + Feta
+  end do
+  end do
+  
+  do j = j_low,j_high
+  do i = i_low,i_high+1
+    nx = -grid%n_eta(i,j,1)
+    ny = -grid%n_eta(i,j,2)
+    left1 = left(i,j,:,1)
+    right1 = right(i,j,:,1)
+    call flux_fun(left1,right1,nx,ny,Feta)
+    Fnormal(i,j,:,2) = Fnormal(i,j,:,2) + Feta
+  end do
+  end do
+  
+end subroutine calc_flux_2D
+
+
+!  subroutine calc_flux_2D(V,nxi,neta,Fnormal)
+!    
+!    real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq), &
+!                                                  intent(in) :: V
+!    real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq), &
+!                                                  intent(in) :: nxi, neta
+!    real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq), &
+!                                                  intent(out) :: Fnormal
+!    real(prec), dimension(i_low:i_high+1,neq) :: Lxi, Rxi, Fxi
+!    real(prec), dimension(j_low:j_high+1,neq) :: Leta, Reta, Feta
+!    real(prec) :: nx, ny
+!    integer :: i, j
+!    
+!    do j = j_low,j_high+1
+!    !write(*,*)'V',j,V(i_low,j,:)
+!    call MUSCL_extrap(V(:,j,:),Lxi,Rxi)
+!    !do i = i_low,i_high+1
+!    !  write(*,*) Lxi(i,1), Rxi(i,1)
+!    !end do
+!    !stop
+!    do i = i_low,i_high+1
+!      nx = nxi(i,j,1)
+!      ny = nxi(i,j,2)
+!      call flux_fun(Lxi(i,:),Rxi(i,:),nx,ny,Fxi(i,:))
+!    end do
+!    !stop
+!    Fnormal(:,j,:) = Fxi
+!    end do
+!    
+!    do i = i_low,i_high+1
+!    call MUSCL_extrap(V(i,:,:),Leta,Reta)
+!    do j = j_low,j_high+1
+!      nx = neta(i,j,1)
+!      ny = neta(i,j,2)
+!      call flux_fun(Leta(j,:),Reta(j,:),nx,ny,Feta(j,:))
+!    end do
+!    Fnormal(i,:,:) = Fnormal(i,:,:) + Feta
+!    end do
+!    
+!  end subroutine calc_flux_2D
   !================================ select_flux ==============================80
   !>
   !! Description:
