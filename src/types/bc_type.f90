@@ -16,7 +16,7 @@ module bc_type
 !!  
   type bc_t
     
-    integer, allocatable, dimension(:,:) :: ind
+    integer, allocatable, dimension(:) :: ind1, ind2
     real(prec), allocatable, dimension(:,:,:) :: Vspec
     
   contains
@@ -38,57 +38,56 @@ module bc_type
 !!  
   contains
     
-  subroutine init_bc(this,ind,Vspec)
+  subroutine init_bc(this,ind1,ind2,Vspec)
     
     use set_inputs, only : neq
     
     class(bc_t) :: this
-    integer, dimension(:,:) :: ind
+    integer, dimension(:) :: ind1,ind2
     real(prec), dimension(:,:,:) :: Vspec
     integer :: s1, s2
     s1 = size(Vspec,1)
     s2 = size(Vspec,2)
     
-    allocate(this%ind(s1,s2), this%Vspec(s1,s2,neq))
+    allocate(this%ind1(s1), this%ind2(s2), this%Vspec(s1,s2,neq))
     
-    this%ind = ind
+    this%ind1 = ind1
+    this%ind2 = ind2
     this%Vspec = Vspec
     
   end subroutine init_bc
   
-  subroutine init_mms_bc(this,ind,grid,length)
+  subroutine init_mms_bc(this,ind1,ind2,grid,length)
     
     use set_inputs, only : neq
     use grid_type, only : grid_t
     use mms_functions, only : rho_mms, uvel_mms, vvel_mms, press_mms
     
     class(subsonic_mms_bc) :: this
-    integer, dimension(:,:) :: ind
+    integer, dimension(:) :: ind1, ind2
     type(grid_t) :: grid
     real(prec), optional :: length
-    real(prec), dimension(size(ind,1),1) :: x,y
+    real(prec), dimension(size(ind1),size(ind2)) :: x,y
     integer :: i, j, s1, s2
-    s1 = size(ind,1)
+    s1 = size(ind1)
+    s2 = size(ind2)
     
-    allocate(this%ind(s1,2), this%Vspec(s1,1,neq))
+    allocate(this%ind1(s1), this%ind2(s2), this%Vspec(s1,s2,neq))
     
-    this%ind = ind
+    this%ind1 = ind1
+    this%ind2 = ind2
     
     if (present(length)) then
       this%length = length
     else
       this%length = one
     end if
-    !write(*,*) lbound(ind,1), ubound(ind,1)
-    !write(*,*)
-    do i = 1,s1
-      x(i,1) = grid%x(ind(i,1),ind(i,2))
-      y(i,1) = grid%y(ind(i,1),ind(i,2))
-      write(*,*) ind(i,1),ind(i,2)
-      !write(*,*) 'i=',ind(i,1),' j=',ind(i,2),' x=',x(i,1),' y=',y(i,1)
-    end do
-    !x = grid%x(ind(:,1),ind(:,2))
-    !y = grid%y(ind(:,1),ind(:,2))
+    !do i = 1,s1
+    !  x(i,1) = grid%x(ind(i,1),ind(i,2))
+    !  y(i,1) = grid%y(ind(i,1),ind(i,2))
+    !end do
+    x = grid%x(ind1,ind2)
+    y = grid%y(ind1,ind2)
     !write(*,*) s1
     !do i = 1,s1
     !  write(*,*) 'x= ',x(i,1),'  y= ',y(i,1)
@@ -108,7 +107,7 @@ module bc_type
     class(bc_t) :: this
     type(soln_t), intent(inout) :: soln
     
-    soln%V(this%ind(:,1),this%ind(:,2),:) = this%Vspec
+    soln%V(this%ind1,this%ind2,:) = this%Vspec
     
   end subroutine enforce_primitive_bc
   
