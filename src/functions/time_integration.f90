@@ -1,7 +1,7 @@
 module time_integration
   
   use set_precision, only : prec
-  use set_constants, only : one, half
+  use set_constants, only : one, half, third, fourth
   use set_inputs,    only : neq, i_low, i_high, ig_low, ig_high
   use set_inputs,    only : j_low, j_high, jg_low, jg_high
   use grid_type
@@ -33,14 +33,22 @@ module time_integration
     real(prec), dimension(lbound(V,1):ubound(V,1),lbound(V,2):ubound(V,2)) &
                                          :: asnd, lambda_xi, lambda_eta
     real(prec), dimension(:,:),   intent(out) :: dt
+    integer :: low1, low2, high1, high2
     
+    low1  = lbound(V,1)
+    high1 = ubound(V,1)
+    low2  = lbound(V,2)
+    high2 = ubound(V,2)
+
+
     call speed_of_sound(V(:,:,4),V(:,:,1),asnd)
     lambda_xi  = abs(V(:,:,2)*n_xi_avg(:,:,1) + &
                      V(:,:,3)*n_xi_avg(:,:,2)) + asnd
     lambda_eta = abs(V(:,:,2)*n_eta_avg(:,:,1) + &
                      V(:,:,3)*n_eta_avg(:,:,2)) + asnd
-    dt = CFL*vol/(lambda_xi*A_xi +lambda_eta*A_eta)
-    !dt(:) = minval(CFL*dx/lambda(i_low:i_high))
+    dt = CFL*vol/(lambda_xi*A_xi(low1:high1,low2:high2) + &
+                  lambda_eta*A_eta(low1:high1,low2:high2))
+    !dt(:,:) = minval(dt)
     
   end subroutine calc_time_step
   
@@ -61,25 +69,35 @@ module time_integration
   !<
   !===========================================================================80
 
-  subroutine explicit_euler( grid, src, dt, F, U, R )
+  subroutine explicit_RK( grid, S, dt, F, U, R, N )
     
     type(grid_t), intent(in) :: grid
-    
     real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq),&
                                                intent(inout) :: U
     real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
                                                intent(out) :: R
-    real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq),&
+    real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2),&
                                                intent(in) :: F
     real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
-                                               intent(in) :: src
+                                               intent(in) :: S
     real(prec), dimension(i_low:i_high,j_low:j_high), intent(in) :: dt
+    integer, intent(in) :: N
+    real(prec), dimension(4) :: k
+    integer :: i, j
     
-    integer :: i
+    k = (/ fourth, third, half, one /)
     
-  end subroutine explicit_euler
+    call calc_residual(grid%A_xi,grid%A_eta,grid%V,S,F,R)
+    do j = 1,N
+    do i = 1,neq
+    U(i_low:i_high,j_low:j_high,i) = U(i_low:i_high,j_low:j_high,i) &
+    - k(j)*R(:,:,i)*dt/grid%V(i_low:i_high,j_low:j_high)
+    end do
+    end do
+    
+  end subroutine explicit_RK
   
-  subroutine calc_residual(A_xi,A_eta,V,n_xi,n_eta,S,F,U,R)
+  subroutine calc_residual(A_xi,A_eta,V,S,F,R)
     
     real(prec), dimension(ig_low:ig_high+1,jg_low:jg_high),&
                                                   intent(in) :: A_xi
@@ -87,16 +105,10 @@ module time_integration
                                                   intent(in) :: A_eta
     real(prec), dimension(i_low:i_high,j_low:j_high),&
                                                   intent(in) :: V
-    real(prec), dimension(ig_low:ig_high+1,jg_low:jg_high,2),&
-                                                  intent(in) :: n_xi
-    real(prec), dimension(ig_low:ig_high,jg_low:jg_high+1,2),&
-                                                  intent(in) :: n_eta
     real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
                                                   intent(in) :: S
-    real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq),&
+    real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2),&
                                                   intent(in) :: F
-    real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq),&
-                                               intent(inout) :: U
     real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
                                                  intent(out) :: R
     
@@ -104,8 +116,8 @@ module time_integration
     
     do j = j_low,j_high
     do i = i_low,i_high
-      R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:)  + A_xi(i,j)*F(i,j,:)  &
-               + A_eta(i,j+1)*F(i,j+1,:) + A_eta(i,j)*F(i,j,:) &
+      R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1)  + A_xi(i,j)*F(i,j,:,1)  &
+               + A_eta(i,j+1)*F(i,j+1,:,2) + A_eta(i,j)*F(i,j,:,2) &
                - V(i,j)*S(i,j,:)
     end do
     end do
