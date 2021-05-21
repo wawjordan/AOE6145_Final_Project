@@ -15,7 +15,7 @@ module other_subroutines
   
   private
   
-  public :: output_file_headers, output_soln, MUSCL_extrap
+  public :: output_file_headers, output_soln, MUSCL_extrap, calc_de
   
   contains
   
@@ -131,9 +131,8 @@ module other_subroutines
     real(prec), dimension(:,:,:), intent(out) :: DE
     real(prec), dimension(1,1:neq), intent(out) :: DEnorm
     integer, intent(in) :: pnorm
-    real(prec) :: Linvi, Linvj
-    Linvi = one/real(i_high-i_low)
-    Linvj = one/real(j_high-j_low)
+    real(prec) :: Linv
+    Linv = one/real( (i_high-i_low)*(j_high-j_low) )
     if (cons) then
       DE = soln%U(i_low:i_high,j_low:j_high,1:neq) &
        & - soln%Umms(i_low:i_high,j_low:j_high,1:neq)
@@ -143,15 +142,20 @@ module other_subroutines
     end if
     
     if (pnorm == 0) then
-      DEnorm(1,1) = Linvj*maxval(sum(abs(DE(:,:,1)),2))
-      DEnorm(1,2) = Linvj*maxval(sum(abs(DE(:,:,2)),2))
-      DEnorm(1,3) = Linvj*maxval(sum(abs(DE(:,:,3)),2))
-      DEnorm(1,4) = Linvj*maxval(sum(abs(DE(:,:,4)),2))
+      DEnorm(1,1) = maxval( abs( DE(:,:,1) ) )
+      DEnorm(1,2) = maxval( abs( DE(:,:,2) ) )
+      DEnorm(1,3) = maxval( abs( DE(:,:,3) ) )
+      DEnorm(1,4) = maxval( abs( DE(:,:,4) ) )
     elseif (pnorm == 1) then
-      DEnorm(1,1) = Linvi*maxval(sum(abs(DE(:,:,1)),1))
-      DEnorm(1,2) = Linvi*maxval(sum(abs(DE(:,:,2)),1))
-      DEnorm(1,3) = Linvi*maxval(sum(abs(DE(:,:,3)),1))
-      DEnorm(1,4) = Linvi*maxval(sum(abs(DE(:,:,4)),1))
+      DEnorm(1,1) = Linv*sum( abs( DE(:,:,1) ) )
+      DEnorm(1,2) = Linv*sum( abs( DE(:,:,2) ) )
+      DEnorm(1,3) = Linv*sum( abs( DE(:,:,3) ) )
+      DEnorm(1,4) = Linv*sum( abs( DE(:,:,4) ) )
+    elseif (pnorm == 2) then
+      DEnorm(1,1) = sqrt( Linv*sum( DE(:,:,1)*DE(:,:,1) ) )
+      DEnorm(1,2) = sqrt( Linv*sum( DE(:,:,2)*DE(:,:,2) ) )
+      DEnorm(1,3) = sqrt( Linv*sum( DE(:,:,3)*DE(:,:,3) ) )
+      DEnorm(1,4) = sqrt( Linv*sum( DE(:,:,4)*DE(:,:,4) ) )
     end if
     
   end subroutine calc_de
