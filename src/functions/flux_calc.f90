@@ -95,8 +95,8 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
   do i = i_low,i_high+1
     nx = grid%n_eta(i,j,1)
     ny = grid%n_eta(i,j,2)
-    left1 = left(i,j,:,1)
-    right1 = right(i,j,:,1)
+    left1 = left(i,j,:,2)
+    right1 = right(i,j,:,2)
     call flux_fun(left1,right1,nx,ny,Feta)
     Fnormal(i,j,:,2) = Fnormal(i,j,:,2) + Feta
   end do
@@ -106,8 +106,8 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
   do i = i_low,i_high+1
     nx = -grid%n_eta(i,j,1)
     ny = -grid%n_eta(i,j,2)
-    left1 = left(i,j,:,1)
-    right1 = right(i,j,:,1)
+    left1 = left(i,j,:,2)
+    right1 = right(i,j,:,2)
     call flux_fun(left1,right1,nx,ny,Feta)
     Fnormal(i,j,:,2) = Fnormal(i,j,:,2) + Feta
   end do
