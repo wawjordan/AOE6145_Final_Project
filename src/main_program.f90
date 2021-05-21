@@ -36,21 +36,21 @@ program main_program
 
   call calc_mms(grid,soln)
   
-  !soln%V(i_low:i_high,j_low:j_high,:) = soln%Vmms(i_low:i_high,j_low:j_high,:)
+  call output_file_headers
   soln%V = soln%Vmms
-  !soln%S = soln%Smms
+  !soln%V(i_low:i_high,j_low:j_high,:) = soln%Vmms(i_low:i_high,j_low:j_high,:)
+  soln%S = soln%Smms
 ! stop 
-  do i = 1,20
+  do i = 1,10
   call prim2cons(soln%U,soln%V)
   call calc_flux_2D(soln,grid,soln%F)
   !call calc_sources(soln,grid)
   call calc_time_step(grid%A_xi,grid%A_eta,grid%n_xi_avg, &
                       grid%n_eta_avg,grid%V,soln%V,soln%dt)
-  call explicit_RK(grid,soln%S,soln%dt,soln%F,soln%U,soln%R,4)
+  call explicit_RK(grid,soln%S,soln%dt,soln%F,soln%U,soln%R,1)
   call update_states(soln)
+  call output_soln(grid,soln,i)
   end do
-  call output_file_headers
-  call output_soln(grid,soln,1)
   
   !call grid_out(geometry_file,grid)
   call teardown_geometry(grid,soln)
