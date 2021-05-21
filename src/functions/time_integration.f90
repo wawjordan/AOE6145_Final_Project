@@ -85,7 +85,8 @@ module time_integration
     real(prec), dimension(4) :: k
     integer :: i, j
     
-    k = (/ fourth, third, half, one /)
+    !k = (/ fourth, third, half, one /)
+    k = (/ one, third, half, one /)
     
     call calc_residual(grid%A_xi,grid%A_eta,grid%V,S,F,R)
     do j = 1,N
