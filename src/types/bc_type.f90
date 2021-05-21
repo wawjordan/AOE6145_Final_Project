@@ -16,7 +16,7 @@ module bc_type
 !!  
   type bc_t
     
-    integer, allocatable, dimension(:) :: ind1, ind2
+    integer, allocatable, dimension(:) :: i1, i2
     real(prec), allocatable, dimension(:,:,:) :: Vspec
     
   contains
@@ -38,60 +38,64 @@ module bc_type
 !!  
   contains
     
-  subroutine init_bc(this,ind1,ind2,Vspec)
+  subroutine init_bc(this,i_low,i_high,j_low,j_high,Vspec)
     
     use set_inputs, only : neq
     
     class(bc_t) :: this
-    integer, dimension(:) :: ind1,ind2
+    integer :: i_low, i_high, j_low, j_high
     real(prec), dimension(:,:,:) :: Vspec
-    integer :: s1, s2
-    s1 = size(Vspec,1)
-    s2 = size(Vspec,2)
+    integer :: s1, s2, k
+    s1 = i_high-i_low
+    s2 = j_high-j_low
     
-    allocate(this%ind1(s1), this%ind2(s2), this%Vspec(s1,s2,neq))
+    allocate(this%i1(s1), this%i2(s2), this%Vspec(s1,s2,neq))
     
-    this%ind1 = ind1
-    this%ind2 = ind2
+    do k = i_low,i_high
+      this%i1 = k
+    end do
+    
+    do k = j_low,j_high
+      this%i2 = k
+    end do
+    
     this%Vspec = Vspec
     
   end subroutine init_bc
   
-  subroutine init_mms_bc(this,ind1,ind2,grid,length)
+  subroutine init_mms_bc(this,grid,i_low,i_high,j_low,j_high,length)
     
     use set_inputs, only : neq
     use grid_type, only : grid_t
     use mms_functions, only : rho_mms, uvel_mms, vvel_mms, press_mms
     
     class(subsonic_mms_bc) :: this
-    integer, dimension(:) :: ind1, ind2
-    type(grid_t) :: grid
+    type(grid_t), intent(in) :: grid
+    integer, intent(in) :: i_low, i_high, j_low, j_high
     real(prec), optional :: length
-    real(prec), dimension(size(ind1),size(ind2)) :: x,y
-    integer :: i, j, s1, s2
-    s1 = size(ind1)
-    s2 = size(ind2)
+    real(prec), dimension(:,:), allocatable :: x,y
+    integer :: s1, s2, k
+    s1 = i_high-i_low
+    s2 = j_high-j_low
     
-    allocate(this%ind1(s1), this%ind2(s2), this%Vspec(s1,s2,neq))
+    allocate( x(i_low:i_high,j_low:j_high), y(i_low:i_high,j_low:j_high) )
+    allocate( this%i1(s1), this%i2(s2), this%Vspec(s1,s2,neq) )
     
-    this%ind1 = ind1
-    this%ind2 = ind2
+    do k = i_low,i_high
+      this%i1 = k
+    end do
+    
+    do k = j_low,j_high
+      this%i2 = k
+    end do
     
     if (present(length)) then
       this%length = length
     else
       this%length = one
     end if
-    !do i = 1,s1
-    !  x(i,1) = grid%x(ind(i,1),ind(i,2))
-    !  y(i,1) = grid%y(ind(i,1),ind(i,2))
-    !end do
-    x = grid%x(ind1,ind2)
-    y = grid%y(ind1,ind2)
-    !write(*,*) s1
-    !do i = 1,s1
-    !  write(*,*) 'x= ',x(i,1),'  y= ',y(i,1)
-    !end do
+    x = grid%x(this%i1,this%i2)
+    y = grid%y(this%i1,this%i2)
     
     this%Vspec(:,:,1) = rho_mms(this%length,x,y)
     this%Vspec(:,:,2) = uvel_mms(this%length,x,y)
@@ -107,7 +111,7 @@ module bc_type
     class(bc_t) :: this
     type(soln_t), intent(inout) :: soln
     
-    soln%V(this%ind1,this%ind2,:) = this%Vspec
+    soln%V(this%i1,this%i2,:) = this%Vspec
     
   end subroutine enforce_primitive_bc
   
