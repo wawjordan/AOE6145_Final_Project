@@ -16,6 +16,7 @@ module other_subroutines
   private
   
   public :: output_file_headers, output_soln, MUSCL_extrap, calc_de
+  public :: calc_sources
   
   contains
   
@@ -29,13 +30,12 @@ module other_subroutines
   !! Outputs:     S  : 
   !<
   !===========================================================================80
-  subroutine calculate_sources(V,y,S)
-    
-    use set_inputs, only : isAxi
+  subroutine source_terms(V,y,isAxi,S)
     
     real(prec), dimension(:),   intent(in) :: V
     real(prec), dimension(:),   intent(out) :: S
     real(prec), intent(in) :: y
+    logical, intent(in) :: isAxi
     real(prec) :: rho, uvel, vvel, p, a, ht
     
     rho  = V(1)
@@ -48,7 +48,7 @@ module other_subroutines
     S = (/ rho*vvel, rho*uvel*vvel, rho*vvel**2, rho*vvel*ht /)
     S = merge(-one,zero,isAxi)/merge(y,1.0e-6_prec,(y>zero))*S
     
-  end subroutine calculate_sources
+  end subroutine source_terms
   
   !================================ MUSCL_extrap =============================80
   !>
@@ -110,6 +110,34 @@ module other_subroutines
 !    end do
 
   end subroutine MUSCL_extrap
+  !================================== calc_sources ==========================80
+  !>
+  !! Description: 
+  !!
+  !! Inputs:      soln : 
+  !!              exact_soln : 
+  !!              pnorm :
+  !!
+  !! Outputs:     DE     : 
+  !!              DEnorm : 
+  !<
+  !===========================================================================80
+  subroutine calc_sources( soln, grid )
+    
+    use set_inputs, only : isAxi
+    
+    type(soln_t), intent(inout) :: soln
+    type(grid_t), intent(in) :: grid
+    integer :: i, j
+    
+    do j = grid%j_low,grid%j_high
+      do i = grid%i_low,grid%i_high
+         call source_terms( soln%V(i,j,:), grid%y(i,j), isAxi, soln%S(i,j,:) )
+      end do
+    end do
+    
+  end subroutine calc_sources
+     
   
   !================================== calc_de ==== ===========================80
   !>
