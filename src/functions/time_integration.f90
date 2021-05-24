@@ -48,7 +48,7 @@ module time_integration
                      V(:,:,3)*n_eta_avg(:,:,2)) + asnd
     dt = CFL*vol/(lambda_xi*A_xi(low1:high1,low2:high2) + &
                   lambda_eta*A_eta(low1:high1,low2:high2))
-    dt(:,:) = minval(dt)
+    dt(:,:) = CFL*minval(dt)
     
   end subroutine calc_time_step
   
