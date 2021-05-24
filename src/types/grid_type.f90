@@ -215,7 +215,7 @@ module grid_type
       grid%A_eta(i,j) = sqrt( (grid%x(i+1,j)-grid%x(i,j))**2 &
                             + (grid%y(i+1,j)-grid%y(i,j))**2 )
       grid%n_eta(i,j,1)  =  ( (grid%y(i+1,j)-grid%y(i,j)) )/grid%A_eta(i,j)
-      grid%n_eta(i,j,2)  = ( (grid%x(i+1,j)-grid%x(i,j)) )/grid%A_eta(i,j)
+      grid%n_eta(i,j,2)  =  ( (grid%x(i+1,j)-grid%x(i,j)) )/grid%A_eta(i,j)
     end do
     
     i = ig_high+1
@@ -223,7 +223,7 @@ module grid_type
       grid%A_xi(i,j) = sqrt( (grid%x(i,j+1)-grid%x(i,j))**2 &
                            + (grid%y(i,j+1)-grid%y(i,j))**2 )
       grid%n_xi(i,j,1) =   ( (grid%y(i,j+1)-grid%y(i,j)) )/grid%A_xi(i,j)
-      grid%n_xi(i,j,2) =  ( (grid%x(i,j+1)-grid%x(i,j)) )/grid%A_xi(i,j)
+      grid%n_xi(i,j,2) =   ( (grid%x(i,j+1)-grid%x(i,j)) )/grid%A_xi(i,j)
     end do
     
     do j = jg_low, jg_high
