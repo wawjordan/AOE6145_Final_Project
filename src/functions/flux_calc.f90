@@ -60,11 +60,16 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
   Fnormal(:,:,:,:) = zero
   
   do i = i_low,i_high+1
-    ind1(i) = i+n_ghost-1
+    ind1(i) = i+n_ghost
   end do
   do j = j_low,j_high+1
-    ind2(j) = j+n_ghost-1
+    ind2(j) = j+n_ghost
   end do
+  
+  !do i = i_low,i_high+1
+  !  write(*,*) i,'ind',ind1(i),ind2(i)
+  !end do
+  !stop
   !write(*,*) i_low,i_high,j_low,j_high 
   call MUSCL_extrap(soln%V,soln%psi_plus,soln%psi_minus,left,right,ind1,ind2)
   
@@ -289,8 +294,9 @@ end subroutine calc_flux_2D
     u2   = (R*uR + uL)/(R + one)
     v2   = (R*vR + vL)/(R + one)
     ht2  = (R*htR + htL)/(R + one)
-    a2   = sqrt((gamma-one)*(ht2 - half*(u2**2 + v2**2)))
+    !a2   = sqrt((gamma-one)*(ht2 - half*(u2**2 + v2**2)))
     un2 = u2*nx + v2*ny
+    a2   = sqrt((gamma-one)*(ht2 - half*(un2**2)))
     
     rvec1 = (/ one, u2, v2, half*(u2**2 +v2**2) /)
     rvec2 = (/ zero, ny*rho2, nx*rho2, rho2*(ny*u2-nx*v2) /)
