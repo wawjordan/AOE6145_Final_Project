@@ -65,7 +65,7 @@ subroutine cv_averages(grid,N,fun,val)
   end do
   
   !where (grid%V>zero)
-    val = val/grid%V
+  val = val/grid%V
   !elsewhere
   !  val = zero
   !end where
