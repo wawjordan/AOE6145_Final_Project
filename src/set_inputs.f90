@@ -51,7 +51,7 @@ module set_inputs
   real(prec) :: pb         = 150000_prec
   real(prec) :: k2         = 1.0_prec/2.0_prec
   real(prec) :: k4         = 1.0_prec/32.0_prec
-  integer :: flux_scheme   = 1
+  integer :: flux_scheme   = 2
   integer :: limiter_scheme = 2
   real(prec) :: beta_lim = 2
   real(prec) :: Lmms = one
@@ -62,7 +62,7 @@ module set_inputs
   real(prec) :: epsM       = zero
   real(prec) :: kappaM     = -one
   logical :: limiter_freeze = .false.
-  logical :: cons           = .true.
+  logical :: cons           = .false.
   logical :: isMMS = .true.
   logical :: cart_grid = .true.
   logical :: isAxi = .false.
