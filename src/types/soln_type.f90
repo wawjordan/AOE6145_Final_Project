@@ -1,7 +1,8 @@
 module soln_type
 
   use set_precision, only : prec
-  use set_constants, only : zero, one
+  use fluid_constants, only : gamma
+  use set_constants, only : zero, one, half
   use set_inputs,    only : i_low, i_high, ig_low, ig_high
   use set_inputs,    only : j_low, j_high, jg_low, jg_high
   use set_inputs,    only : neq, max_iter, isMMS
@@ -74,6 +75,7 @@ module soln_type
     if (isMMS) then
       allocate( soln%DE( i_low:i_high,  j_low:j_high, neq ),  &
                 soln%Vmms( ig_low:ig_high,  jg_low:jg_high, neq ),&
+                soln%Umms( ig_low:ig_high,  jg_low:jg_high, neq ),&
                 soln%Smms( ig_low:ig_high,  jg_low:jg_high, neq ),&
                 soln%DEnorm( neq ) )
       soln%DE     = zero
@@ -134,7 +136,7 @@ module soln_type
                soln%psi_minus  )
     
     if (isMMS) then
-      deallocate( soln%DE, soln%Vmms, soln%Smms, soln%DEnorm )
+      deallocate( soln%DE, soln%Vmms, soln%Umms, soln%Smms, soln%DEnorm )
     end if
     
   end subroutine deallocate_soln
@@ -147,19 +149,41 @@ module soln_type
     
     type(soln_t), intent(inout) :: soln
     type(grid_t), intent(inout) :: grid
+    real(prec) :: L
     integer :: N
     
-    N = 1
+    N = 5
+    L = one
     
     call cv_averages(grid,N,wrap_rho_mms,soln%Vmms(:,:,1))
     call cv_averages(grid,N,wrap_uvel_mms,soln%Vmms(:,:,2))
     call cv_averages(grid,N,wrap_vvel_mms,soln%Vmms(:,:,3))
     call cv_averages(grid,N,wrap_press_mms,soln%Vmms(:,:,4))
     
-    call cv_averages(grid,N,wrap_rmassconv,soln%Smms(:,:,1))
-    call cv_averages(grid,N,wrap_xmtmconv,soln%Smms(:,:,2))
-    call cv_averages(grid,N,wrap_ymtmconv,soln%Smms(:,:,3))
-    call cv_averages(grid,N,wrap_energyconv,soln%Smms(:,:,4))
+    soln%Umms(:,:,1) = soln%Vmms(:,:,1)
+    soln%Umms(:,:,2) = soln%Vmms(:,:,1)*soln%Vmms(:,:,2)
+    soln%Umms(:,:,3) = soln%Vmms(:,:,1)*soln%Vmms(:,:,3)
+    soln%Umms(:,:,4) = soln%Vmms(:,:,4)/(gamma-one) + &
+                       half*soln%Vmms(:,:,1)*( &
+                       soln%Vmms(:,:,2)*soln%Vmms(:,:,2) + &
+                       soln%Vmms(:,:,3)*soln%Vmms(:,:,3) )
+    
+    call cv_averages(grid,1,wrap_rmassconv,soln%Smms(:,:,1))
+    call cv_averages(grid,1,wrap_xmtmconv,soln%Smms(:,:,2))
+    call cv_averages(grid,1,wrap_ymtmconv,soln%Smms(:,:,3))
+    call cv_averages(grid,1,wrap_energyconv,soln%Smms(:,:,4))
+!    soln%Smms(:,:,1) = rmassconv(L,                      &
+!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
+!                       grid%y(ig_low:ig_high,jg_low:jg_high))
+!    soln%Smms(:,:,2) = xmtmconv(L,                       &
+!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
+!                       grid%y(ig_low:ig_high,jg_low:jg_high))
+!    soln%Smms(:,:,3) = ymtmconv(L,                       &
+!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
+!                       grid%y(ig_low:ig_high,jg_low:jg_high))
+!    soln%Smms(:,:,4) = energyconv(gamma, L,              &
+!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
+!                       grid%y(ig_low:ig_high,jg_low:jg_high))
     
   end subroutine calc_mms
 !  subroutine calc_mms( grid, soln )
