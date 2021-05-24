@@ -16,7 +16,7 @@ module other_subroutines
   private
   
   public :: output_file_headers, output_soln, MUSCL_extrap, calc_de
-  public :: calc_sources
+  public :: calc_sources, output_exact_soln
   
   contains
   
@@ -86,19 +86,25 @@ module other_subroutines
       call limiter_fun(r_minus,psi_minus(:,:,:,2))
     end if
     
-    left(:,:,:,1)  = V(i,j,:) + fourth*epsM*( &
-         & (one-kappaM)*psi_plus(i-1,j,:,1)*(V(i,j,:)-V(i-1,j,:)) + &
-         & (one+kappaM)*psi_minus(i,j,:,1)*(V(i+1,j,:)-V(i,j,:)) )
-    right(:,:,:,1) = V(i+1,j,:) - fourth*epsM*( &
-         & (one+kappaM)*psi_minus(i+1,j,:,1)*(V(i+1,j,:)-V(i,j,:)) + &
-         & (one-kappaM)*psi_plus(i,j,:,1)*(V(i+2,j,:)-V(i+1,j,:)) )
-    
-    left(:,:,:,2)  = V(i,j,:) + fourth*epsM*( &
-         & (one-kappaM)*psi_plus(i,j-1,:,2)*(V(i,j,:)-V(i,j-1,:)) + &
-         & (one+kappaM)*psi_minus(i,j,:,2)*(V(i,j+1,:)-V(i,j,:)) )
-    right(:,:,:,2) = V(i,j+1,:) - fourth*epsM*( &
-         & (one+kappaM)*psi_minus(i,j+1,:,2)*(V(i,j+1,:)-V(i,j,:)) + &
-         & (one-kappaM)*psi_plus(i,j,:,2)*(V(i,j+2,:)-V(i,j+1,:)) )
+!    left(:,:,:,1)  = V(i,j,:) + fourth*epsM*( &
+!         & (one-kappaM)*psi_plus(i-1,j,:,1)*(V(i,j,:)-V(i-1,j,:)) + &
+!         & (one+kappaM)*psi_minus(i,j,:,1)*(V(i+1,j,:)-V(i,j,:)) )
+!    right(:,:,:,1) = V(i+1,j,:) - fourth*epsM*( &
+!         & (one+kappaM)*psi_minus(i+1,j,:,1)*(V(i+1,j,:)-V(i,j,:)) + &
+!         & (one-kappaM)*psi_plus(i,j,:,1)*(V(i+2,j,:)-V(i+1,j,:)) )
+!    
+!    left(:,:,:,2)  = V(i,j,:) + fourth*epsM*( &
+!         & (one-kappaM)*psi_plus(i,j-1,:,2)*(V(i,j,:)-V(i,j-1,:)) + &
+!         & (one+kappaM)*psi_minus(i,j,:,2)*(V(i,j+1,:)-V(i,j,:)) )
+!    right(:,:,:,2) = V(i,j+1,:) - fourth*epsM*( &
+!         & (one+kappaM)*psi_minus(i,j+1,:,2)*(V(i,j+1,:)-V(i,j,:)) + &
+!         & (one-kappaM)*psi_plus(i,j,:,2)*(V(i,j+2,:)-V(i,j+1,:)) )
+left(:,:,:,1) = V(i,j,:) 
+right(:,:,:,1) = V(i+1,j,:) 
+left(:,:,:,2) = V(i,j,:) 
+right(:,:,:,2) = V(i,j+1,:) 
+
+
 !    do i = low-1,high
 !      j = i-low+2
 !      left(j,:) = V(i,:) + fourth*epsM*( &
@@ -151,10 +157,9 @@ module other_subroutines
   !!              DEnorm : 
   !<
   !===========================================================================80
-  subroutine calc_de( soln, exact_soln, DE, DEnorm, pnorm, cons )
+  subroutine calc_de( soln, DE, DEnorm, pnorm, cons )
     
     type(soln_t), intent(inout) :: soln
-    type(soln_t), intent(in) :: exact_soln
     logical, intent(in) :: cons
     real(prec), dimension(:,:,:), intent(out) :: DE
     real(prec), dimension(1,1:neq), intent(out) :: DEnorm
