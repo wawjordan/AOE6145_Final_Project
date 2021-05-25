@@ -33,17 +33,22 @@ program main_program
   !call read_namelist('input.nml')
   call set_derived_inputs
   call setup_geometry(grid,soln)
-
+  
   call calc_mms(grid,soln)
   call output_exact_soln(grid,soln)
   call output_file_headers
   soln%V = soln%Vmms
   !soln%V(i_low:i_high,j_low:j_high,:) = soln%Vmms(i_low:i_high,j_low:j_high,:)
   soln%S = soln%Smms
-! stop 
+  
+  !call Limit(soln%V,soln%psi_plus,soln%psi_minus)
+  
   call output_soln(grid,soln,0)
-  do i = 1,100
+  do i = 1,140
+  
   call prim2cons(soln%U,soln%V)
+  !call Limit(soln%V,soln%psi_plus,soln%psi_minus)
+  !soln%S = soln%Smms
   call calc_flux_2D(soln,grid,soln%F)
   !call calc_sources(soln,grid)
   call calc_time_step(grid%A_xi,grid%A_eta,grid%n_xi_avg, &
@@ -55,8 +60,7 @@ program main_program
   call output_soln(grid,soln,i)
   !end if
   end do
-  
-  !call grid_out(geometry_file,grid)
+  call grid_out(geometry_file,grid)
   call teardown_geometry(grid,soln)
   close(50)
   write(*,*) 'Program End'
