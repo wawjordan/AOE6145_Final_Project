@@ -49,7 +49,9 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
   type(grid_t), intent(in) :: grid
   real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2), &
                                                   intent(out) :: Fnormal
-  real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2) &
+  !real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2) &
+  !                                                 :: left, right
+  real(prec), dimension(i_low-1:i_high,j_low-1:j_high,neq,2) &
                                                    :: left, right
   integer, dimension(i_low:i_high+1) :: ind1
   integer, dimension(j_low:j_high+1) :: ind2
@@ -60,10 +62,10 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
   Fnormal(:,:,:,:) = zero
   
   do i = i_low,i_high+1
-    ind1(i) = i+n_ghost
+    ind1(i) = i
   end do
   do j = j_low,j_high+1
-    ind2(j) = j+n_ghost
+    ind2(j) = j
   end do
   
   !do i = i_low,i_high+1
@@ -71,52 +73,88 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
   !end do
   !stop
   !write(*,*) i_low,i_high,j_low,j_high 
-  call MUSCL_extrap(soln%V,soln%psi_plus,soln%psi_minus,left,right,ind1,ind2)
+  !call MUSCL_extrap(soln%V,soln%psi_plus,soln%psi_minus,left,right,ind1,ind2)
   
 !  write(*,*) left(1,1,:,1)
+
   do j = j_low,j_high+1
-  do i = i_low+1,i_high+1
+  do i = i_low,i_high+1
+    !nx = one
+    !ny = zero
     nx = grid%n_xi(i,j,1)
     ny = grid%n_xi(i,j,2)
-    left1 = left(i,j,:,1)
-    right1 = right(i,j,:,1)
+    left1 = soln%V(i-1,j,:)
+    right1 = soln%V(i,j,:)
     call flux_fun(left1,right1,nx,ny,Fxi)
-    Fnormal(i,j,:,1) = Fnormal(i,j,:,1) + Fxi
+    Fnormal(i,j,:,1) = Fxi
   end do
   end do
   
   do j = j_low,j_high+1
-  do i = i_low,i_high
-    nx = -grid%n_xi(i,j,1)
-    ny = -grid%n_xi(i,j,2)
-    left1 = left(i,j,:,1)
-    right1 = right(i,j,:,1)
-    call flux_fun(left1,right1,nx,ny,Fxi)
-    Fnormal(i,j,:,1) = Fnormal(i,j,:,1) + Fxi
-  end do
-  end do
-  
-  do j = j_low+1,j_high+1
   do i = i_low,i_high+1
+    !nx = zero
+    !ny = one
     nx = grid%n_eta(i,j,1)
     ny = grid%n_eta(i,j,2)
-    left1 = left(i,j,:,2)
-    right1 = right(i,j,:,2)
+    left1 = soln%V(i,j-1,:)
+    right1 = soln%V(i,j,:)
     call flux_fun(left1,right1,nx,ny,Feta)
-    Fnormal(i,j,:,2) = Fnormal(i,j,:,2) + Feta
+    Fnormal(i,j,:,2) = Feta
   end do
   end do
   
-  do j = j_low,j_high
-  do i = i_low,i_high+1
-    nx = -grid%n_eta(i,j,1)
-    ny = -grid%n_eta(i,j,2)
-    left1 = left(i,j,:,2)
-    right1 = right(i,j,:,2)
-    call flux_fun(left1,right1,nx,ny,Feta)
-    Fnormal(i,j,:,2) = Fnormal(i,j,:,2) + Feta
-  end do
-  end do
+
+!  do j = j_low,j_high+1
+!  do i = i_low+1,i_high+1
+!    nx = one
+!    ny = zero
+!    !nx = grid%n_xi(i,j,1)
+!    !ny = grid%n_xi(i,j,2)
+!    left1 = left(i,j,:,1)
+!    right1 = right(i,j,:,1)
+!    call flux_fun(left1,right1,nx,ny,Fxi)
+!    Fnormal(i,j,:,1) = Fnormal(i,j,:,1) + Fxi
+!  end do
+!  end do
+!  
+!  do j = j_low,j_high+1
+!  do i = i_low,i_high
+!    nx = -one
+!    ny = zero
+!    !nx = -grid%n_xi(i,j,1)
+!    !ny = -grid%n_xi(i,j,2)
+!    left1 = left(i,j,:,1)
+!    right1 = right(i,j,:,1)
+!    call flux_fun(left1,right1,nx,ny,Fxi)
+!    Fnormal(i,j,:,1) = Fnormal(i,j,:,1) + Fxi
+!  end do
+!  end do
+!  
+!  do j = j_low+1,j_high+1
+!  do i = i_low,i_high+1
+!    nx = zero
+!    ny = one
+!    !nx = grid%n_eta(i,j,1)
+!    !ny = grid%n_eta(i,j,2)
+!    left1 = left(i,j,:,2)
+!    right1 = right(i,j,:,2)
+!    call flux_fun(left1,right1,nx,ny,Feta)
+!    Fnormal(i,j,:,2) = Fnormal(i,j,:,2) + Feta
+!  end do
+!  end do
+!  
+!  do j = j_low,j_high
+!  do i = i_low,i_high+1
+!    nx = zero
+!    ny = -one
+!    !nx = -grid%n_eta(i,j,1)
+!    !ny = -grid%n_eta(i,j,2)
+!    left1 = left(i,j,:,2)
+!    right1 = right(i,j,:,2)
+!    call flux_fun(left1,right1,nx,ny,Feta)
+!    Fnormal(i,j,:,2) = Fnormal(i,j,:,2) + Feta
+!  end do
+!  end do
   
 end subroutine calc_flux_2D
 
