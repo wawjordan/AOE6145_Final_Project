@@ -19,8 +19,8 @@ module set_inputs
   public :: leftV, rightV, leftU, rightU, limiter_freeze, psi_plus, psi_minus
   public :: grid_name, geometry_file
    
-  integer :: imax    = 129
-  integer :: jmax    = 129
+  integer :: imax    = 9
+  integer :: jmax    = 9
   integer :: i_low   = 0
   integer :: i_high  = 0
   integer :: ig_low  = 0
@@ -51,7 +51,7 @@ module set_inputs
   real(prec) :: pb         = 150000_prec
   real(prec) :: k2         = 1.0_prec/2.0_prec
   real(prec) :: k4         = 1.0_prec/32.0_prec
-  integer :: flux_scheme   = 2
+  integer :: flux_scheme   = 1
   integer :: limiter_scheme = 2
   real(prec) :: beta_lim = 2
   real(prec) :: Lmms = one
