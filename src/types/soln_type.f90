@@ -56,7 +56,7 @@ module soln_type
     
     allocate( &
               soln%U( ig_low:ig_high, jg_low:jg_high, neq ), &
-              soln%F( ig_low:ig_high, jg_low:jg_high, neq, 2 ), &
+              soln%F( i_low:i_high+1, j_low:j_high+1, neq, 2 ), &
               soln%S( ig_low:ig_high, jg_low:jg_high, neq ), &
               soln%V( ig_low:ig_high, jg_low:jg_high, neq ), &
               soln%L( ig_low:ig_high, jg_low:jg_high, neq ), &
@@ -69,8 +69,8 @@ module soln_type
               soln%rold( neq ),  &
               soln%rinit( neq ) )
     allocate( &
-              soln%psi_plus(  ig_low:ig_high, jg_low:jg_high, neq,  2 ), &
-              soln%psi_minus(  ig_low:ig_high, jg_low:jg_high, neq, 2 )  )
+              soln%psi_plus(  ig_low:ig_high+1, jg_low:jg_high+1, neq,  2 ), &
+              soln%psi_minus(  ig_low:ig_high+1, jg_low:jg_high+1, neq, 2 )  )
     
     if (isMMS) then
       allocate( soln%DE( i_low:i_high,  j_low:j_high, neq ),  &
@@ -131,6 +131,20 @@ module soln_type
                soln%rnorm, &
                soln%rold,  &
                soln%rinit   )
+   ! deallocate( &
+   !            soln%U,     &
+   !            soln%F,     &
+   !            soln%S,     &
+   !            soln%V,     &
+   !            soln%L,     &
+   !            soln%R,     &
+   !            soln%asnd,  &
+   !            soln%mach,  &
+   !            soln%temp,  &
+   !            soln%dt,    &
+   !            soln%rnorm, &
+   !            soln%rold,  &
+   !            soln%rinit   )
     deallocate( &
                soln%psi_plus,  &
                soln%psi_minus  )
@@ -149,6 +163,7 @@ module soln_type
     
     type(soln_t), intent(inout) :: soln
     type(grid_t), intent(inout) :: grid
+    real(prec), dimension(ig_low:ig_high,jg_low:jg_high) :: x,y
     real(prec) :: L
     integer :: N
     
@@ -168,10 +183,20 @@ module soln_type
                        soln%Vmms(:,:,2)*soln%Vmms(:,:,2) + &
                        soln%Vmms(:,:,3)*soln%Vmms(:,:,3) )
     
+    x = grid%x(ig_low+1:ig_high+1,jg_low:jg_high) - &
+        grid%x(ig_low:ig_high,jg_low:jg_high)
+    y = grid%y(ig_low:ig_high,jg_low+1:jg_high+1) - &
+        grid%y(ig_low:ig_high,jg_low:jg_high)
+    
     call cv_averages(grid,1,wrap_rmassconv,soln%Smms(:,:,1))
     call cv_averages(grid,1,wrap_xmtmconv,soln%Smms(:,:,2))
     call cv_averages(grid,1,wrap_ymtmconv,soln%Smms(:,:,3))
     call cv_averages(grid,1,wrap_energyconv,soln%Smms(:,:,4))
+!    soln%Smms(:,:,1) = rmassconv(L,x,y)
+!    soln%Smms(:,:,2) = xmtmconv(L,x,y)
+!    soln%Smms(:,:,3) = ymtmconv(L,x,y)
+!    soln%Smms(:,:,4) = energyconv(gamma,L,x,y)
+
 !    soln%Smms(:,:,1) = rmassconv(L,                      &
 !                       grid%x(ig_low:ig_high,jg_low:jg_high),&
 !                       grid%y(ig_low:ig_high,jg_low:jg_high))
@@ -184,7 +209,7 @@ module soln_type
 !    soln%Smms(:,:,4) = energyconv(gamma, L,              &
 !                       grid%x(ig_low:ig_high,jg_low:jg_high),&
 !                       grid%y(ig_low:ig_high,jg_low:jg_high))
-    
+   
   end subroutine calc_mms
 !  subroutine calc_mms( grid, soln )
 !    
@@ -198,30 +223,30 @@ module soln_type
 !    real(prec) :: L  = one
 !    
 !    soln%Vmms(:,:,1) = rho_mms(L,                        &
-!                       grid%x(i_low:i_high,j_low:j_high),&
-!                       grid%y(i_low:i_high,j_low:j_high))
+!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
+!                       grid%y(ig_low:ig_high,jg_low:jg_high))
 !    soln%Vmms(:,:,2) = uvel_mms(L,                       &
-!                       grid%x(i_low:i_high,j_low:j_high),&
-!                       grid%y(i_low:i_high,j_low:j_high))
+!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
+!                       grid%y(ig_low:ig_high,jg_low:jg_high))
 !    soln%Vmms(:,:,3) = vvel_mms(L,                       &
-!                       grid%x(i_low:i_high,j_low:j_high),&
-!                       grid%y(i_low:i_high,j_low:j_high))
+!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
+!                       grid%y(ig_low:ig_high,jg_low:jg_high))
 !    soln%Vmms(:,:,4) = press_mms(L,                      &
-!                       grid%x(i_low:i_high,j_low:j_high),&
-!                       grid%y(i_low:i_high,j_low:j_high))
+!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
+!                       grid%y(ig_low:ig_high,jg_low:jg_high))
 !    
 !    soln%Smms(:,:,1) = rmassconv(L,                      &
-!                       grid%x(i_low:i_high,j_low:j_high),&
-!                       grid%y(i_low:i_high,j_low:j_high))
+!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
+!                       grid%y(ig_low:ig_high,jg_low:jg_high))
 !    soln%Smms(:,:,2) = xmtmconv(L,                       &
-!                       grid%x(i_low:i_high,j_low:j_high),&
-!                       grid%y(i_low:i_high,j_low:j_high))
+!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
+!                       grid%y(ig_low:ig_high,jg_low:jg_high))
 !    soln%Smms(:,:,3) = ymtmconv(L,                       &
-!                       grid%x(i_low:i_high,j_low:j_high),&
-!                       grid%y(i_low:i_high,j_low:j_high))
+!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
+!                       grid%y(ig_low:ig_high,jg_low:jg_high))
 !    soln%Smms(:,:,4) = energyconv(gamma, L,              &
-!                       grid%x(i_low:i_high,j_low:j_high),&
-!                       grid%y(i_low:i_high,j_low:j_high))
+!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
+!                       grid%y(ig_low:ig_high,jg_low:jg_high))
 !    
 !  end subroutine calc_mms
 end module soln_type
