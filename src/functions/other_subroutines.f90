@@ -74,6 +74,8 @@ module other_subroutines
     !low = lbound(V,1)+n_ghost
     !high = ubound(V,1)-n_ghost
     
+    r_plus = zero
+    r_minus = zero
     if (limiter_freeze) then
       continue
     else
@@ -99,10 +101,10 @@ module other_subroutines
 !    right(:,:,:,2) = V(i,j+1,:) - fourth*epsM*( &
 !         & (one+kappaM)*psi_minus(i,j+1,:,2)*(V(i,j+1,:)-V(i,j,:)) + &
 !         & (one-kappaM)*psi_plus(i,j,:,2)*(V(i,j+2,:)-V(i,j+1,:)) )
-left(:,:,:,1) = V(i,j,:) 
-right(:,:,:,1) = V(i+1,j,:) 
-left(:,:,:,2) = V(i,j,:) 
-right(:,:,:,2) = V(i,j+1,:) 
+left(:,:,:,1) = V(i-1,j,:) 
+right(:,:,:,1) = V(i,j,:) 
+left(:,:,:,2) = V(i,j-1,:) 
+right(:,:,:,2) = V(i,j,:)
 
 
 !    do i = low-1,high
