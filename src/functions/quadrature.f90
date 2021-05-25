@@ -53,8 +53,13 @@ subroutine cv_averages(grid,N,fun,val)
       P = transpose( reshape( (/ &
           grid%x(i,j),     grid%y(i,j),      &
           grid%x(i+1,j),   grid%y(i+1,j),    &
-          grid%x(i+1,j+1), grid%y(i+1,j+1),  &
-          grid%x(i,j+1),   grid%y(i,j+1) /), (/2,4/) ) )
+          grid%x(i,j+1), grid%y(i,j+1),  &
+          grid%x(i+1,j+1),   grid%y(i+1,j+1) /), (/2,4/) ) )
+      !P = transpose( reshape( (/ &
+      !    grid%x(i,j),     grid%y(i,j),      &
+      !    grid%x(i+1,j),   grid%y(i+1,j),    &
+      !    grid%x(i+1,j+1), grid%y(i+1,j+1),  &
+      !    grid%x(i,j+1),   grid%y(i,j+1) /), (/2,4/) ) )
       call gauss_quad(P,xi,xi,w,w,fun,val(i,j))
       !write(*,*) 'P1=',P(1,1),P(1,2)
       !write(*,*) 'P2=',P(2,1),P(2,2)
