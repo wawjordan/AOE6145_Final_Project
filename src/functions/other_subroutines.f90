@@ -16,7 +16,7 @@ module other_subroutines
   private
   
   public :: output_file_headers, output_soln, MUSCL_extrap, calc_de
-  public :: calc_sources, output_exact_soln
+  public :: calc_sources, output_exact_soln, Limit
   
   contains
   
@@ -60,20 +60,13 @@ module other_subroutines
   !!              right :
   !<
   !===========================================================================80
-  subroutine MUSCL_extrap( V, psi_plus, psi_minus, left, right, i, j )
-    
+subroutine Limit(V,psi_plus,psi_minus)
+
     use set_inputs, only : limiter_freeze
     real(prec), dimension(:,:,:), intent(in)  :: V
     real(prec), dimension(:,:,:,:), intent(inout)  :: psi_plus, psi_minus
-    real(prec), dimension(:,:,:,:), intent(out) :: left, right
     real(prec), dimension(lbound(V,1):ubound(V,1), &
                           lbound(V,2):ubound(V,2),neq) :: r_plus, r_minus
-    integer, dimension(:), intent(in) :: i,j
-    !integer :: i,j, low, high
-    
-    !low = lbound(V,1)+n_ghost
-    !high = ubound(V,1)-n_ghost
-    
     r_plus = zero
     r_minus = zero
     if (limiter_freeze) then
@@ -87,6 +80,53 @@ module other_subroutines
       call limiter_fun(r_plus,psi_plus(:,:,:,2))
       call limiter_fun(r_minus,psi_minus(:,:,:,2))
     end if
+
+end subroutine Limit
+
+subroutine MUSCL_extrap(stencil,psi_plus,psi_minus,left,right)
+
+    real(prec), dimension(4,neq), intent(in)  :: stencil
+    real(prec), dimension(4,neq), intent(in)  :: psi_plus, psi_minus
+    real(prec), dimension(neq), intent(out) :: left, right
+    integer :: i
+    
+    i = 2
+    
+
+    left  = stencil(i,:) + fourth*epsM*( &
+         & (one-kappaM)*psi_plus(i-1,:)*(stencil(i,:)-stencil(i-1,:)) + &
+         & (one+kappaM)*psi_minus(i,:)*(stencil(i+1,:)-stencil(i,:)) )
+    right = stencil(i+1,:) - fourth*epsM*( &
+         & (one+kappaM)*psi_minus(i+1,:)*(stencil(i+1,:)-stencil(i,:)) + &
+         & (one-kappaM)*psi_plus(i,:)*(stencil(i+2,:)-stencil(i+1,:)) )
+end subroutine MUSCL_extrap
+!  subroutine MUSCL_extrap( V, psi_plus, psi_minus, left, right, i, j )
+    
+!    use set_inputs, only : limiter_freeze
+!    real(prec), dimension(:,:,:), intent(in)  :: V
+!    real(prec), dimension(:,:,:,:), intent(inout)  :: psi_plus, psi_minus
+!    real(prec), dimension(:,:,:,:), intent(out) :: left, right
+!    real(prec), dimension(lbound(V,1):ubound(V,1), &
+!                          lbound(V,2):ubound(V,2),neq) :: r_plus, r_minus
+!    integer, dimension(:), intent(in) :: i,j
+    !integer :: i,j, low, high
+    
+    !low = lbound(V,1)+n_ghost
+    !high = ubound(V,1)-n_ghost
+    
+!    r_plus = zero
+!    r_minus = zero
+!    if (limiter_freeze) then
+!      continue
+!    else
+!      call calc_consecutive_variations(V,r_plus,r_minus,1)
+!      call limiter_fun(r_plus,psi_plus(:,:,:,1))
+!      call limiter_fun(r_minus,psi_minus(:,:,:,1))
+!      
+!      call calc_consecutive_variations(V,r_plus,r_minus,2)
+!      call limiter_fun(r_plus,psi_plus(:,:,:,2))
+!      call limiter_fun(r_minus,psi_minus(:,:,:,2))
+!    end if
     
 !    left(:,:,:,1)  = V(i,j,:) + fourth*epsM*( &
 !         & (one-kappaM)*psi_plus(i-1,j,:,1)*(V(i,j,:)-V(i-1,j,:)) + &
@@ -101,10 +141,10 @@ module other_subroutines
 !    right(:,:,:,2) = V(i,j+1,:) - fourth*epsM*( &
 !         & (one+kappaM)*psi_minus(i,j+1,:,2)*(V(i,j+1,:)-V(i,j,:)) + &
 !         & (one-kappaM)*psi_plus(i,j,:,2)*(V(i,j+2,:)-V(i,j+1,:)) )
-left(:,:,:,1) = V(i-1,j,:) 
-right(:,:,:,1) = V(i,j,:) 
-left(:,:,:,2) = V(i,j-1,:) 
-right(:,:,:,2) = V(i,j,:)
+!left(:,:,:,1) = V(i-1,j,:) 
+!right(:,:,:,1) = V(i,j,:) 
+!left(:,:,:,2) = V(i,j-1,:) 
+!right(:,:,:,2) = V(i,j,:)
 
 
 !    do i = low-1,high
@@ -117,7 +157,7 @@ right(:,:,:,2) = V(i,j,:)
 !         & (one-kappaM)*psi_plus(i,:)*(V(i+2,:)-V(i+1,:)) )
 !    end do
 
-  end subroutine MUSCL_extrap
+!  end subroutine MUSCL_extrap
   !================================== calc_sources ==========================80
   !>
   !! Description: 
@@ -161,7 +201,7 @@ right(:,:,:,2) = V(i,j,:)
   !===========================================================================80
   subroutine calc_de( soln, DE, DEnorm, pnorm, cons )
     
-    type(soln_t), intent(inout) :: soln
+    type(soln_t), intent(in) :: soln
     logical, intent(in) :: cons
     real(prec), dimension(:,:,:), intent(out) :: DE
     real(prec), dimension(1,1:neq), intent(out) :: DEnorm
