@@ -121,8 +121,8 @@ module variable_conversion
     
     do j = lbound(V,2),ubound(V,2)
       do i = lbound(V,1),ubound(V,1)
-        V(i,j,1) = max(0.01_prec,V(i,j,1))
-        V(i,j,4) = max(500.0_prec,V(i,j,4))
+        V(i,j,1) = max(0.001_prec,V(i,j,1))
+        V(i,j,4) = max(50.0_prec,V(i,j,4))
       end do
     end do
     
