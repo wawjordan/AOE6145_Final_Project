@@ -45,33 +45,17 @@ contains
 
 subroutine calc_flux_2D(soln,grid,Fnormal)
 
-  type(soln_t), intent(inout) :: soln
+  type(soln_t), intent(in) :: soln
   type(grid_t), intent(in) :: grid
   real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2), &
                                                   intent(out) :: Fnormal
-  !real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2) &
-  !                                                 :: left, right
-  real(prec), dimension(i_low-1:i_high,j_low-1:j_high,neq,2) &
-                                                   :: left, right
-  integer, dimension(i_low:i_high+1) :: ind1
-  integer, dimension(j_low:j_high+1) :: ind2
-  real(prec), dimension(neq) :: left1, right1, Fxi, Feta
+  real(prec), dimension(neq) :: left, right
   real(prec) :: nx, ny
-  integer :: i,j
-  
+  integer :: i,j,k
+  integer, dimension(4) :: ind
+  real(prec), dimension(4,neq) :: Vtmp, psiPtmp, psiMtmp
   Fnormal(:,:,:,:) = zero
   
-  do i = i_low,i_high+1
-    ind1(i) = i
-  end do
-  do j = j_low,j_high+1
-    ind2(j) = j
-  end do
-  
-  !do i = i_low,i_high+1
-  !  write(*,*) i,'ind',ind1(i),ind2(i)
-  !end do
-  !stop
   !write(*,*) i_low,i_high,j_low,j_high 
   !call MUSCL_extrap(soln%V,soln%psi_plus,soln%psi_minus,left,right,ind1,ind2)
   
@@ -79,31 +63,38 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
 
   do j = j_low,j_high+1
   do i = i_low,i_high+1
-    !nx = one
-    !ny = zero
-    nx = grid%n_xi(i,j,1)
-    ny = grid%n_xi(i,j,2)
-    left1 = soln%V(i-1,j,:)
-    right1 = soln%V(i,j,:)
-    call flux_fun(left1,right1,nx,ny,Fxi)
-    Fnormal(i,j,:,1) = Fxi
+    nx = one
+    ny = zero
+    !nx = grid%n_xi(i,j,1)
+    !ny = grid%n_xi(i,j,2)
+    ind = (/ ( k,k=i-2,i+1 ) /)
+    Vtmp = soln%V(ind,j,:)
+    psiPtmp = soln%psi_plus(ind,j,:,1)
+    psiMtmp = soln%psi_minus(ind,j,:,1)
+    call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
+    !left =  soln%V(i,j,:)
+    !right = soln%V(i+1,j,:)
+    call flux_fun(left,right,nx,ny,Fnormal(i,j,:,1))
+    !write(*,*) Fnormal(i+1,j,:,1)
   end do
   end do
-  
   do j = j_low,j_high+1
   do i = i_low,i_high+1
-    !nx = zero
-    !ny = one
-    nx = grid%n_eta(i,j,1)
-    ny = grid%n_eta(i,j,2)
-    left1 = soln%V(i,j-1,:)
-    right1 = soln%V(i,j,:)
-    call flux_fun(left1,right1,nx,ny,Feta)
-    Fnormal(i,j,:,2) = Feta
+    nx = zero
+    ny = one
+    !nx = grid%n_eta(i,j,1)
+    !ny = grid%n_eta(i,j,2)
+    ind = (/ ( k,k=j-2,j+1 ) /)
+    Vtmp = soln%V(i,ind,:)
+    psiPtmp = soln%psi_plus(i,ind,:,2)
+    psiMtmp = soln%psi_minus(i,ind,:,2)
+    call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
+    !left =  soln%V(i,j,:)
+    !right = soln%V(i,j+1,:)
+    call flux_fun(left,right,nx,ny,Fnormal(i,j,:,2))
+    !write(*,*) Fnormal(i,j+1,:,2)
   end do
   end do
-  
-
 !  do j = j_low,j_high+1
 !  do i = i_low+1,i_high+1
 !    nx = one
@@ -280,9 +271,9 @@ end subroutine calc_flux_2D
     
     Fp = d_plus*pL + d_minus*pR
     
-    F(1) = rhoL*aL*c_plus + rhoR*aR*c_minus
-    F(2) = rhoL*aL*c_plus*uL + rhoR*aR*c_minus*uR + Fp*nx
-    F(3) = rhoL*aL*c_plus*vL + rhoR*aR*c_minus*vR + Fp*ny
+    F(1) = rhoL*aL*c_plus     + rhoR*aR*c_minus
+    F(2) = rhoL*aL*c_plus*uL  + rhoR*aR*c_minus*uR + Fp*nx
+    F(3) = rhoL*aL*c_plus*vL  + rhoR*aR*c_minus*vR + Fp*ny
     F(4) = rhoL*aL*c_plus*htL + rhoR*aR*c_minus*htR
     
   end subroutine van_leer_flux
