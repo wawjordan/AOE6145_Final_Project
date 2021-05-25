@@ -1,7 +1,7 @@
 module time_integration
   
   use set_precision, only : prec
-  use set_constants, only : one, half, third, fourth
+  use set_constants, only : zero, one, half, third, fourth
   use set_inputs,    only : neq, i_low, i_high, ig_low, ig_high
   use set_inputs,    only : j_low, j_high, jg_low, jg_high
   use grid_type
@@ -89,12 +89,12 @@ module time_integration
     k = (/ one, third, half, one /)
     
     call calc_residual(grid%A_xi,grid%A_eta,grid%V,S,F,R)
-    do j = 1,N
+    !do j = 1,N
     do i = 1,neq
     U(i_low:i_high,j_low:j_high,i) = U(i_low:i_high,j_low:j_high,i) &
-    - k(j)*R(:,:,i)*dt/grid%V(i_low:i_high,j_low:j_high)
+    - (R(:,:,i)*dt)/grid%V(i_low:i_high,j_low:j_high)
     end do
-    end do
+    !end do
     
   end subroutine explicit_RK
   
@@ -104,7 +104,7 @@ module time_integration
                                                   intent(in) :: A_xi
     real(prec), dimension(ig_low:ig_high,jg_low:jg_high+1),&
                                                   intent(in) :: A_eta
-    real(prec), dimension(i_low:i_high,j_low:j_high),&
+    real(prec), dimension(ig_low:ig_high,jg_low:jg_high),&
                                                   intent(in) :: V
     real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
                                                   intent(in) :: S
@@ -120,12 +120,11 @@ module time_integration
       R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1) - A_xi(i,j)*F(i,j,:,1)  &
                + A_eta(i,j+1)*F(i,j+1,:,2) - A_eta(i,j)*F(i,j,:,2) &
                - V(i,j)*S(i,j,:)
-      !R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1)  + A_xi(i,j)*F(i,j,:,1)  &
-      !         + A_eta(i,j+1)*F(i,j+1,:,2) + A_eta(i,j)*F(i,j,:,2) &
+      !R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1)  - A_xi(i,j)*F(i,j,:,1)  &
+      !         + A_eta(i,j+1)*F(i,j+1,:,2) - A_eta(i,j)*F(i,j,:,2) &
       !         - V(i,j)*S(i,j,:)
     end do
     end do
-    
   end subroutine calc_residual
   !============================= residual_norms ==============================80
   !>
@@ -140,7 +139,7 @@ module time_integration
     
     real(prec), dimension(i_low:i_high,1:neq), intent(in) :: R
     real(prec), dimension(1,1:neq), intent(in)  :: rinit
-    real(prec),  intent(inout) :: Rnorm(1,1:neq)
+    real(prec),  intent(out) :: Rnorm(1,1:neq)
     integer :: pnorm
     
     if (pnorm == 0) then
