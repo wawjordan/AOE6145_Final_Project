@@ -19,8 +19,8 @@ module set_inputs
   public :: leftV, rightV, leftU, rightU, limiter_freeze, psi_plus, psi_minus
   public :: grid_name, geometry_file
    
-  integer :: imax    = 9
-  integer :: jmax    = 9
+  integer :: imax    = 17
+  integer :: jmax    = 17
   integer :: i_low   = 0
   integer :: i_high  = 0
   integer :: ig_low  = 0
@@ -61,7 +61,7 @@ module set_inputs
   real(prec) :: eps_roe    = 0.1_prec
   real(prec) :: epsM       = zero
   real(prec) :: kappaM     = -one
-  logical :: limiter_freeze = .false.
+  logical :: limiter_freeze = .true.
   logical :: cons           = .false.
   logical :: isMMS = .true.
   logical :: cart_grid = .true.
