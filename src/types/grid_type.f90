@@ -63,6 +63,7 @@ module grid_type
     integer :: i, j
     
     ! extrapolate coordinates to form ghost cells
+    ! "bottom"
     do j = j_low-1, jg_low, -1
     do i = i_low, i_high+1
       grid%x(i,j) = two*grid%x(i,j+1) - grid%x(i,j+2)
@@ -70,13 +71,15 @@ module grid_type
     end do
     end do
     
+    ! "top"
     do j = j_high+2, jg_high+1
     do i = i_low, i_high+1
       grid%x(i,j) = two*grid%x(i,j-1) - grid%x(i,j-2)
       grid%y(i,j) = two*grid%y(i,j-1) - grid%y(i,j-2)
     end do
     end do
-   !! 
+    
+    ! "left"
     do j = j_low, j_high+1
     do i = i_low-1, ig_low, -1
       grid%x(i,j) = two*grid%x(i+1,j) - grid%x(i+2,j)
@@ -84,13 +87,16 @@ module grid_type
     end do
     end do
     
+    ! "right"
     do j = j_low, j_high+1
     do i = i_high+2, ig_high+1
       grid%x(i,j) = two*grid%x(i-1,j) - grid%x(i-2,j)
       grid%y(i,j) = two*grid%y(i-1,j) - grid%y(i-2,j)
     end do
     end do
-   !!!! 
+   !!!!
+    
+    ! "bottom left"
     do j = j_low-1, jg_low,-1
     do i = i_low-1, ig_low,-1
       x1 = grid%x(i+2,j)
@@ -108,6 +114,7 @@ module grid_type
     end do
     end do
     
+    ! "top left"
     do j = j_high+2, jg_high+1
     do i = i_low-1, ig_low,-1
       x1 = grid%x(i+2,j)
@@ -124,7 +131,8 @@ module grid_type
                           grid%x(i,j), grid%y(i,j) )
     end do
     end do
-   !! 
+     
+    ! "bottom right"
     do j = j_low-1, jg_low,-1
     do i = i_high+2, ig_high+1
       x1 = grid%x(i-2,j)
@@ -142,6 +150,7 @@ module grid_type
     end do
     end do
     
+    ! "top right"
     do j = j_high+2, jg_high+1
     do i = i_high+2, ig_high+1
       x1 = grid%x(i-2,j)
@@ -199,8 +208,8 @@ module grid_type
       grid%A_eta(i,j) = sqrt( (grid%x(i+1,j)-grid%x(i,j))**2 &
                             + (grid%y(i+1,j)-grid%y(i,j))**2 )
       grid%n_xi(i,j,1)   = ( (grid%y(i,j+1)-grid%y(i,j)) )/grid%A_xi(i,j) 
-      grid%n_xi(i,j,2)   = ( (grid%x(i,j+1)-grid%x(i,j)) )/grid%A_xi(i,j)
-      grid%n_eta(i,j,1)  = ( (grid%y(i+1,j)-grid%y(i,j)) )/grid%A_eta(i,j)
+      grid%n_xi(i,j,2)   = -( (grid%x(i,j+1)-grid%x(i,j)) )/grid%A_xi(i,j)
+      grid%n_eta(i,j,1)  = -( (grid%y(i+1,j)-grid%y(i,j)) )/grid%A_eta(i,j)
       grid%n_eta(i,j,2)  = ( (grid%x(i+1,j)-grid%x(i,j)) )/grid%A_eta(i,j)
       call cell_volume( (/ grid%x(i,j), grid%y(i,j) /), &
                     (/ grid%x(i+1,j), grid%y(i+1,j) /), &
@@ -214,7 +223,7 @@ module grid_type
     do i = ig_low, ig_high
       grid%A_eta(i,j) = sqrt( (grid%x(i+1,j)-grid%x(i,j))**2 &
                             + (grid%y(i+1,j)-grid%y(i,j))**2 )
-      grid%n_eta(i,j,1)  =  ( (grid%y(i+1,j)-grid%y(i,j)) )/grid%A_eta(i,j)
+      grid%n_eta(i,j,1)  =  -( (grid%y(i+1,j)-grid%y(i,j)) )/grid%A_eta(i,j)
       grid%n_eta(i,j,2)  =  ( (grid%x(i+1,j)-grid%x(i,j)) )/grid%A_eta(i,j)
     end do
     
@@ -223,7 +232,7 @@ module grid_type
       grid%A_xi(i,j) = sqrt( (grid%x(i,j+1)-grid%x(i,j))**2 &
                            + (grid%y(i,j+1)-grid%y(i,j))**2 )
       grid%n_xi(i,j,1) =   ( (grid%y(i,j+1)-grid%y(i,j)) )/grid%A_xi(i,j)
-      grid%n_xi(i,j,2) =   ( (grid%x(i,j+1)-grid%x(i,j)) )/grid%A_xi(i,j)
+      grid%n_xi(i,j,2) =   -( (grid%x(i,j+1)-grid%x(i,j)) )/grid%A_xi(i,j)
     end do
     
     do j = jg_low, jg_high
