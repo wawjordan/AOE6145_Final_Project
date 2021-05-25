@@ -41,6 +41,7 @@ program main_program
   !soln%V(i_low:i_high,j_low:j_high,:) = soln%Vmms(i_low:i_high,j_low:j_high,:)
   soln%S = soln%Smms
 ! stop 
+  call output_soln(grid,soln,0)
   do i = 1,100
   call prim2cons(soln%U,soln%V)
   call calc_flux_2D(soln,grid,soln%F)
@@ -50,12 +51,13 @@ program main_program
   call explicit_RK(grid,soln%S,soln%dt,soln%F,soln%U,soln%R,1)
   call update_states(soln)
   call calc_de(soln,soln%DE,soln%DEnorm,0,cons)
-  if (mod(i,10)==0) then
+  !if (mod(i,10)==0) then
   call output_soln(grid,soln,i)
-  end if
+  !end if
   end do
   
   !call grid_out(geometry_file,grid)
   call teardown_geometry(grid,soln)
   close(50)
+  write(*,*) 'Program End'
 end program main_program
