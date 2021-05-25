@@ -2,7 +2,7 @@ module limiter_calc
   
   use set_precision, only : prec
   use set_constants, only : zero, one, two, three, four, half, fourth
-  use set_inputs, only : neq, imax, i_low, i_high, ig_low, ig_high
+  use set_inputs, only : neq, i_low, i_high, ig_low, ig_high
   use set_inputs, only : beta_lim, n_ghost
   
   implicit none
@@ -88,6 +88,9 @@ contains
         r_plus(i,j,:)   = ( V(i+2,j,:) - V(i+1,j,:) )/den
         r_minus(i,j,:)  = ( V(i,j,:) - V(i-1,j,:) )/den
       end do
+      r_plus(low1-1,j,:) = r_plus(low1,j,:)
+      r_minus(low1-1,j,:) = r_minus(low1,j,:)
+      
       r_plus(low1-2,j,:) = r_plus(low1-1,j,:)
       r_minus(low1-2,j,:) = r_minus(low1-1,j,:)
       
@@ -107,6 +110,9 @@ contains
     end do
     
     do i = low1,high1
+      r_plus(i,low2-1,:) = r_plus(i,low2,:)
+      r_minus(i,low2-1,:) = r_minus(i,low2,:)
+      
       r_plus(i,low2-2,:) = r_plus(i,low2-1,:)
       r_minus(i,low2-2,:) = r_minus(i,low2-1,:)
       
@@ -169,7 +175,14 @@ contains
     real(prec), dimension(:,:,:), intent(in) :: r
     !real(prec), dimension(i_low-1:i_high,neq), intent(out)   :: psi
     real(prec), dimension(:,:,:), intent(out)   :: psi
-    
+    integer :: i, j
+    !do i = lbound(r,1),ubound(r,1)
+    !do j = lbound(r,2),ubound(r,2)
+    !  write(*,*) i,j,r(i,j,1)
+    !  psi(i,j,:) = (r(i,j,:)**2 + r(i,j,:))/(one + r(i,j,:)**2)
+    !  psi(i,j,:) = half*(one+sign(one,r(i,j,:)))*psi(i,j,:)
+    !end do
+    !end do
     psi = (r**2 + r)/(one + r**2)
     psi = half*(one+sign(one,r))*psi
     
