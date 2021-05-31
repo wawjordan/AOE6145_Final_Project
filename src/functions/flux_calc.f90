@@ -14,7 +14,7 @@ module flux_calc
   
   private
   
-  public :: flux_fun, select_flux, calc_flux_2D
+  public :: flux_fun, select_flux, exact_flux, calc_flux_2D
   
   procedure( calc_flux ), pointer :: flux_fun
   
@@ -213,6 +213,26 @@ end subroutine calc_flux_2D
   
   end subroutine select_flux
   
+  subroutine exact_flux(V, nx, ny, F)
+    
+    real(prec), dimension(neq), intent(in) :: V
+    real(prec), intent(in) :: nx, ny
+    real(prec), dimension(neq), intent(out) :: F
+    real(prec) :: rho, uvel, vvel, p, a, ht, un
+    
+    rho  = V(1)
+    uvel = V(2)
+    vvel = V(3)
+    p    = V(4)
+    call speed_of_sound(p,rho,a)
+    un = uvel*nx + vvel*ny
+    ht = a**2/(gamma-one) + half*un**2
+    F(1) = rho*un
+    F(2) = rho*uvel*un + nx*p
+    F(3) = rho*vvel*un + ny*p
+    F(4) = rho*ht*un
+    
+  end subroutine exact_flux
   !============================== van_leer_flux ==============================80
   !>
   !! Description:
