@@ -175,14 +175,7 @@ contains
     real(prec), dimension(:,:,:), intent(in) :: r
     !real(prec), dimension(i_low-1:i_high,neq), intent(out)   :: psi
     real(prec), dimension(:,:,:), intent(out)   :: psi
-    integer :: i, j
-    !do i = lbound(r,1),ubound(r,1)
-    !do j = lbound(r,2),ubound(r,2)
-    !  write(*,*) i,j,r(i,j,1)
-    !  psi(i,j,:) = (r(i,j,:)**2 + r(i,j,:))/(one + r(i,j,:)**2)
-    !  psi(i,j,:) = half*(one+sign(one,r(i,j,:)))*psi(i,j,:)
-    !end do
-    !end do
+    
     psi = (r**2 + r)/(one + r**2)
     psi = half*(one+sign(one,r))*psi
     
