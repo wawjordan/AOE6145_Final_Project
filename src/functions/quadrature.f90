@@ -60,7 +60,9 @@ subroutine cv_averages(grid,N,fun,val)
       !    grid%x(i+1,j),   grid%y(i+1,j),    &
       !    grid%x(i+1,j+1), grid%y(i+1,j+1),  &
       !    grid%x(i,j+1),   grid%y(i,j+1) /), (/2,4/) ) )
-      call gauss_quad(P,xi,xi,w,w,fun,val(i,j))
+      !call gauss_quad(P,xi,xi,w,w,fun,val(i,j))
+      val(i,j) = fourth*( fun(P(1,1),P(1,2)) + fun(P(2,1),P(2,2)) &
+                        + fun(P(3,1),P(3,2)) + fun(P(4,1),P(4,2)) )
       !write(*,*) 'P1=',P(1,1),P(1,2)
       !write(*,*) 'P2=',P(2,1),P(2,2)
       !write(*,*) 'P3=',P(3,1),P(3,2)
@@ -70,7 +72,7 @@ subroutine cv_averages(grid,N,fun,val)
   end do
   
   !where (grid%V>zero)
-  val = val/grid%V
+  !val = val/grid%V
   !elsewhere
   !  val = zero
   !end where
