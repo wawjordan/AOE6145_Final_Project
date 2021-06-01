@@ -13,29 +13,12 @@ private
 
 public :: gauss_quad, gauss_pts, cv_averages
 
-!procedure( phi ), pointer :: fun
-!
-!abstract interface
-!
-!function phi(x,y)
-!  
-!  import :: prec
-!  real(prec) :: phi
-!  real(prec), intent(in) :: x, y
-!  
-!end function phi
-!
-!end interface
-
 contains
 
 subroutine cv_averages(grid,N,fun,val)
   
   type(grid_t), intent(in) :: grid
   integer, intent(in) :: N
-  !real(prec), dimension(i_low:i_high,  &
-  !                      j_low:j_high), &
-  !                      intent(out) :: val
   real(prec), dimension(lbound(grid%V,1):ubound(grid%V,1),  &
                         lbound(grid%V,2):ubound(grid%V,2)), &
                         intent(out) :: val
@@ -48,8 +31,6 @@ subroutine cv_averages(grid,N,fun,val)
   
   do i = lbound(grid%V,1),ubound(grid%V,1)
     do j = lbound(grid%V,2),ubound(grid%V,2)
-  !do i = i_low,i_high
-  !  do j = j_low,j_high
       P = transpose( reshape( (/ &
           grid%x(i,j),     grid%y(i,j),      &
           grid%x(i+1,j),   grid%y(i+1,j),    &
@@ -71,11 +52,7 @@ subroutine cv_averages(grid,N,fun,val)
     end do
   end do
   
-  !where (grid%V>zero)
   !val = val/grid%V
-  !elsewhere
-  !  val = zero
-  !end where
   
   deallocate(xi,w)
   
