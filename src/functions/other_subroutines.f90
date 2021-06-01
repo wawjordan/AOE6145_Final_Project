@@ -6,7 +6,7 @@ module other_subroutines
   use set_inputs, only : jmax, j_low, j_high, jg_low, jg_high
   use set_inputs, only : epsM, kappaM, isMMS, n_ghost
   use fluid_constants, only : gamma
-  use variable_conversion
+  use variable_conversion, only : speed_of_sound
   use limiter_calc, only : limiter_fun, calc_consecutive_variations
   use soln_type, only : soln_t
   use grid_type, only : grid_t
@@ -366,35 +366,80 @@ end subroutine MUSCL_extrap
     & "S<sub>1</sub>""S<sub>2</sub>""S<sub>3</sub>""S<sub>4</sub>"'
     write(fldunit,*) 'ZONE'
     write(fldunit,*) 'T= "1"'
-    write(fldunit,*) 'I=',i_high-i_low+2,' J=',j_high-j_low+2
+    write(fldunit,*) 'I=',ig_high-ig_low+2,' J=',jg_high-jg_low+2
     write(fldunit,*) 'DT = ( DOUBLE, DOUBLE, DOUBLE, DOUBLE, &
                            & DOUBLE, DOUBLE, DOUBLE, DOUBLE, &
                            & DOUBLE, DOUBLE )'
     write(fldunit,*) 'DATAPACKING = BLOCK'
     write(fldunit,*) 'VARLOCATION = ([3-10]=CELLCENTERED)'
     
-    write(fldunit,*) ((grid%x(i,j),i=i_low,i_high+1),    & !  1
-                     NEW_LINE('a'), j=j_low,j_high+1)    
-    write(fldunit,*) ((grid%y(i,j),i=i_low,i_high+1),    & !  2
-                     NEW_LINE('a'), j=j_low,j_high+1)    
-    write(fldunit,*) ((soln%Vmms(i,j,1),i=i_low,i_high), & !  3
-                     NEW_LINE('a'), j=j_low,j_high)      
-    write(fldunit,*) ((soln%Vmms(i,j,2),i=i_low,i_high), & !  4
-                     NEW_LINE('a'), j=j_low,j_high)      
-    write(fldunit,*) ((soln%Vmms(i,j,3),i=i_low,i_high), & !  5
-                     NEW_LINE('a'), j=j_low,j_high)      
-    write(fldunit,*) ((soln%Vmms(i,j,4),i=i_low,i_high), & !  6
-                     NEW_LINE('a'), j=j_low,j_high)      
-    write(fldunit,*) ((soln%Smms(i,j,1),i=i_low,i_high), & !  7
-                     NEW_LINE('a'), j=j_low,j_high)      
-    write(fldunit,*) ((soln%Smms(i,j,2),i=i_low,i_high), & !  8
-                     NEW_LINE('a'), j=j_low,j_high)      
-    write(fldunit,*) ((soln%Smms(i,j,3),i=i_low,i_high), & !  9
-                     NEW_LINE('a'), j=j_low,j_high)      
-    write(fldunit,*) ((soln%Smms(i,j,4),i=i_low,i_high), & ! 10
-                     NEW_LINE('a'), j=j_low,j_high)      
+    write(fldunit,*) ((grid%x(i,j),i=ig_low,ig_high+1),    & !  1
+                     NEW_LINE('a'), j=jg_low,jg_high+1)    
+    write(fldunit,*) ((grid%y(i,j),i=ig_low,ig_high+1),    & !  2
+                     NEW_LINE('a'), j=jg_low,jg_high+1)    
+    write(fldunit,*) ((soln%Vmms(i,j,1),i=ig_low,ig_high), & !  3
+                     NEW_LINE('a'), j=jg_low,jg_high)      
+    write(fldunit,*) ((soln%Vmms(i,j,2),i=ig_low,ig_high), & !  4
+                     NEW_LINE('a'), j=jg_low,jg_high)      
+    write(fldunit,*) ((soln%Vmms(i,j,3),i=ig_low,ig_high), & !  5
+                     NEW_LINE('a'), j=jg_low,jg_high)      
+    write(fldunit,*) ((soln%Vmms(i,j,4),i=ig_low,ig_high), & !  6
+                     NEW_LINE('a'), j=jg_low,jg_high)      
+    write(fldunit,*) ((soln%Smms(i,j,1),i=ig_low,ig_high), & !  7
+                     NEW_LINE('a'), j=jg_low,jg_high)      
+    write(fldunit,*) ((soln%Smms(i,j,2),i=ig_low,ig_high), & !  8
+                     NEW_LINE('a'), j=jg_low,jg_high)      
+    write(fldunit,*) ((soln%Smms(i,j,3),i=ig_low,ig_high), & !  9
+                     NEW_LINE('a'), j=jg_low,jg_high)      
+    write(fldunit,*) ((soln%Smms(i,j,4),i=ig_low,ig_high), & ! 10
+                     NEW_LINE('a'), j=jg_low,jg_high)      
     
   end subroutine output_exact_soln
+  !subroutine output_exact_soln(grid,soln)
+  !  
+  !  type( grid_t ), intent(in) :: grid
+  !  type( soln_t ), intent(in) :: soln
+  !  
+  !  integer :: i, j, fldunit
+  !  fldunit = 20
+  !  
+  !  open(fldunit,file= '../results/exact_soln.dat')
+  !  write(fldunit,*) 'TITLE = "Manufactured Solution"'
+  !  write(fldunit,*) 'variables="x""y"&
+  !  & "<greek>r</greek><sub>exact</sub>"&
+  !  & "u<sub>exact</sub>""v<sub>exact</sub>""p<sub>exact</sub>"&
+  !  & "S<sub>1</sub>""S<sub>2</sub>""S<sub>3</sub>""S<sub>4</sub>"'
+  !  write(fldunit,*) 'ZONE'
+  !  write(fldunit,*) 'T= "1"'
+  !  write(fldunit,*) 'I=',i_high-i_low+2,' J=',j_high-j_low+2
+  !  write(fldunit,*) 'DT = ( DOUBLE, DOUBLE, DOUBLE, DOUBLE, &
+  !                         & DOUBLE, DOUBLE, DOUBLE, DOUBLE, &
+  !                         & DOUBLE, DOUBLE )'
+  !  write(fldunit,*) 'DATAPACKING = BLOCK'
+  !  write(fldunit,*) 'VARLOCATION = ([3-10]=CELLCENTERED)'
+  !  
+  !  write(fldunit,*) ((grid%x(i,j),i=i_low,i_high+1),    & !  1
+  !                   NEW_LINE('a'), j=j_low,j_high+1)    
+  !  write(fldunit,*) ((grid%y(i,j),i=i_low,i_high+1),    & !  2
+  !                   NEW_LINE('a'), j=j_low,j_high+1)    
+  !  write(fldunit,*) ((soln%Vmms(i,j,1),i=i_low,i_high), & !  3
+  !                   NEW_LINE('a'), j=j_low,j_high)      
+  !  write(fldunit,*) ((soln%Vmms(i,j,2),i=i_low,i_high), & !  4
+  !                   NEW_LINE('a'), j=j_low,j_high)      
+  !  write(fldunit,*) ((soln%Vmms(i,j,3),i=i_low,i_high), & !  5
+  !                   NEW_LINE('a'), j=j_low,j_high)      
+  !  write(fldunit,*) ((soln%Vmms(i,j,4),i=i_low,i_high), & !  6
+  !                   NEW_LINE('a'), j=j_low,j_high)      
+  !  write(fldunit,*) ((soln%Smms(i,j,1),i=i_low,i_high), & !  7
+  !                   NEW_LINE('a'), j=j_low,j_high)      
+  !  write(fldunit,*) ((soln%Smms(i,j,2),i=i_low,i_high), & !  8
+  !                   NEW_LINE('a'), j=j_low,j_high)      
+  !  write(fldunit,*) ((soln%Smms(i,j,3),i=i_low,i_high), & !  9
+  !                   NEW_LINE('a'), j=j_low,j_high)      
+  !  write(fldunit,*) ((soln%Smms(i,j,4),i=i_low,i_high), & ! 10
+  !                   NEW_LINE('a'), j=j_low,j_high)      
+  !  
+  !end subroutine output_exact_soln
   
   !============================= output_soln ================================80
   !>
@@ -419,7 +464,7 @@ end subroutine MUSCL_extrap
     open(fldunit,status='unknown')
     write(fldunit,*) 'ZONE'
     write(fldunit,*) 'T= "',counter,'"'
-    write(fldunit,*) 'I=',i_high-i_low+2,' J=',j_high-j_low+2
+    write(fldunit,*) 'I=',ig_high-ig_low+2,' J=',jg_high-jg_low+2
     if(isMMS) then
       write(fldunit,*) 'DT = ( DOUBLE, DOUBLE, DOUBLE, DOUBLE, &
                              & DOUBLE, DOUBLE, DOUBLE, DOUBLE, &
@@ -427,28 +472,28 @@ end subroutine MUSCL_extrap
       write(fldunit,*) 'DATAPACKING = BLOCK'
       write(fldunit,*) 'VARLOCATION = ([3-11]=CELLCENTERED)'
       
-      write(fldunit,*) ((grid%x(i,j),i=i_low,i_high+1),    & !  1
-                       NEW_LINE('a'), j=j_low,j_high+1)    
-      write(fldunit,*) ((grid%y(i,j),i=i_low,i_high+1),    & !  2
-                       NEW_LINE('a'), j=j_low,j_high+1)    
-      write(fldunit,*) ((soln%V(i,j,1),i=i_low,i_high),    & !  3
-                       NEW_LINE('a'), j=j_low,j_high)      
-      write(fldunit,*) ((soln%V(i,j,2),i=i_low,i_high),    & !  4
-                       NEW_LINE('a'), j=j_low,j_high)      
-      write(fldunit,*) ((soln%V(i,j,3),i=i_low,i_high),    & !  5
-                       NEW_LINE('a'), j=j_low,j_high)      
-      write(fldunit,*) ((soln%V(i,j,4),i=i_low,i_high),    & !  6
-                       NEW_LINE('a'), j=j_low,j_high)      
-      write(fldunit,*) ((soln%mach(i,j),i=i_low,i_high),   & !  7
-                       NEW_LINE('a'), j=j_low,j_high)      
-      write(fldunit,*) ((soln%DE(i,j,1),i=i_low,i_high),   & !  8
-                       NEW_LINE('a'), j=j_low,j_high)      
-      write(fldunit,*) ((soln%DE(i,j,2),i=i_low,i_high),   & !  9
-                       NEW_LINE('a'), j=j_low,j_high)      
-      write(fldunit,*) ((soln%DE(i,j,3),i=i_low,i_high),   & ! 10
-                       NEW_LINE('a'), j=j_low,j_high)      
-      write(fldunit,*) ((soln%DE(i,j,4),i=i_low,i_high),   & ! 11
-                       NEW_LINE('a'), j=j_low,j_high)      
+      write(fldunit,*) ((grid%x(i,j),i=ig_low,ig_high+1),    & !  1
+                       NEW_LINE('a'), j=jg_low,jg_high+1)    
+      write(fldunit,*) ((grid%y(i,j),i=ig_low,ig_high+1),    & !  2
+                       NEW_LINE('a'), j=jg_low,jg_high+1)    
+      write(fldunit,*) ((soln%V(i,j,1),i=ig_low,ig_high),    & !  3
+                       NEW_LINE('a'), j=jg_low,jg_high)      
+      write(fldunit,*) ((soln%V(i,j,2),i=ig_low,ig_high),    & !  4
+                       NEW_LINE('a'), j=jg_low,jg_high)      
+      write(fldunit,*) ((soln%V(i,j,3),i=ig_low,ig_high),    & !  5
+                       NEW_LINE('a'), j=jg_low,jg_high)      
+      write(fldunit,*) ((soln%V(i,j,4),i=ig_low,ig_high),    & !  6
+                       NEW_LINE('a'), j=jg_low,jg_high)      
+      write(fldunit,*) ((soln%mach(i,j),i=ig_low,ig_high),   & !  7
+                       NEW_LINE('a'), j=jg_low,jg_high)      
+      write(fldunit,*) ((soln%DE(i,j,1),i=ig_low,ig_high),   & !  8
+                       NEW_LINE('a'), j=jg_low,jg_high)      
+      write(fldunit,*) ((soln%DE(i,j,2),i=ig_low,ig_high),   & !  9
+                       NEW_LINE('a'), j=jg_low,jg_high)      
+      write(fldunit,*) ((soln%DE(i,j,3),i=ig_low,ig_high),   & ! 10
+                       NEW_LINE('a'), j=jg_low,jg_high)      
+      write(fldunit,*) ((soln%DE(i,j,4),i=ig_low,ig_high),   & ! 11
+                       NEW_LINE('a'), j=jg_low,jg_high)      
       
     else
       
@@ -457,24 +502,94 @@ end subroutine MUSCL_extrap
       write(fldunit,*) 'DATAPACKING = BLOCK'
       write(fldunit,*) 'VARLOCATION = ([3-7]=CELLCENTERED'
       
-      write(fldunit,*) ((grid%x(i,j),i=i_low,i_high+1),    & !  1
-                       NEW_LINE('a'), j=j_low,j_high+1)    
-      write(fldunit,*) ((grid%y(i,j),i=i_low,i_high+1),    & !  2
-                       NEW_LINE('a'), j=j_low,j_high+1)    
-      write(fldunit,*) ((soln%V(i,j,1),i=i_low,i_high),    & !  3
-                       NEW_LINE('a'), j=j_low,j_high)      
-      write(fldunit,*) ((soln%V(i,j,2),i=i_low,i_high),    & !  4
-                       NEW_LINE('a'), j=j_low,j_high)      
-      write(fldunit,*) ((soln%V(i,j,3),i=i_low,i_high),    & !  5
-                       NEW_LINE('a'), j=j_low,j_high)      
-      write(fldunit,*) ((soln%V(i,j,4),i=i_low,i_high),    & !  6
-                       NEW_LINE('a'), j=j_low,j_high)      
-      write(fldunit,*) ((soln%mach(i,j),i=i_low,i_high),   & !  7
-                       NEW_LINE('a'), j=j_low,j_high)      
+      write(fldunit,*) ((grid%x(i,j),i=ig_low,ig_high+1),    & !  1
+                       NEW_LINE('a'), j=jg_low,jg_high+1)    
+      write(fldunit,*) ((grid%y(i,j),i=ig_low,ig_high+1),    & !  2
+                       NEW_LINE('a'), j=jg_low,jg_high+1)    
+      write(fldunit,*) ((soln%V(i,j,1),i=ig_low,ig_high),    & !  3
+                       NEW_LINE('a'), j=jg_low,jg_high)      
+      write(fldunit,*) ((soln%V(i,j,2),i=ig_low,ig_high),    & !  4
+                       NEW_LINE('a'), j=jg_low,jg_high)      
+      write(fldunit,*) ((soln%V(i,j,3),i=ig_low,ig_high),    & !  5
+                       NEW_LINE('a'), j=jg_low,jg_high)      
+      write(fldunit,*) ((soln%V(i,j,4),i=ig_low,ig_high),    & !  6
+                       NEW_LINE('a'), j=jg_low,jg_high)      
+      write(fldunit,*) ((soln%mach(i,j),i=ig_low,ig_high),   & !  7
+                       NEW_LINE('a'), j=jg_low,jg_high)      
       
     endif
     
   end subroutine output_soln
+ ! subroutine output_soln(grid,soln,num_iter)
+ !   
+ !   use set_inputs, only : counter
+ !   
+ !   type( grid_t ), intent(in) :: grid
+ !   type( soln_t ), intent(in) :: soln
+ !   integer,        intent(in) :: num_iter
+ !   
+ !   integer :: i, j, fldunit
+ !   fldunit = 40
+ !   
+ !   open(fldunit,status='unknown')
+ !   write(fldunit,*) 'ZONE'
+ !   write(fldunit,*) 'T= "',counter,'"'
+ !   write(fldunit,*) 'I=',i_high-i_low+2,' J=',j_high-j_low+2
+ !   if(isMMS) then
+ !     write(fldunit,*) 'DT = ( DOUBLE, DOUBLE, DOUBLE, DOUBLE, &
+ !                            & DOUBLE, DOUBLE, DOUBLE, DOUBLE, &
+ !                            & DOUBLE, DOUBLE, DOUBLE)'
+ !     write(fldunit,*) 'DATAPACKING = BLOCK'
+ !     write(fldunit,*) 'VARLOCATION = ([3-11]=CELLCENTERED)'
+ !     
+ !     write(fldunit,*) ((grid%x(i,j),i=i_low,i_high+1),    & !  1
+ !                      NEW_LINE('a'), j=j_low,j_high+1)    
+ !     write(fldunit,*) ((grid%y(i,j),i=i_low,i_high+1),    & !  2
+ !                      NEW_LINE('a'), j=j_low,j_high+1)    
+ !     write(fldunit,*) ((soln%V(i,j,1),i=i_low,i_high),    & !  3
+ !                      NEW_LINE('a'), j=j_low,j_high)      
+ !     write(fldunit,*) ((soln%V(i,j,2),i=i_low,i_high),    & !  4
+ !                      NEW_LINE('a'), j=j_low,j_high)      
+ !     write(fldunit,*) ((soln%V(i,j,3),i=i_low,i_high),    & !  5
+ !                      NEW_LINE('a'), j=j_low,j_high)      
+ !     write(fldunit,*) ((soln%V(i,j,4),i=i_low,i_high),    & !  6
+ !                      NEW_LINE('a'), j=j_low,j_high)      
+ !     write(fldunit,*) ((soln%mach(i,j),i=i_low,i_high),   & !  7
+ !                      NEW_LINE('a'), j=j_low,j_high)      
+ !     write(fldunit,*) ((soln%DE(i,j,1),i=i_low,i_high),   & !  8
+ !                      NEW_LINE('a'), j=j_low,j_high)      
+ !     write(fldunit,*) ((soln%DE(i,j,2),i=i_low,i_high),   & !  9
+ !                      NEW_LINE('a'), j=j_low,j_high)      
+ !     write(fldunit,*) ((soln%DE(i,j,3),i=i_low,i_high),   & ! 10
+ !                      NEW_LINE('a'), j=j_low,j_high)      
+ !     write(fldunit,*) ((soln%DE(i,j,4),i=i_low,i_high),   & ! 11
+ !                      NEW_LINE('a'), j=j_low,j_high)      
+ !     
+ !   else
+ !     
+ !     write(fldunit,*) 'DT = (DOUBLE, DOUBLE, DOUBLE, DOUBLE,&
+ !                          &  DOUBLE, DOUBLE, DOUBLE)'
+ !     write(fldunit,*) 'DATAPACKING = BLOCK'
+ !     write(fldunit,*) 'VARLOCATION = ([3-7]=CELLCENTERED'
+ !     
+ !     write(fldunit,*) ((grid%x(i,j),i=i_low,i_high+1),    & !  1
+ !                      NEW_LINE('a'), j=j_low,j_high+1)    
+ !     write(fldunit,*) ((grid%y(i,j),i=i_low,i_high+1),    & !  2
+ !                      NEW_LINE('a'), j=j_low,j_high+1)    
+ !     write(fldunit,*) ((soln%V(i,j,1),i=i_low,i_high),    & !  3
+ !                      NEW_LINE('a'), j=j_low,j_high)      
+ !     write(fldunit,*) ((soln%V(i,j,2),i=i_low,i_high),    & !  4
+ !                      NEW_LINE('a'), j=j_low,j_high)      
+ !     write(fldunit,*) ((soln%V(i,j,3),i=i_low,i_high),    & !  5
+ !                      NEW_LINE('a'), j=j_low,j_high)      
+ !     write(fldunit,*) ((soln%V(i,j,4),i=i_low,i_high),    & !  6
+ !                      NEW_LINE('a'), j=j_low,j_high)      
+ !     write(fldunit,*) ((soln%mach(i,j),i=i_low,i_high),   & !  7
+ !                      NEW_LINE('a'), j=j_low,j_high)      
+ !     
+ !   endif
+ !   
+ ! end subroutine output_soln
   
   !============================= output_res ==================================80
   !>
