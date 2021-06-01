@@ -105,101 +105,10 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
   end do
   end do
   !stop
-!  do j = j_low,j_high+1
-!  do i = i_low+1,i_high+1
-!    nx = one
-!    ny = zero
-!    !nx = grid%n_xi(i,j,1)
-!    !ny = grid%n_xi(i,j,2)
-!    left1 = left(i,j,:,1)
-!    right1 = right(i,j,:,1)
-!    call flux_fun(left1,right1,nx,ny,Fxi)
-!    Fnormal(i,j,:,1) = Fnormal(i,j,:,1) + Fxi
-!  end do
-!  end do
-!  
-!  do j = j_low,j_high+1
-!  do i = i_low,i_high
-!    nx = -one
-!    ny = zero
-!    !nx = -grid%n_xi(i,j,1)
-!    !ny = -grid%n_xi(i,j,2)
-!    left1 = left(i,j,:,1)
-!    right1 = right(i,j,:,1)
-!    call flux_fun(left1,right1,nx,ny,Fxi)
-!    Fnormal(i,j,:,1) = Fnormal(i,j,:,1) + Fxi
-!  end do
-!  end do
-!  
-!  do j = j_low+1,j_high+1
-!  do i = i_low,i_high+1
-!    nx = zero
-!    ny = one
-!    !nx = grid%n_eta(i,j,1)
-!    !ny = grid%n_eta(i,j,2)
-!    left1 = left(i,j,:,2)
-!    right1 = right(i,j,:,2)
-!    call flux_fun(left1,right1,nx,ny,Feta)
-!    Fnormal(i,j,:,2) = Fnormal(i,j,:,2) + Feta
-!  end do
-!  end do
-!  
-!  do j = j_low,j_high
-!  do i = i_low,i_high+1
-!    nx = zero
-!    ny = -one
-!    !nx = -grid%n_eta(i,j,1)
-!    !ny = -grid%n_eta(i,j,2)
-!    left1 = left(i,j,:,2)
-!    right1 = right(i,j,:,2)
-!    call flux_fun(left1,right1,nx,ny,Feta)
-!    Fnormal(i,j,:,2) = Fnormal(i,j,:,2) + Feta
-!  end do
-!  end do
   
 end subroutine calc_flux_2D
 
 
-!  subroutine calc_flux_2D(V,nxi,neta,Fnormal)
-!    
-!    real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq), &
-!                                                  intent(in) :: V
-!    real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq), &
-!                                                  intent(in) :: nxi, neta
-!    real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq), &
-!                                                  intent(out) :: Fnormal
-!    real(prec), dimension(i_low:i_high+1,neq) :: Lxi, Rxi, Fxi
-!    real(prec), dimension(j_low:j_high+1,neq) :: Leta, Reta, Feta
-!    real(prec) :: nx, ny
-!    integer :: i, j
-!    
-!    do j = j_low,j_high+1
-!    !write(*,*)'V',j,V(i_low,j,:)
-!    call MUSCL_extrap(V(:,j,:),Lxi,Rxi)
-!    !do i = i_low,i_high+1
-!    !  write(*,*) Lxi(i,1), Rxi(i,1)
-!    !end do
-!    !stop
-!    do i = i_low,i_high+1
-!      nx = nxi(i,j,1)
-!      ny = nxi(i,j,2)
-!      call flux_fun(Lxi(i,:),Rxi(i,:),nx,ny,Fxi(i,:))
-!    end do
-!    !stop
-!    Fnormal(:,j,:) = Fxi
-!    end do
-!    
-!    do i = i_low,i_high+1
-!    call MUSCL_extrap(V(i,:,:),Leta,Reta)
-!    do j = j_low,j_high+1
-!      nx = neta(i,j,1)
-!      ny = neta(i,j,2)
-!      call flux_fun(Leta(j,:),Reta(j,:),nx,ny,Feta(j,:))
-!    end do
-!    Fnormal(i,:,:) = Fnormal(i,:,:) + Feta
-!    end do
-!    
-!  end subroutine calc_flux_2D
   !================================ select_flux ==============================80
   !>
   !! Description:
@@ -268,9 +177,7 @@ end subroutine calc_flux_2D
     uL   = left(2)
     vL   = left(3)
     pL   = left(4)
-    !write(*,*) rhoL, uL, vL, pL
     call speed_of_sound(pL,rhoL,aL) 
-    !write(*,*) aL
     rhoR = right(1)
     uR   = right(2)
     vR   = right(3)
@@ -354,9 +261,9 @@ end subroutine calc_flux_2D
     u2   = (R*uR + uL)/(R + one)
     v2   = (R*vR + vL)/(R + one)
     ht2  = (R*htR + htL)/(R + one)
-    !a2   = sqrt((gamma-one)*(ht2 - half*(u2**2 + v2**2)))
+    a2   = sqrt((gamma-one)*(ht2 - half*(u2**2 + v2**2)))
     un2 = u2*nx + v2*ny
-    a2   = sqrt((gamma-one)*(ht2 - half*(un2**2)))
+    !a2   = sqrt((gamma-one)*(ht2 - half*(un2**2)))
     
     rvec1 = (/ one, u2, v2, half*(u2**2 +v2**2) /)
     rvec2 = (/ zero, ny*rho2, nx*rho2, rho2*(ny*u2-nx*v2) /)
