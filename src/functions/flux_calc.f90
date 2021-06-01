@@ -48,53 +48,63 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
   type(soln_t), intent(in) :: soln
   type(grid_t), intent(in) :: grid
   real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2), &
-                                                  intent(out) :: Fnormal
+                                                  intent(inout) :: Fnormal
+  !real(prec), dimension(:,:,:,:), intent(inout) :: Fnormal
   real(prec), dimension(neq) :: left, right
   real(prec) :: nx, ny
   integer :: i,j,k
   integer, dimension(4) :: ind
   real(prec), dimension(4,neq) :: Vtmp, psiPtmp, psiMtmp
   Fnormal(:,:,:,:) = zero
-  
+  !write(*,*) lbound(Fnormal,1), ubound(Fnormal,1)
+  !write(*,*) lbound(Fnormal,2), ubound(Fnormal,2)
+  !write(*,*) lbound(Fnormal,3), ubound(Fnormal,3)
+  !write(*,*) lbound(Fnormal,4), ubound(Fnormal,4)
+  !stop
   !write(*,*) i_low,i_high,j_low,j_high 
   !call MUSCL_extrap(soln%V,soln%psi_plus,soln%psi_minus,left,right,ind1,ind2)
   
 !  write(*,*) left(1,1,:,1)
 
+  !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
   do j = j_low,j_high+1
+  !write(*,*) j
   do i = i_low,i_high+1
     nx = one
     ny = zero
     !nx = grid%n_xi(i,j,1)
     !ny = grid%n_xi(i,j,2)
-    ind = (/ ( k,k=i-2,i+1 ) /)
-    Vtmp = soln%V(ind,j,:)
-    psiPtmp = soln%psi_plus(ind,j,:,1)
-    psiMtmp = soln%psi_minus(ind,j,:,1)
-    call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
-    !left =  soln%V(i,j,:)
-    !right = soln%V(i+1,j,:)
+    !ind = (/ ( k,k=i-2,i+1 ) /)
+    !Vtmp = soln%V(ind,j,:)
+    !psiPtmp = soln%psi_plus(ind,j,:,1)
+    !psiMtmp = soln%psi_minus(ind,j,:,1)
+    !call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
+    left =  soln%V(i,j,:)
+    right = soln%V(i+1,j,:)
     call flux_fun(left,right,nx,ny,Fnormal(i,j,:,1))
-    !write(*,*) Fnormal(i+1,j,:,1)
+    !write(*,*) Fnormal(i,j,:,1)
   end do
   end do
+  !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
   do j = j_low,j_high+1
+  !write(*,*) j
   do i = i_low,i_high+1
     nx = zero
     ny = one
     !nx = grid%n_eta(i,j,1)
     !ny = grid%n_eta(i,j,2)
-    ind = (/ ( k,k=j-2,j+1 ) /)
-    Vtmp = soln%V(i,ind,:)
-    psiPtmp = soln%psi_plus(i,ind,:,2)
-    psiMtmp = soln%psi_minus(i,ind,:,2)
-    call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
-    !left =  soln%V(i,j,:)
-    !right = soln%V(i,j+1,:)
+    !ind = (/ ( k,k=j-2,j+1 ) /)
+    !Vtmp = soln%V(i,ind,:)
+    !psiPtmp = soln%psi_plus(i,ind,:,2)
+    !psiMtmp = soln%psi_minus(i,ind,:,2)
+    !call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
+    left =  soln%V(i,j,:)
+    right = soln%V(i,j+1,:)
     call flux_fun(left,right,nx,ny,Fnormal(i,j,:,2))
-    !write(*,*) Fnormal(i,j+1,:,2)
+    !write(*,*) Fnormal(i,j,:,2)
   end do
   end do
+  !stop
 !  do j = j_low,j_high+1
 !  do i = i_low+1,i_high+1
 !    nx = one
@@ -258,8 +268,9 @@ end subroutine calc_flux_2D
     uL   = left(2)
     vL   = left(3)
     pL   = left(4)
-    call speed_of_sound(pL,rhoL,aL)
-    
+    !write(*,*) rhoL, uL, vL, pL
+    call speed_of_sound(pL,rhoL,aL) 
+    !write(*,*) aL
     rhoR = right(1)
     uR   = right(2)
     vR   = right(3)
