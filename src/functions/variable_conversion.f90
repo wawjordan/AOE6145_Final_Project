@@ -29,7 +29,7 @@ module variable_conversion
     
     type(soln_t), intent(inout) :: soln
     call cons2prim(soln%U,soln%V)
-    call limit_primitives(soln%V)
+    !call limit_primitives(soln%V)
     call prim2cons(soln%U, soln%V)
     call speed_of_sound(soln%V(:,:,4),soln%V(:,:,1),soln%asnd)
     
