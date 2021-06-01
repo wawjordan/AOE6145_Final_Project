@@ -150,22 +150,16 @@ module soln_type
     use mms_functions, only : rho_mms, uvel_mms, vvel_mms, press_mms, &
                          rmassconv, xmtmconv, ymtmconv, energyconv
     use quadrature, only : cv_averages
-    use variable_conversion, only : prim2cons
+    !use variable_conversion, only : prim2cons --> circular dependency
     use grid_type, only : grid_t
     
     type(soln_t), intent(inout) :: soln
     type(grid_t), intent(inout) :: grid
-    real(prec), dimension(ig_low:ig_high,jg_low:jg_high) :: x,y
     real(prec) :: L
     integer :: N
     
     N = 5
     L = one
-    
-    x = half*(grid%x(ig_low+1:ig_high+1,jg_low:jg_high) + &
-        grid%x(ig_low:ig_high,jg_low:jg_high))
-    y = half*(grid%y(ig_low:ig_high,jg_low+1:jg_high+1) + &
-        grid%y(ig_low:ig_high,jg_low:jg_high))
     
     call cv_averages(grid,N,wrap_rho_mms,soln%Vmms(:,:,1))
     call cv_averages(grid,N,wrap_uvel_mms,soln%Vmms(:,:,2))
@@ -177,14 +171,7 @@ module soln_type
 !    soln%Vmms(:,:,3) = vvel_mms(L,grid%xc,grid%yc)
 !    soln%Vmms(:,:,4) = press_mms(L,grid%xc,grid%yc)
     
-!    soln%Umms(:,:,1) = soln%Vmms(:,:,1)
-!    soln%Umms(:,:,2) = soln%Vmms(:,:,1)*soln%Vmms(:,:,2)
-!    soln%Umms(:,:,3) = soln%Vmms(:,:,1)*soln%Vmms(:,:,3)
-!    soln%Umms(:,:,4) = soln%Vmms(:,:,4)/(gamma-one) + &
-!                       half*soln%Vmms(:,:,1)*( &
-!                       soln%Vmms(:,:,2)*soln%Vmms(:,:,2) + &
-!                       soln%Vmms(:,:,3)*soln%Vmms(:,:,3) )
-call prim2cons(soln%Umms,soln%Vmms)   
+!call prim2cons(soln%Umms,soln%Vmms)   
     
 !    call cv_averages(grid,1,wrap_rmassconv,soln%Smms(:,:,1))
 !    call cv_averages(grid,1,wrap_xmtmconv,soln%Smms(:,:,2))
@@ -195,56 +182,6 @@ call prim2cons(soln%Umms,soln%Vmms)
     soln%Smms(:,:,3) = ymtmconv(L,grid%xc,grid%yc)
     soln%Smms(:,:,4) = energyconv(gamma,L,grid%xc,grid%yc)
 
-!    soln%Smms(:,:,1) = rmassconv(L,                      &
-!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
-!                       grid%y(ig_low:ig_high,jg_low:jg_high))
-!    soln%Smms(:,:,2) = xmtmconv(L,                       &
-!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
-!                       grid%y(ig_low:ig_high,jg_low:jg_high))
-!    soln%Smms(:,:,3) = ymtmconv(L,                       &
-!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
-!                       grid%y(ig_low:ig_high,jg_low:jg_high))
-!    soln%Smms(:,:,4) = energyconv(gamma, L,              &
-!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
-!                       grid%y(ig_low:ig_high,jg_low:jg_high))
-   
   end subroutine calc_mms
-!  subroutine calc_mms( grid, soln )
-!    
-!    use fluid_constants, only : gamma
-!    use mms_functions
-!    use grid_type, only : grid_t
-!    
-!    type(soln_t), intent(inout) :: soln
-!    type(grid_t), intent(inout) :: grid
-!    
-!    real(prec) :: L  = one
-!    
-!    soln%Vmms(:,:,1) = rho_mms(L,                        &
-!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
-!                       grid%y(ig_low:ig_high,jg_low:jg_high))
-!    soln%Vmms(:,:,2) = uvel_mms(L,                       &
-!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
-!                       grid%y(ig_low:ig_high,jg_low:jg_high))
-!    soln%Vmms(:,:,3) = vvel_mms(L,                       &
-!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
-!                       grid%y(ig_low:ig_high,jg_low:jg_high))
-!    soln%Vmms(:,:,4) = press_mms(L,                      &
-!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
-!                       grid%y(ig_low:ig_high,jg_low:jg_high))
-!    
-!    soln%Smms(:,:,1) = rmassconv(L,                      &
-!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
-!                       grid%y(ig_low:ig_high,jg_low:jg_high))
-!    soln%Smms(:,:,2) = xmtmconv(L,                       &
-!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
-!                       grid%y(ig_low:ig_high,jg_low:jg_high))
-!    soln%Smms(:,:,3) = ymtmconv(L,                       &
-!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
-!                       grid%y(ig_low:ig_high,jg_low:jg_high))
-!    soln%Smms(:,:,4) = energyconv(gamma, L,              &
-!                       grid%x(ig_low:ig_high,jg_low:jg_high),&
-!                       grid%y(ig_low:ig_high,jg_low:jg_high))
-!    
-!  end subroutine calc_mms
+  
 end module soln_type
