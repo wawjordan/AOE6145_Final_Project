@@ -4,9 +4,9 @@ module time_integration
   use set_constants, only : zero, one, half, third, fourth
   use set_inputs,    only : neq, i_low, i_high, ig_low, ig_high
   use set_inputs,    only : j_low, j_high, jg_low, jg_high
-  use grid_type
-  use soln_type
-  use variable_conversion
+  use grid_type,     only : grid_t
+  use soln_type,     only : soln_t
+  use variable_conversion, only : speed_of_sound
   
   implicit none
   
@@ -75,7 +75,7 @@ module time_integration
     real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq),&
                                                intent(inout) :: U
     real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
-                                               intent(out) :: R
+                                               intent(inout) :: R
     real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2),&
                                                intent(in) :: F
     real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
@@ -90,9 +90,9 @@ module time_integration
     
     call calc_residual(grid%A_xi,grid%A_eta,grid%V,S,F,R)
     !do j = 1,N
-    do i = 1,neq
+    do i = 1,4
     U(i_low:i_high,j_low:j_high,i) = U(i_low:i_high,j_low:j_high,i) &
-    - (R(:,:,i)*dt)/grid%V(i_low:i_high,j_low:j_high)
+    - (R(i_low:i_high,j_low:j_high,i)*dt)/grid%V(i_low:i_high,j_low:j_high)
     end do
     !end do
     
@@ -111,7 +111,7 @@ module time_integration
     real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2),&
                                                   intent(in) :: F
     real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
-                                                 intent(out) :: R
+                                                 intent(inout) :: R
     
     integer :: i,j
     
