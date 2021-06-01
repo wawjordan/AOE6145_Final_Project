@@ -39,29 +39,31 @@ program main_program
   soln%S = soln%Smms
   
   call output_soln(grid,soln,0)
-  do i = 1,250
+  do i = 1,45000
 
   call prim2cons(soln%U,soln%V)
   !soln%U(ig_low:i_low-1,jg_low:jg_high,:) = soln%Umms(ig_low:i_low-1,jg_low:jg_high,:)
   !soln%U(i_high+1:ig_high,jg_low:jg_high,:) = soln%Umms(i_high+1:ig_high,jg_low:jg_high,:)
   !soln%U(ig_low:ig_high,jg_low:j_low-1,:) = soln%Umms(ig_low:ig_high,jg_low:j_low-1,:)
   !soln%U(ig_low:ig_high,j_high+1:jg_high,:) = soln%Umms(ig_low:ig_high,j_high+1:jg_high,:)
-  write(*,*) i
+  !write(*,*) i
   !call Limit(soln%V,soln%psi_plus,soln%psi_minus)
   !soln%S = soln%Smms
   call calc_flux_2D(soln,grid,soln%F)
   !call calc_sources(soln,grid)
   call calc_time_step(grid%A_xi,grid%A_eta,grid%n_xi_avg, &
                       grid%n_eta_avg,grid%V,soln%V,soln%dt)
-  call explicit_RK(grid,soln%S,soln%dt,soln%F,soln%U,soln%R,1)
+  !call explicit_RK(grid,soln%S,soln%dt,soln%F,soln%U,soln%R,1)
+  call explicit_RK(grid,soln)
   call cons2prim(soln%U,soln%V)
-  soln%V(ig_low:i_low-1,jg_low:jg_high,:) = soln%Vmms(ig_low:i_low-1,jg_low:jg_high,:)
+  !soln%V(ig_low:i_low-1,jg_low:jg_high,:) = soln%Vmms(ig_low:i_low-1,jg_low:jg_high,:)
   !soln%V(i_high+1:ig_high,jg_low:jg_high,:) = soln%Vmms(i_high+1:ig_high,jg_low:jg_high,:)
-  soln%V(ig_low:ig_high,jg_low:j_low-1,:) = soln%Vmms(ig_low:ig_high,jg_low:j_low-1,:)
+  !soln%V(ig_low:ig_high,jg_low:j_low-1,:) = soln%Vmms(ig_low:ig_high,jg_low:j_low-1,:)
   !soln%V(ig_low:ig_high,j_high+1:jg_high,:) = soln%Vmms(ig_low:ig_high,j_high+1:jg_high,:)
   !call update_states(soln)
   !call calc_de(soln,soln%DE,soln%DEnorm,0,cons)
-  if (mod(i,10)==0) then
+  if (mod(i,1000)==0) then
+  !write(*,*) i
   call output_soln(grid,soln,i)
   end if
   end do
