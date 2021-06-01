@@ -7,7 +7,7 @@ program main_program
   use set_inputs, only : ig_low,ig_high,jg_low,jg_high
   use file_handling, only : grid_in, grid_out
   use geometry, only : setup_geometry, teardown_geometry
-  use variable_conversion, only : prim2cons, cons2prim
+  use variable_conversion, only : prim2cons, cons2prim, update_states
   use other_subroutines, only : output_exact_soln, output_file_headers,&
                                 output_soln, calc_de
   use time_integration, only : calc_time_step, explicit_RK
@@ -35,18 +35,29 @@ program main_program
   call output_exact_soln(grid,soln)
   call output_file_headers
   soln%V = soln%Vmms
+  call prim2cons(soln%Umms,soln%Vmms)
   soln%U = soln%Umms
   soln%S = soln%Smms
   
   call output_soln(grid,soln,0)
-  do i = 1,45000
-
-  call prim2cons(soln%U,soln%V)
+  do i = 1,1055
+  write(*,*) i
+  
+  !soln%U(i_low:i_high,jg_high-1,:) = 2*soln%U(i_low:i_high,j_high,:) - &
+  !                                       soln%U(i_low:i_high,j_high-1,:)
+  !soln%U(ig_high-1,j_low:j_high,:) = 2*soln%U(i_high,j_low:j_high,:) - &
+  !                                       soln%U(i_high-1,j_low:j_high,:)
+  !soln%U(ig_low:ig_high,jg_high,:) = soln%U(ig_low:ig_high,jg_high-1,:)
+  
+  !soln%U(ig_high-1,jg_low:jg_high,:) = soln%U(ig_high-2,jg_low:jg_high,:)
+  !soln%U(ig_high,jg_low:jg_high,:) = soln%U(ig_high-1,jg_low:jg_high,:)
+  !call prim2cons(soln%U,soln%V)
+  call update_states(soln)
+   
   !soln%U(ig_low:i_low-1,jg_low:jg_high,:) = soln%Umms(ig_low:i_low-1,jg_low:jg_high,:)
   !soln%U(i_high+1:ig_high,jg_low:jg_high,:) = soln%Umms(i_high+1:ig_high,jg_low:jg_high,:)
   !soln%U(ig_low:ig_high,jg_low:j_low-1,:) = soln%Umms(ig_low:ig_high,jg_low:j_low-1,:)
   !soln%U(ig_low:ig_high,j_high+1:jg_high,:) = soln%Umms(ig_low:ig_high,j_high+1:jg_high,:)
-  !write(*,*) i
   !call Limit(soln%V,soln%psi_plus,soln%psi_minus)
   !soln%S = soln%Smms
   call calc_flux_2D(soln,grid,soln%F)
@@ -60,13 +71,13 @@ program main_program
   !soln%V(i_high+1:ig_high,jg_low:jg_high,:) = soln%Vmms(i_high+1:ig_high,jg_low:jg_high,:)
   !soln%V(ig_low:ig_high,jg_low:j_low-1,:) = soln%Vmms(ig_low:ig_high,jg_low:j_low-1,:)
   !soln%V(ig_low:ig_high,j_high+1:jg_high,:) = soln%Vmms(ig_low:ig_high,j_high+1:jg_high,:)
-  !call update_states(soln)
   !call calc_de(soln,soln%DE,soln%DEnorm,0,cons)
-  if (mod(i,1000)==0) then
+  if (mod(i,100)==0) then
   !write(*,*) i
   call output_soln(grid,soln,i)
   end if
   end do
+  call output_soln(grid,soln,i)
   call grid_out(geometry_file,grid)
   call teardown_geometry(grid,soln)
   close(50)
