@@ -73,7 +73,7 @@ module soln_type
               soln%psi_minus(  ig_low:ig_high+1, jg_low:jg_high+1, neq, 2 )  )
     
     if (isMMS) then
-      allocate( soln%DE( i_low:i_high,  j_low:j_high, neq ),  &
+      allocate( soln%DE( ig_low:ig_high,  jg_low:jg_high, neq ),  &
                 soln%Vmms( ig_low:ig_high,  jg_low:jg_high, neq ),&
                 soln%Umms( ig_low:ig_high,  jg_low:jg_high, neq ),&
                 soln%Smms( ig_low:ig_high,  jg_low:jg_high, neq ),&
@@ -131,20 +131,6 @@ module soln_type
                soln%rnorm, &
                soln%rold,  &
                soln%rinit   )
-   ! deallocate( &
-   !            soln%U,     &
-   !            soln%F,     &
-   !            soln%S,     &
-   !            soln%V,     &
-   !            soln%L,     &
-   !            soln%R,     &
-   !            soln%asnd,  &
-   !            soln%mach,  &
-   !            soln%temp,  &
-   !            soln%dt,    &
-   !            soln%rnorm, &
-   !            soln%rold,  &
-   !            soln%rinit   )
     deallocate( &
                soln%psi_plus,  &
                soln%psi_minus  )
@@ -157,8 +143,14 @@ module soln_type
   
   subroutine calc_mms( grid, soln )
     
-    use mms_functions
-    use quadrature
+    use mms_functions, only : wrap_rho_mms, wrap_uvel_mms, &
+                              wrap_vvel_mms, wrap_press_mms, &
+                              wrap_rmassconv, wrap_xmtmconv, &
+                              wrap_ymtmconv, wrap_energyconv
+    use mms_functions, only : rho_mms, uvel_mms, vvel_mms, press_mms, &
+                         rmassconv, xmtmconv, ymtmconv, energyconv
+    use quadrature, only : cv_averages
+    use variable_conversion, only : prim2cons
     use grid_type, only : grid_t
     
     type(soln_t), intent(inout) :: soln
@@ -170,32 +162,38 @@ module soln_type
     N = 5
     L = one
     
+    x = half*(grid%x(ig_low+1:ig_high+1,jg_low:jg_high) + &
+        grid%x(ig_low:ig_high,jg_low:jg_high))
+    y = half*(grid%y(ig_low:ig_high,jg_low+1:jg_high+1) + &
+        grid%y(ig_low:ig_high,jg_low:jg_high))
+    
     call cv_averages(grid,N,wrap_rho_mms,soln%Vmms(:,:,1))
     call cv_averages(grid,N,wrap_uvel_mms,soln%Vmms(:,:,2))
     call cv_averages(grid,N,wrap_vvel_mms,soln%Vmms(:,:,3))
     call cv_averages(grid,N,wrap_press_mms,soln%Vmms(:,:,4))
     
-    soln%Umms(:,:,1) = soln%Vmms(:,:,1)
-    soln%Umms(:,:,2) = soln%Vmms(:,:,1)*soln%Vmms(:,:,2)
-    soln%Umms(:,:,3) = soln%Vmms(:,:,1)*soln%Vmms(:,:,3)
-    soln%Umms(:,:,4) = soln%Vmms(:,:,4)/(gamma-one) + &
-                       half*soln%Vmms(:,:,1)*( &
-                       soln%Vmms(:,:,2)*soln%Vmms(:,:,2) + &
-                       soln%Vmms(:,:,3)*soln%Vmms(:,:,3) )
+!    soln%Vmms(:,:,1) = rho_mms(L,grid%xc,grid%yc)
+!    soln%Vmms(:,:,2) = uvel_mms(L,grid%xc,grid%yc)
+!    soln%Vmms(:,:,3) = vvel_mms(L,grid%xc,grid%yc)
+!    soln%Vmms(:,:,4) = press_mms(L,grid%xc,grid%yc)
     
-    x = grid%x(ig_low+1:ig_high+1,jg_low:jg_high) - &
-        grid%x(ig_low:ig_high,jg_low:jg_high)
-    y = grid%y(ig_low:ig_high,jg_low+1:jg_high+1) - &
-        grid%y(ig_low:ig_high,jg_low:jg_high)
+!    soln%Umms(:,:,1) = soln%Vmms(:,:,1)
+!    soln%Umms(:,:,2) = soln%Vmms(:,:,1)*soln%Vmms(:,:,2)
+!    soln%Umms(:,:,3) = soln%Vmms(:,:,1)*soln%Vmms(:,:,3)
+!    soln%Umms(:,:,4) = soln%Vmms(:,:,4)/(gamma-one) + &
+!                       half*soln%Vmms(:,:,1)*( &
+!                       soln%Vmms(:,:,2)*soln%Vmms(:,:,2) + &
+!                       soln%Vmms(:,:,3)*soln%Vmms(:,:,3) )
+call prim2cons(soln%Umms,soln%Vmms)   
     
-    call cv_averages(grid,1,wrap_rmassconv,soln%Smms(:,:,1))
-    call cv_averages(grid,1,wrap_xmtmconv,soln%Smms(:,:,2))
-    call cv_averages(grid,1,wrap_ymtmconv,soln%Smms(:,:,3))
-    call cv_averages(grid,1,wrap_energyconv,soln%Smms(:,:,4))
-!    soln%Smms(:,:,1) = rmassconv(L,x,y)
-!    soln%Smms(:,:,2) = xmtmconv(L,x,y)
-!    soln%Smms(:,:,3) = ymtmconv(L,x,y)
-!    soln%Smms(:,:,4) = energyconv(gamma,L,x,y)
+!    call cv_averages(grid,1,wrap_rmassconv,soln%Smms(:,:,1))
+!    call cv_averages(grid,1,wrap_xmtmconv,soln%Smms(:,:,2))
+!    call cv_averages(grid,1,wrap_ymtmconv,soln%Smms(:,:,3))
+!    call cv_averages(grid,1,wrap_energyconv,soln%Smms(:,:,4))
+    soln%Smms(:,:,1) = rmassconv(L,grid%xc,grid%yc)
+    soln%Smms(:,:,2) = xmtmconv(L,grid%xc,grid%yc)
+    soln%Smms(:,:,3) = ymtmconv(L,grid%xc,grid%yc)
+    soln%Smms(:,:,4) = energyconv(gamma,L,grid%xc,grid%yc)
 
 !    soln%Smms(:,:,1) = rmassconv(L,                      &
 !                       grid%x(ig_low:ig_high,jg_low:jg_high),&
