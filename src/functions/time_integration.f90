@@ -120,9 +120,6 @@ module time_integration
       R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1) - A_xi(i,j)*F(i,j,:,1)  &
                + A_eta(i,j+1)*F(i,j+1,:,2) - A_eta(i,j)*F(i,j,:,2) &
                - V(i,j)*S(i,j,:)
-      !R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1)  - A_xi(i,j)*F(i,j,:,1)  &
-      !         + A_eta(i,j+1)*F(i,j+1,:,2) - A_eta(i,j)*F(i,j,:,2) &
-      !         - V(i,j)*S(i,j,:)
     end do
     end do
   end subroutine calc_residual
