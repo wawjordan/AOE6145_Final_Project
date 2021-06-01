@@ -19,6 +19,7 @@ module grid_type
     
     
     real(prec), allocatable, dimension(:,:) :: x, y
+    real(prec), allocatable, dimension(:,:) :: xc, yc
     real(prec), allocatable, dimension(:,:) :: A_xi, A_eta
     real(prec), allocatable, dimension(:,:,:) :: n_xi, n_eta
     real(prec), allocatable, dimension(:,:,:) :: n_xi_avg
@@ -40,12 +41,14 @@ module grid_type
   !===========================================================================80
   subroutine allocate_grid( grid )
     
-    use set_inputs   , only : grid_name, n_ghost
+    use set_inputs, only : grid_name, n_ghost
     
     type( grid_t ), intent( inout ) :: grid
     
     allocate( grid%x(       ig_low:ig_high+1,jg_low:jg_high+1), &
               grid%y(       ig_low:ig_high+1,jg_low:jg_high+1), &
+              grid%xc(      ig_low:ig_high,jg_low:jg_high), &
+              grid%yc(      ig_low:ig_high,jg_low:jg_high), &
               grid%A_xi(    ig_low:ig_high+1,jg_low:jg_high), &
               grid%A_eta(   ig_low:ig_high,jg_low:jg_high+1), &
               grid%n_xi(    ig_low:ig_high+1,jg_low:jg_high,2),   &
@@ -211,11 +214,16 @@ module grid_type
       grid%n_xi(i,j,2)   = -( (grid%x(i,j+1)-grid%x(i,j)) )/grid%A_xi(i,j)
       grid%n_eta(i,j,1)  = -( (grid%y(i+1,j)-grid%y(i,j)) )/grid%A_eta(i,j)
       grid%n_eta(i,j,2)  = ( (grid%x(i+1,j)-grid%x(i,j)) )/grid%A_eta(i,j)
-      call cell_volume( (/ grid%x(i,j), grid%y(i,j) /), &
-                    (/ grid%x(i+1,j), grid%y(i+1,j) /), &
-                (/ grid%x(i+1,j+1), grid%y(i+1,j+1) /), &
-                    (/ grid%x(i,j+1), grid%y(i,j+1) /), &
-                                      grid%V(i,j)       )
+     ! call cell_volume( (/ grid%x(i,j), grid%y(i,j) /), &
+     !               (/ grid%x(i+1,j), grid%y(i+1,j) /), &
+     !           (/ grid%x(i+1,j+1), grid%y(i+1,j+1) /), &
+     !               (/ grid%x(i,j+1), grid%y(i,j+1) /), &
+     !                                 grid%V(i,j)       )
+     call volume_calc( (/ grid%x(i,j), grid%x(i+1,j), grid%x(i+1,j+1), &
+                                         grid%x(i,j+1),grid%x(i,j) /), &
+                       (/ grid%y(i,j), grid%y(i+1,j), grid%y(i+1,j+1), &
+                                         grid%y(i,j+1),grid%y(i,j) /), &
+                       grid%xc(i,j), grid%yc(i,j), grid%V(i,j) )
     end do
     end do
     
@@ -257,6 +265,33 @@ module grid_type
     V = half*abs( AC(1)*BD(2) - AC(2)*BD(1) )
     
   end subroutine cell_volume
+  
+  subroutine volume_calc(x,y,cx,cy,V)
+    
+    real(prec), dimension(:), intent(in) :: x,y
+    real(prec), intent(out) :: cx, cy, V
+    integer :: i, N
+    
+    cx = zero
+    cy = zero
+    V  = zero
+    N = size(x)
+    
+    do i = 1,N-1
+      V = V + x(i)*y(i+1) - x(i+1)*y(i)
+    end do
+    V = half*V
+    
+    do i = 1,N-1
+      cx = cx + (x(i)+x(i+1))*(x(i)*y(i+1)-x(i+1)*y(i))
+      cy = cy + (y(i)+y(i+1))*(x(i)*y(i+1)-x(i+1)*y(i))
+    end do
+    cx = cx/(6.0_prec*V)
+    cy = cy/(6.0_prec*V)
+    
+   V = abs(V)
+   
+  end subroutine volume_calc
   !============================= deallocate_grid =============================80
   !>
   !! Description: 
@@ -270,8 +305,8 @@ module grid_type
     
     type( grid_t ), intent( inout ) :: grid
     
-    deallocate( grid%x, grid%y, grid%A_xi, grid%A_eta, grid%n_xi, grid%n_eta, &
-                grid%V )
+    deallocate( grid%x, grid%y, grid%xc, grid%yc, grid%A_xi, grid%A_eta, &
+                grid%n_xi, grid%n_eta, grid%V )
     
   end subroutine deallocate_grid
   
