@@ -65,8 +65,36 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
   !call MUSCL_extrap(soln%V,soln%psi_plus,soln%psi_minus,left,right,ind1,ind2)
   
 !  write(*,*) left(1,1,:,1)
-
+  !write(*,*) '(i)'
+  !do j = jg_low,jg_high
+  !write(*,*) (/(i,i=ig_low,ig_high)/)
+  !end do
+  !write(*,*) '(j)'
+  !do j = jg_low,jg_high
+  !write(*,*) (/(j,i=ig_low,ig_high)/)
+  !end do
   !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
+  !write(*,*) 'rho'
+  !do j = jg_low,jg_high
+  !write(*,*) soln%V(:,j,1)
+  !end do
+  !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
+  !write(*,*) 'u'
+  !do j = jg_low,jg_high
+  !write(*,*) soln%V(:,j,2)
+  !end do
+  !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
+  !write(*,*) 'v'
+  !do j = jg_low,jg_high
+  !write(*,*) soln%V(:,j,3)
+  !end do
+  !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
+  !write(*,*) 'p'
+  !do j = jg_low,jg_high
+  !write(*,*) soln%V(:,j,4)
+  !end do
+  !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
+
   do j = j_low,j_high+1
   !write(*,*) j
   do i = i_low,i_high+1
@@ -80,11 +108,14 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
     !psiMtmp = soln%psi_minus(ind,j,:,1)
     !call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
     left =  soln%V(i,j,:)
+    !write(*,*) i,j,'left',left
     right = soln%V(i+1,j,:)
+    !write(*,*) i,j,'right',right
     call flux_fun(left,right,nx,ny,Fnormal(i,j,:,1))
     !write(*,*) Fnormal(i,j,:,1)
   end do
   end do
+  !stop
   !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
   do j = j_low,j_high+1
   !write(*,*) j
@@ -98,8 +129,8 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
     !psiPtmp = soln%psi_plus(i,ind,:,2)
     !psiMtmp = soln%psi_minus(i,ind,:,2)
     !call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
-    left =  soln%V(i,j,:)
-    right = soln%V(i,j+1,:)
+    !left =  soln%V(i,j,:)
+    !right = soln%V(i,j+1,:)
     call flux_fun(left,right,nx,ny,Fnormal(i,j,:,2))
     !write(*,*) Fnormal(i,j,:,2)
   end do
@@ -253,15 +284,15 @@ end subroutine calc_flux_2D
     unL = uL*nx + vL*ny
     unR = uR*nx + vR*ny
     
-    htL = aL**2/(gamma-one) + half*unL**2
-    htR = aR**2/(gamma-one) + half*unR**2
+    htL = aL*aL/(gamma-one) + half*(uL*uL + vL*vL)
+    htR = aR*aR/(gamma-one) + half*(uR*uR + vR*vR)
     
     R = sqrt(rhoR/rhoL)
     rho2 = R*rhoL
     u2   = (R*uR + uL)/(R + one)
     v2   = (R*vR + vL)/(R + one)
     ht2  = (R*htR + htL)/(R + one)
-    a2   = sqrt((gamma-one)*(ht2 - half*(u2**2 + v2**2)))
+    a2   = sqrt((gamma-one)*(ht2 - half*(u2*u2 + v2*v2)))
     un2 = u2*nx + v2*ny
     !a2   = sqrt((gamma-one)*(ht2 - half*(un2**2)))
     
