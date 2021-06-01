@@ -20,20 +20,14 @@ program main_program
   use flux_calc, only : select_flux, calc_flux_2D
   implicit none
   
-  !character(len=100) :: header_str1
-  !character(len=100) :: niter
   integer :: i, j, k
   type( grid_t )      :: grid
   type( soln_t )      :: soln
-  !type( dirichlet_mms_bc ) :: inlet_left, inlet_bottom
-  !type( outflow_bc ) 
-  !integer, dimension(:), allocatable :: ind1, ind2
   
   call set_derived_constants
   call set_fluid_constants
   call select_flux()
   call select_limiter()
-  !call read_namelist('input.nml')
   call set_derived_inputs
   call setup_geometry(grid,soln)
   
@@ -42,16 +36,10 @@ program main_program
   call output_file_headers
   soln%V = soln%Vmms
   soln%U = soln%Umms
-  !soln%V(i_low:i_high,j_low:j_high,:) = soln%Vmms(i_low:i_high,j_low:j_high,:)
-
   soln%S = soln%Smms
   
-  !call Limit(soln%V,soln%psi_plus,soln%psi_minus)
-  
-  !call update_states(soln)
   call output_soln(grid,soln,0)
   do i = 1,250
-
 
   call prim2cons(soln%U,soln%V)
   !soln%U(ig_low:i_low-1,jg_low:jg_high,:) = soln%Umms(ig_low:i_low-1,jg_low:jg_high,:)
