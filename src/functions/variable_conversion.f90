@@ -34,8 +34,7 @@ module variable_conversion
     call speed_of_sound(soln%V(:,:,4),soln%V(:,:,1),soln%asnd)
     
     soln%mach = sqrt(soln%V(:,:,2)**2 + soln%V(:,:,3)**2)/soln%asnd
-    !write(*,*) sqrt(-soln%mach(1,1))
-    !stop
+    
   end subroutine update_states
   
   !============================== speed_of_sound  ============================80
