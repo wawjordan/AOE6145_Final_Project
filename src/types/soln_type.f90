@@ -150,7 +150,6 @@ module soln_type
     use mms_functions, only : rho_mms, uvel_mms, vvel_mms, press_mms, &
                          rmassconv, xmtmconv, ymtmconv, energyconv
     use quadrature, only : cv_averages
-    !use variable_conversion, only : prim2cons --> circular dependency
     use grid_type, only : grid_t
     
     type(soln_t), intent(inout) :: soln
@@ -161,17 +160,15 @@ module soln_type
     N = 5
     L = one
     
-    call cv_averages(grid,N,wrap_rho_mms,soln%Vmms(:,:,1))
-    call cv_averages(grid,N,wrap_uvel_mms,soln%Vmms(:,:,2))
-    call cv_averages(grid,N,wrap_vvel_mms,soln%Vmms(:,:,3))
-    call cv_averages(grid,N,wrap_press_mms,soln%Vmms(:,:,4))
+!    call cv_averages(grid,N,wrap_rho_mms,soln%Vmms(:,:,1))
+!    call cv_averages(grid,N,wrap_uvel_mms,soln%Vmms(:,:,2))
+!    call cv_averages(grid,N,wrap_vvel_mms,soln%Vmms(:,:,3))
+!    call cv_averages(grid,N,wrap_press_mms,soln%Vmms(:,:,4))
     
-!    soln%Vmms(:,:,1) = rho_mms(L,grid%xc,grid%yc)
-!    soln%Vmms(:,:,2) = uvel_mms(L,grid%xc,grid%yc)
-!    soln%Vmms(:,:,3) = vvel_mms(L,grid%xc,grid%yc)
-!    soln%Vmms(:,:,4) = press_mms(L,grid%xc,grid%yc)
-    
-!call prim2cons(soln%Umms,soln%Vmms)   
+    soln%Vmms(:,:,1) = rho_mms(L,grid%xc,grid%yc)
+    soln%Vmms(:,:,2) = uvel_mms(L,grid%xc,grid%yc)
+    soln%Vmms(:,:,3) = vvel_mms(L,grid%xc,grid%yc)
+    soln%Vmms(:,:,4) = press_mms(L,grid%xc,grid%yc)
     
 !    call cv_averages(grid,1,wrap_rmassconv,soln%Smms(:,:,1))
 !    call cv_averages(grid,1,wrap_xmtmconv,soln%Smms(:,:,2))
