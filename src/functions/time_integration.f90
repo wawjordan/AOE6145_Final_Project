@@ -75,13 +75,13 @@ module time_integration
     type(soln_t), intent(inout) :: soln
     integer :: i, j
     
-    
-    call calc_residual(grid%A_xi(i_low:i_high+1,j_low:j_high),&
-                      grid%A_eta(i_low:i_high,j_low:j_high+1),&
-                      grid%V(i_low:i_high,j_low:j_high),&
-                      soln%S(i_low:i_high,j_low:j_high,:),&
-                      soln%F(i_low:i_high+1,j_low:j_high+1,:,:),&
-                      soln%R(i_low:i_high,j_low:j_high,:))
+    call calc_residual(grid,soln)
+    !call calc_residual(grid%A_xi(i_low:i_high+1,j_low:j_high),&
+    !                  grid%A_eta(i_low:i_high,j_low:j_high+1),&
+    !                  grid%V(i_low:i_high,j_low:j_high),&
+    !                  soln%S(i_low:i_high,j_low:j_high,:),&
+    !                  soln%F(i_low:i_high+1,j_low:j_high+1,:,:),&
+    !                  soln%R(i_low:i_high,j_low:j_high,:))
     do i = 1,4
     soln%U(i_low:i_high,j_low:j_high,i) = &
          soln%U(i_low:i_high,j_low:j_high,i) - &
@@ -127,30 +127,48 @@ module time_integration
   !  
   !end subroutine explicit_RK
   
-  subroutine calc_residual(A_xi,A_eta,V,S,F,R)
+  subroutine calc_residual(grid,soln)
     
-    real(prec), dimension(:,:), intent(in) :: A_xi
-    real(prec), dimension(:,:), intent(in) :: A_eta
-    real(prec), dimension(:,:), intent(in) :: V
-    real(prec), dimension(:,:,:), intent(in) :: S
-    real(prec), dimension(:,:,:,:), intent(in) :: F
-    real(prec), dimension(:,:,:), intent(inout) :: R
-    integer :: i,j,lowi,highi,lowj,highj
-    lowi  = lbound(R,1)
-    highi = ubound(R,1)
-    lowj  = lbound(R,2)
-    highj = ubound(R,2)
-    do j = lowj,highj
-    do i = lowi,highi
+    type(grid_t), intent(inout) :: grid
+    type(soln_t), intent(inout) :: soln
+    integer :: i,j
+    do j = j_low,j_high
+    do i = i_low,i_high
       !R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1) - A_xi(i,j)*F(i,j,:,1)  &
       !         + A_eta(i,j+1)*F(i,j+1,:,2) - A_eta(i,j)*F(i,j,:,2) &
       !         - V(i,j)*S(i,j,:)
-      R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1) - A_xi(i,j)*F(i,j,:,1)  &
-               + A_eta(i,j+1)*F(i,j+1,:,2) - A_eta(i,j)*F(i,j,:,2) &
-               - V(i,j)*S(i,j,:)
+      soln%R(i,j,:) = grid%A_xi(i+1,j)*soln%F(i+1,j,:,1) &
+                    - grid%A_xi(i,j)*soln%F(i,j,:,1)  &
+                    + grid%A_eta(i,j+1)*soln%F(i,j+1,:,2) &
+                    - grid%A_eta(i,j)*soln%F(i,j,:,2) &
+                    - grid%V(i,j)*soln%S(i,j,:)
     end do
     end do
   end subroutine calc_residual
+  !***subroutine calc_residual(A_xi,A_eta,V,S,F,R)
+  !  
+  !  real(prec), dimension(:,:), intent(in) :: A_xi
+  !  real(prec), dimension(:,:), intent(in) :: A_eta
+  !  real(prec), dimension(:,:), intent(in) :: V
+  !  real(prec), dimension(:,:,:), intent(in) :: S
+  !  real(prec), dimension(:,:,:,:), intent(in) :: F
+  !  real(prec), dimension(:,:,:), intent(inout) :: R
+  !  integer :: i,j,lowi,highi,lowj,highj
+  !  lowi  = lbound(R,1)
+  !  highi = ubound(R,1)
+  !  lowj  = lbound(R,2)
+  !  highj = ubound(R,2)
+  !  do j = lowj,highj
+  !  do i = lowi,highi
+  !    !R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1) - A_xi(i,j)*F(i,j,:,1)  &
+  !    !         + A_eta(i,j+1)*F(i,j+1,:,2) - A_eta(i,j)*F(i,j,:,2) &
+  !    !         - V(i,j)*S(i,j,:)
+  !    R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1) - A_xi(i,j)*F(i,j,:,1)  &
+  !             + A_eta(i,j+1)*F(i,j+1,:,2) - A_eta(i,j)*F(i,j,:,2) &
+  !             - V(i,j)*S(i,j,:)
+  !  end do
+  !  end do
+  !end subroutine calc_residual
   !subroutine calc_residual(A_xi,A_eta,V,S,F,R)
   !  
   !  real(prec), dimension(ig_low:ig_high+1,jg_low:jg_high),&
