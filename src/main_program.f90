@@ -6,14 +6,16 @@ program main_program
   use set_inputs, only : set_derived_inputs, geometry_file
   use set_inputs, only : i_low,i_high,j_low,j_high, n_ghost, cons, neq
   use set_inputs, only : ig_low,ig_high,jg_low,jg_high
-  use set_inputs, only : res_save, res_out, soln_save, tol
+  use set_inputs, only : res_save, res_out, soln_save, tol, Lmms
   use file_handling, only : grid_in, grid_out
   use geometry, only : setup_geometry, teardown_geometry
-  use variable_conversion, only : prim2cons, cons2prim, update_states
+  use variable_conversion, only : prim2cons, cons2prim, update_states, &
+                                  limit_primitives
   use other_subroutines, only : output_exact_soln, output_file_headers,&
                                 output_soln, output_res, calc_de, Limit, MUSCL_extrap
   use time_integration, only : calc_time_step, explicit_RK, residual_norms
   use limiter_calc, only : select_limiter, calc_consecutive_variations, limiter_fun
+  use mms_functions, only : rho_mms, uvel_mms, vvel_mms, press_mms
   !use init_problem, only : initialize
   !use namelist, only : read_namelist
   use bc_type, only : dirichlet_mms_bc_t
@@ -44,39 +46,74 @@ program main_program
   call output_exact_soln(grid,soln)
   call output_file_headers
   soln%V = soln%Vmms
+  
   call prim2cons(soln%Umms,soln%Vmms)
   soln%U = soln%Umms
   soln%S = soln%Smms
   
   call output_soln(grid,soln,0)
   do k = 1,100000
-  !write(*,*) k
+!==============================================================================
+  !soln%V(i_low:i_high,j_low-1,1) = &
+  ! 2*rho_mms(Lmms,grid%x(i_low:i_high,j_low), grid%y(i_low:i_high,j_low) ) &
+  ! - soln%V(i_low:i_high,j_low,1)
+  !soln%V(i_low:i_high,j_low-1,2) = &
+  ! 2*uvel_mms(Lmms,grid%x(i_low:i_high,j_low), grid%y(i_low:i_high,j_low) ) &
+  ! - soln%V(i_low:i_high,j_low,2)
+  !soln%V(i_low:i_high,j_low-1,3) = &
+  ! 2*vvel_mms(Lmms,grid%x(i_low:i_high,j_low), grid%y(i_low:i_high,j_low) ) &
+  ! - soln%V(i_low:i_high,j_low,3)
+  !soln%V(i_low:i_high,j_low-1,4) = &
+  ! 2*press_mms(Lmms,grid%x(i_low:i_high,j_low), grid%y(i_low:i_high,j_low) ) &
+  ! - soln%V(i_low:i_high,j_low,4)
+  ! 
+  !!soln%V(i_low:i_high,j_low-2,:) = soln%V(i_low:i_high,j_low-1,:)
+  !soln%V(i_low:i_high,j_low-2,:) = 2*soln%V(i_low:i_high,j_low-1,:) - &
+  !                                   soln%V(i_low:i_high,j_low,:)
+  !
+  !soln%V(i_low-1,j_low:j_high,1) = &
+  ! 2*rho_mms(Lmms,grid%x(i_low,j_low:j_high), grid%y(i_low,j_low:j_high) ) &
+  ! - soln%V(i_low-1,j_low:j_high,1)
+  !soln%V(i_low-1,j_low:j_high,2) = &
+  ! 2*uvel_mms(Lmms,grid%x(i_low,j_low:j_high), grid%y(i_low,j_low:j_high) ) &
+  ! - soln%V(i_low-1,j_low:j_high,2)
+  !soln%V(i_low-1,j_low:j_high,3) = &
+  ! 2*vvel_mms(Lmms,grid%x(i_low,j_low:j_high), grid%y(i_low,j_low:j_high) ) &
+  ! - soln%V(i_low-1,j_low:j_high,3)
+  !soln%V(i_low-1,j_low:j_high,4) = &
+  ! 2*press_mms(Lmms,grid%x(i_low,j_low:j_high), grid%y(i_low,j_low:j_high) ) &
+  ! - soln%V(i_low-1,j_low:j_high,4)
+  ! 
+  !!soln%V(i_low-2,j_low:j_high,:) = soln%V(i_low-1,j_low:j_high,:)
+  !soln%V(i_low-2,j_low:j_high,:) = 2*soln%V(i_low-1,j_low:j_high,:) - &
+  !                                 soln%V(i_low,j_low:j_high,:)
+!==============================================================================
   
-  soln%V(i_low:i_high,jg_high-1,:) = 2*soln%V(i_low:i_high,j_high,:) - &
-                                         soln%V(i_low:i_high,j_high-1,:)
-  soln%V(ig_high-1,j_low:j_high,:) = 2*soln%V(i_high,j_low:j_high,:) - &
-                                         soln%V(i_high-1,j_low:j_high,:)
-  
-  soln%V(i_low:i_high,jg_high,:) = 2*soln%V(i_low:i_high,jg_high-1,:) - &
-                                         soln%V(i_low:i_high,j_high,:)
-  soln%V(ig_high,j_low:j_high,:) = 2*soln%V(ig_high-1,j_low:j_high,:) - &
-                                         soln%V(i_high,j_low:j_high,:)
+  !soln%V(i_low:i_high,jg_high-1,:) = 2*soln%V(i_low:i_high,j_high,:) - &
+  !                                       soln%V(i_low:i_high,j_high-1,:)
+  !soln%V(ig_high-1,j_low:j_high,:) = 2*soln%V(i_high,j_low:j_high,:) - &
+  !                                       soln%V(i_high-1,j_low:j_high,:)
+  !
+  !soln%V(i_low:i_high,jg_high,:) = 2*soln%V(i_low:i_high,jg_high-1,:) - &
+  !                                       soln%V(i_low:i_high,j_high,:)
+  !soln%V(ig_high,j_low:j_high,:) = 2*soln%V(ig_high-1,j_low:j_high,:) - &
+  !                                       soln%V(i_high,j_low:j_high,:)
  
  
-  soln%V(i_high+1,j_high+1,:) = 2*soln%V(i_high,j_high,:) - &
-                                         soln%V(i_high-1,j_high-1,:)
-  soln%V(i_high+2,j_high+2,:) = 2*soln%V(i_high+1,j_high+1,:) - &
-                                         soln%V(i_high,j_high,:)
-  
-  soln%V(i_high+1,j_low-1,:) = 2*soln%V(i_high,j_low,:) - &
-                                         soln%V(i_high-1,j_low+1,:)
-  soln%V(i_high+2,j_low-2,:) = 2*soln%V(i_high+1,j_low-1,:) - &
-                                         soln%V(i_high,j_low,:)
-  
+  !soln%V(i_high+1,j_high+1,:) = 2*soln%V(i_high,j_high,:) - &
+  !                                       soln%V(i_high-1,j_high-1,:)
+  !soln%V(i_high+2,j_high+2,:) = 2*soln%V(i_high+1,j_high+1,:) - &
+  !                                       soln%V(i_high,j_high,:)
+  !
+  !soln%V(i_high+1,j_low-1,:) = 2*soln%V(i_high,j_low,:) - &
+  !                                       soln%V(i_high-1,j_low+1,:)
+  !soln%V(i_high+2,j_low-2,:) = 2*soln%V(i_high+1,j_low-1,:) - &
+  !                                       soln%V(i_high,j_low,:)
+  call limit_primitives(soln%V)
   call prim2cons(soln%U,soln%V)
   call update_states(soln)
    
-  !call Limit(soln%V,soln%psi_plus,soln%psi_minus)
+  call Limit(soln%V,soln%psi_plus,soln%psi_minus)
   call calc_flux_2D(soln,grid,soln%F)
   
   i1 = i_high+1
@@ -84,7 +121,7 @@ program main_program
     nx = grid%n_xi(i1,j1,1)
     ny = grid%n_xi(i1,j1,2)
     !ind = (/ ( k1,k1=i1-2,i1+1 ) /)
-    !Vtmp(1,:) = soln%Vmms(ind(1),j1,:)
+    !Vtmp(1,:) = soln%V(ind(1),j1,:)
     !Vtmp(2,:) = soln%Vmms(ind(2),j1,:)
     !Vtmp(3,:) = soln%Vmms(ind(3),j1,:)
     !Vtmp(4,:) = soln%Vmms(ind(4),j1,:)
@@ -100,9 +137,9 @@ program main_program
     nx = grid%n_eta(i1,j1,1)
     ny = grid%n_eta(i1,j1,2)
     !ind = (/ ( k1,k1=j1-2,j1+1 ) /)
-    !Vtmp(1,:) = soln%Vmms(i1,ind(1),:)
-    !Vtmp(2,:) = soln%Vmms(i1,ind(2),:)
-    !Vtmp(3,:) = soln%Vmms(i1,ind(3),:)
+    !Vtmp(1,:) = soln%V(i1,ind(1),:)
+    !Vtmp(2,:) = soln%V(i1,ind(2),:)
+    !Vtmp(3,:) = soln%V(i1,ind(3),:)
     !Vtmp(4,:) = soln%Vmms(i1,ind(4),:)
     !psiPtmp = soln%psi_plus(i1,ind,:,2)
     !psiMtmp = soln%psi_minus(i1,ind,:,2)
