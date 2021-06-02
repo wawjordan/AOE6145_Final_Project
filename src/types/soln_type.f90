@@ -160,15 +160,15 @@ module soln_type
     N = 5
     L = one
     
-!    call cv_averages(grid,N,wrap_rho_mms,soln%Vmms(:,:,1))
-!    call cv_averages(grid,N,wrap_uvel_mms,soln%Vmms(:,:,2))
-!    call cv_averages(grid,N,wrap_vvel_mms,soln%Vmms(:,:,3))
-!    call cv_averages(grid,N,wrap_press_mms,soln%Vmms(:,:,4))
+    call cv_averages(grid,N,wrap_rho_mms,soln%Vmms(:,:,1))
+    call cv_averages(grid,N,wrap_uvel_mms,soln%Vmms(:,:,2))
+    call cv_averages(grid,N,wrap_vvel_mms,soln%Vmms(:,:,3))
+    call cv_averages(grid,N,wrap_press_mms,soln%Vmms(:,:,4))
     
-    soln%Vmms(:,:,1) = rho_mms(L,grid%xc,grid%yc)
-    soln%Vmms(:,:,2) = uvel_mms(L,grid%xc,grid%yc)
-    soln%Vmms(:,:,3) = vvel_mms(L,grid%xc,grid%yc)
-    soln%Vmms(:,:,4) = press_mms(L,grid%xc,grid%yc)
+!    soln%Vmms(:,:,1) = rho_mms(L,grid%xc,grid%yc)
+!    soln%Vmms(:,:,2) = uvel_mms(L,grid%xc,grid%yc)
+!    soln%Vmms(:,:,3) = vvel_mms(L,grid%xc,grid%yc)
+!    soln%Vmms(:,:,4) = press_mms(L,grid%xc,grid%yc)
     
 !    call cv_averages(grid,1,wrap_rmassconv,soln%Smms(:,:,1))
 !    call cv_averages(grid,1,wrap_xmtmconv,soln%Smms(:,:,2))
