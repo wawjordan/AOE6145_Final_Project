@@ -25,8 +25,8 @@ module set_inputs
   logical :: cart_grid      = .true.
   logical :: isAxi          = .false.
   
-  integer :: imax           = 65
-  integer :: jmax           = 65
+  integer :: imax           = 17
+  integer :: jmax           = 17
   integer :: i_low          = 0
   integer :: i_high         = 0
   integer :: ig_low         = 0
@@ -39,13 +39,13 @@ module set_inputs
   integer :: n_ghost        = 2
   integer :: counter        = 1
   integer :: max_iter       = 150000
-  integer :: soln_save      = 150000
+  integer :: soln_save      = 1000
   integer :: res_save       = 10
-  integer :: res_out        = 1000
-  integer :: flux_scheme    = 2
+  integer :: res_out        = 100
+  integer :: flux_scheme    = 1
   integer :: limiter_scheme = 2
 
-  real(prec) :: tol        = 1.0e-11_prec
+  real(prec) :: tol        = 1.0e-10_prec
   real(prec) :: eps        = 1.0e-3_prec
   real(prec) :: p0         = 300.0_prec
   real(prec) :: T0         = 600.0_prec
