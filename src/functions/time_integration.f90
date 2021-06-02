@@ -91,32 +91,39 @@ module time_integration
     end do
     
   end subroutine explicit_RK
-  !subroutine explicit_RK( grid, S, dt, F, U, R, N )
+  !subroutine explicit_RK( grid, soln )
   !  
-  !  type(grid_t), intent(in) :: grid
-  !  real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq),&
-  !                                             intent(inout) :: U
-  !  real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
-  !                                             intent(inout) :: R
-  !  real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2),&
-  !                                             intent(in) :: F
-  !  real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
-  !                                             intent(in) :: S
-  !  real(prec), dimension(i_low:i_high,j_low:j_high), intent(in) :: dt
-  !  integer, intent(in) :: N
+  !  type(grid_t), intent(inout) :: grid
+  !  type(soln_t), intent(inout) :: soln
+  !  !real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq),&
+  !  !                                           intent(inout) :: U
+  !  !real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
+  !  !                                           intent(inout) :: R
+  !  !real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2),&
+  !  !                                           intent(in) :: F
+  !  !real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
+  !  !                                           intent(in) :: S
+  !  !real(prec), dimension(i_low:i_high,j_low:j_high), intent(in) :: dt
+  !  !integer, intent(in) :: N
   !  real(prec), dimension(4) :: k
   !  integer :: i, j
   !  
-  !  !k = (/ fourth, third, half, one /)
-  !  k = (/ one, third, half, one /)
-  !  
-  !  call calc_residual(grid%A_xi,grid%A_eta,grid%V,S,F,R)
-  !  !do j = 1,N
+  !  k = (/ fourth, third, half, one /)
+  !  do j = 1,4
+  !  call calc_residual(grid%A_xi(i_low:i_high+1,j_low:j_high),&
+  !                    grid%A_eta(i_low:i_high,j_low:j_high+1),&
+  !                    grid%V(i_low:i_high,j_low:j_high),&
+  !                    soln%S(i_low:i_high,j_low:j_high,:),&
+  !                    soln%F(i_low:i_high+1,j_low:j_high+1,:,:),&
+  !                    soln%R(i_low:i_high,j_low:j_high,:))
   !  do i = 1,4
-  !  U(i_low:i_high,j_low:j_high,i) = U(i_low:i_high,j_low:j_high,i) &
-  !  - (R(i_low:i_high,j_low:j_high,i)*dt)/grid%V(i_low:i_high,j_low:j_high)
+  !  soln%U(i_low:i_high,j_low:j_high,i) = &
+  !       soln%U(i_low:i_high,j_low:j_high,i) - &
+  !     k(j)*( soln%R(i_low:i_high,j_low:j_high,i)*  &
+  !      soln%dt(i_low:i_high,j_low:j_high) )/  &
+  !       grid%V(i_low:i_high,j_low:j_high)
   !  end do
-  !  !end do
+  !  end do
   !  
   !end subroutine explicit_RK
   
@@ -135,6 +142,9 @@ module time_integration
     highj = ubound(R,2)
     do j = lowj,highj
     do i = lowi,highi
+      !R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1) - A_xi(i,j)*F(i,j,:,1)  &
+      !         + A_eta(i,j+1)*F(i,j+1,:,2) - A_eta(i,j)*F(i,j,:,2) &
+      !         - V(i,j)*S(i,j,:)
       R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1) - A_xi(i,j)*F(i,j,:,1)  &
                + A_eta(i,j+1)*F(i,j+1,:,2) - A_eta(i,j)*F(i,j,:,2) &
                - V(i,j)*S(i,j,:)
@@ -177,29 +187,33 @@ module time_integration
   !===========================================================================80
   subroutine residual_norms( R, Rnorm, pnorm, rinit )
     
-    real(prec), dimension(i_low:i_high,1:neq), intent(in) :: R
-    real(prec), dimension(1,1:neq), intent(in)  :: rinit
-    real(prec),  intent(out) :: Rnorm(1,1:neq)
-    integer :: pnorm
+    real(prec), dimension(i_low:i_high,j_low:j_high,neq), intent(in) :: R
+    real(prec), dimension(neq), intent(in)  :: rinit
+    real(prec), dimension(neq), intent(out) :: Rnorm
+    integer, intent(in) :: pnorm
+    real(prec) :: Linv
+    integer :: i
+    
+    Linv = one/real(size(R(:,:,1)),prec)
     
     if (pnorm == 0) then
-      Rnorm(1,1:neq) = maxval(abs(R),1)
+      do i = 1,neq
+        Rnorm(i) = maxval(abs(R(:,:,i)))
+      end do
     elseif (pnorm == 1) then
-      Rnorm(1,1) = (one/real(size(R,1)))*sum(abs(R(:,1)),1)
-      Rnorm(1,2) = (one/real(size(R,1)))*sum(abs(R(:,2)),1)
-      Rnorm(1,3) = (one/real(size(R,1)))*sum(abs(R(:,3)),1)
-    elseif (pnorm == 2) then 
-      Rnorm(1,1) = sqrt((one/real(size(R,1)))*sum(R(:,1)**2,1))
-      Rnorm(1,2) = sqrt((one/real(size(R,1)))*sum(R(:,2)**2,1))
-      Rnorm(1,3) = sqrt((one/real(size(R,1)))*sum(R(:,3)**2,1))
+      do i = 1,neq
+        Rnorm(i) = Linv*sum(abs(R(:,:,i)))
+      end do
+    elseif (pnorm == 2) then
+      do i = 1,neq 
+        Rnorm(i) = sqrt(Linv*sum(R(:,:,i)**2))
+      end do
     else
-      Rnorm(1,1) = maxval(abs(R(:,1)))
-      Rnorm(1,2) = maxval(abs(R(:,2)))
-      Rnorm(1,3) = maxval(abs(R(:,3)))
+      do i = 1,neq
+        Rnorm(i) = maxval(abs(R(:,:,i)))
+      end do
     end if
-     Rnorm(1,1) = Rnorm(1,1)/rinit(1,1)
-     Rnorm(1,2) = Rnorm(1,2)/rinit(1,2)
-     Rnorm(1,3) = Rnorm(1,3)/rinit(1,3)
+     Rnorm = Rnorm/rinit
      
   end subroutine residual_norms
 
