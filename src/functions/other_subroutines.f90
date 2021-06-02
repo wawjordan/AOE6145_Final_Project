@@ -64,9 +64,16 @@ subroutine Limit(V,psi_plus,psi_minus)
 
     use set_inputs, only : limiter_freeze
     real(prec), dimension(:,:,:), intent(in)  :: V
-    real(prec), dimension(:,:,:,:), intent(inout)  :: psi_plus, psi_minus
-    real(prec), dimension(lbound(psi_plus,1):ubound(psi_plus,1), &
-                          lbound(psi_plus,2):ubound(psi_plus,2),neq) :: r_plus, r_minus
+    !real(prec), dimension(:,:,:,:), intent(inout)  :: psi_plus, psi_minus
+    real(prec), dimension(ig_low:ig_high, &
+                          jg_low:jg_high,neq,2),intent(inout) :: psi_plus, psi_minus
+    !real(prec), dimension(lbound(psi_plus,1):ubound(psi_plus,1), &
+    !                      lbound(psi_plus,2):ubound(psi_plus,2),neq) :: r_plus, r_minus
+    real(prec), dimension(ig_low:ig_high, &
+                          jg_low:jg_high,neq) :: r_plus, r_minus
+    !write(*,*) lbound(psi_plus,1),ubound(psi_plus,1)
+    !write(*,*) lbound(psi_plus,2),ubound(psi_plus,2)
+    !stop
     r_plus = zero
     r_minus = zero
     if (limiter_freeze) then
