@@ -79,6 +79,10 @@ contains
     high1 = ubound(V,1)-n_ghost
     low2 = lbound(V,2)+n_ghost
     high2 = ubound(V,2)-n_ghost
+    
+    !write(*,*) low1,high1
+    !write(*,*) low2,high2
+    !stop
     if (dir==1) then
     
     do j = low2,high2
@@ -97,7 +101,7 @@ contains
       r_plus(high1+1,j,:) = r_plus(high1,j,:)
       r_minus(high1+1,j,:) = r_minus(high1,j,:)
     end do
-
+    
     elseif (dir==2) then
 
     do j = low2,high2
