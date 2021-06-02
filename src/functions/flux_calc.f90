@@ -107,6 +107,17 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
     psiPtmp = soln%psi_plus(ind,j,:,1)
     psiMtmp = soln%psi_minus(ind,j,:,1)
     call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
+    !write(*,*) i,j
+    !write(*,*) ind
+    !write(*,*) Vtmp(:,1)
+    !write(*,*) left(1), right(1)
+    !write(*,*) Vtmp(:,2)
+    !write(*,*) left(2), right(2)
+    !write(*,*) Vtmp(:,3)
+    !write(*,*) left(3), right(3)
+    !write(*,*) Vtmp(:,4)
+    !write(*,*) left(4), right(4)
+    !stop
     !left =  soln%V(i,j,:)
     !write(*,*) i,j,'left',left
     !right = soln%V(i+1,j,:)
@@ -129,8 +140,8 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
     psiPtmp = soln%psi_plus(i,ind,:,2)
     psiMtmp = soln%psi_minus(i,ind,:,2)
     call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
-    left =  soln%V(i,j,:)
-    right = soln%V(i,j+1,:)
+    !left =  soln%V(i,j,:)
+    !right = soln%V(i,j+1,:)
     call flux_fun(left,right,nx,ny,Fnormal(i,j,:,2))
     !write(*,*) Fnormal(i,j,:,2)
   end do
