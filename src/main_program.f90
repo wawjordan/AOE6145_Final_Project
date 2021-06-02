@@ -1,17 +1,18 @@
 program main_program
   
   use set_precision, only : prec
-  use set_constants, only : zero, set_derived_constants
+  use set_constants, only : zero, one, set_derived_constants
   use fluid_constants, only : set_fluid_constants
   use set_inputs, only : set_derived_inputs, geometry_file
   use set_inputs, only : i_low,i_high,j_low,j_high, n_ghost, cons, neq
   use set_inputs, only : ig_low,ig_high,jg_low,jg_high
+  use set_inputs, only : res_save, res_out, soln_save, tol
   use file_handling, only : grid_in, grid_out
   use geometry, only : setup_geometry, teardown_geometry
   use variable_conversion, only : prim2cons, cons2prim, update_states
   use other_subroutines, only : output_exact_soln, output_file_headers,&
-                                output_soln, calc_de, Limit, MUSCL_extrap
-  use time_integration, only : calc_time_step, explicit_RK
+                                output_soln, output_res, calc_de, Limit, MUSCL_extrap
+  use time_integration, only : calc_time_step, explicit_RK, residual_norms
   use limiter_calc, only : select_limiter, calc_consecutive_variations, limiter_fun
   !use init_problem, only : initialize
   !use namelist, only : read_namelist
@@ -48,59 +49,104 @@ program main_program
   soln%S = soln%Smms
   
   call output_soln(grid,soln,0)
-  do k = 1,1434
-  write(*,*) k
+  do k = 1,100000
+  !write(*,*) k
   
-  !soln%V(i_low:i_high,jg_high-1,:) = 2*soln%V(i_low:i_high,j_high,:) - &
-  !                                       soln%V(i_low:i_high,j_high-1,:)
-  !soln%V(ig_high-1,j_low:j_high,:) = 2*soln%V(i_high,j_low:j_high,:) - &
-  !                                       soln%V(i_high-1,j_low:j_high,:)
-  !
-  !soln%V(i_low:i_high,jg_high,:) = 2*soln%V(i_low:i_high,jg_high-1,:) - &
-  !                                       soln%V(i_low:i_high,j_high,:)
-  !soln%V(ig_high,j_low:j_high,:) = 2*soln%V(ig_high-1,j_low:j_high,:) - &
-  !                                       soln%V(i_high,j_low:j_high,:)
+  soln%V(i_low:i_high,jg_high-1,:) = 2*soln%V(i_low:i_high,j_high,:) - &
+                                         soln%V(i_low:i_high,j_high-1,:)
+  soln%V(ig_high-1,j_low:j_high,:) = 2*soln%V(i_high,j_low:j_high,:) - &
+                                         soln%V(i_high-1,j_low:j_high,:)
   
+  soln%V(i_low:i_high,jg_high,:) = 2*soln%V(i_low:i_high,jg_high-1,:) - &
+                                         soln%V(i_low:i_high,j_high,:)
+  soln%V(ig_high,j_low:j_high,:) = 2*soln%V(ig_high-1,j_low:j_high,:) - &
+                                         soln%V(i_high,j_low:j_high,:)
+ 
+ 
+  soln%V(i_high+1,j_high+1,:) = 2*soln%V(i_high,j_high,:) - &
+                                         soln%V(i_high-1,j_high-1,:)
+  soln%V(i_high+2,j_high+2,:) = 2*soln%V(i_high+1,j_high+1,:) - &
+                                         soln%V(i_high,j_high,:)
+  
+  soln%V(i_high+1,j_low-1,:) = 2*soln%V(i_high,j_low,:) - &
+                                         soln%V(i_high-1,j_low+1,:)
+  soln%V(i_high+2,j_low-2,:) = 2*soln%V(i_high+1,j_low-1,:) - &
+                                         soln%V(i_high,j_low,:)
+  
+  call prim2cons(soln%U,soln%V)
   call update_states(soln)
    
   !call Limit(soln%V,soln%psi_plus,soln%psi_minus)
   call calc_flux_2D(soln,grid,soln%F)
   
   i1 = i_high+1
-  do j1 = j_low,j_high+1
+  do j1 = j_low,j_high
     nx = grid%n_xi(i1,j1,1)
     ny = grid%n_xi(i1,j1,2)
-    ind = (/ ( k1,k1=i1-2,i1+1 ) /)
-    Vtmp = soln%Vmms(ind,j1,:)
-    psiPtmp = soln%psi_plus(ind,j1,:,1)
-    psiMtmp = soln%psi_minus(ind,j1,:,1)
-    call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
+    !ind = (/ ( k1,k1=i1-2,i1+1 ) /)
+    !Vtmp(1,:) = soln%Vmms(ind(1),j1,:)
+    !Vtmp(2,:) = soln%Vmms(ind(2),j1,:)
+    !Vtmp(3,:) = soln%Vmms(ind(3),j1,:)
+    !Vtmp(4,:) = soln%Vmms(ind(4),j1,:)
+    !psiPtmp = soln%psi_plus(ind,j1,:,1)
+    !psiMtmp = soln%psi_minus(ind,j1,:,1)
+    !call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
+    left = soln%V(i1-1,j1,:)
+    right = soln%Vmms(i1,j1,:)
     call flux_fun(left,right,nx,ny,soln%F(i1,j1,:,1))
   end do
   j1 = j_high+1
-  do i1 = i_low,i_high+1
+  do i1 = i_low,i_high
     nx = grid%n_eta(i1,j1,1)
     ny = grid%n_eta(i1,j1,2)
-    ind = (/ ( k1,k1=j1-2,j1+1 ) /)
-    Vtmp = soln%Vmms(i1,ind,:)
-    psiPtmp = soln%psi_plus(i1,ind,:,2)
-    psiMtmp = soln%psi_minus(i1,ind,:,2)
-    call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
+    !ind = (/ ( k1,k1=j1-2,j1+1 ) /)
+    !Vtmp(1,:) = soln%Vmms(i1,ind(1),:)
+    !Vtmp(2,:) = soln%Vmms(i1,ind(2),:)
+    !Vtmp(3,:) = soln%Vmms(i1,ind(3),:)
+    !Vtmp(4,:) = soln%Vmms(i1,ind(4),:)
+    !psiPtmp = soln%psi_plus(i1,ind,:,2)
+    !psiMtmp = soln%psi_minus(i1,ind,:,2)
+    !call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
+    left = soln%V(i1,j1-1,:)
+    right = soln%Vmms(i1,j1,:)
     call flux_fun(left,right,nx,ny,soln%F(i1,j1,:,2))
   end do
   
   !call calc_sources(soln,grid)
   call calc_time_step(grid%A_xi,grid%A_eta,grid%n_xi_avg, &
                       grid%n_eta_avg,grid%V,soln%V,soln%dt)
-  !call explicit_RK(grid,soln%S,soln%dt,soln%F,soln%U,soln%R,1)
+  
   call explicit_RK(grid,soln)
   call cons2prim(soln%U,soln%V)
-  if (mod(k,50)==0) then
-  !write(*,*) k
+  if (k==1) then 
+  call residual_norms(soln%R,soln%Rnorm,2,(/one,one,one,one/))
+  soln%rinit = soln%Rnorm
+  else
+  call residual_norms(soln%R,soln%Rnorm,2,soln%rinit)
+  end if
+  
+  if (mod(k,res_save)==0) then
+  call calc_DE(soln,soln%DE,soln%DEnorm,0,cons)
+  call output_res(soln,k)
+  end if
+  
+  if (mod(k,res_out)==0) then
+  write(*,*) k, soln%Rnorm
+  end if
+  
+  if (mod(k,soln_save)==0) then
+  call calc_DE(soln,soln%DE,soln%DEnorm,0,cons)
   call output_soln(grid,soln,k)
   end if
+  if (all(soln%Rnorm<tol)) then
+    exit
+  end if
+
   end do
+  call calc_DE(soln,soln%DE,soln%DEnorm,0,cons)
+  call output_res(soln,k)
   call output_soln(grid,soln,k)
+  
   call grid_out(geometry_file,grid)
   call teardown_geometry(grid,soln)
   close(50)
