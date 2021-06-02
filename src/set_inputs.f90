@@ -25,8 +25,8 @@ module set_inputs
   logical :: cart_grid      = .true.
   logical :: isAxi          = .false.
   
-  integer :: imax           = 17
-  integer :: jmax           = 17
+  integer :: imax           = 33
+  integer :: jmax           = 33
   integer :: i_low          = 0
   integer :: i_high         = 0
   integer :: ig_low         = 0
@@ -40,12 +40,12 @@ module set_inputs
   integer :: counter        = 1
   integer :: max_iter       = 150000
   integer :: soln_save      = 1000
-  integer :: res_save       = 10
+  integer :: res_save       = 100
   integer :: res_out        = 100
   integer :: flux_scheme    = 1
   integer :: limiter_scheme = 2
 
-  real(prec) :: tol        = 1.0e-10_prec
+  real(prec) :: tol        = 1.0e-9_prec
   real(prec) :: eps        = 1.0e-3_prec
   real(prec) :: p0         = 300.0_prec
   real(prec) :: T0         = 600.0_prec
@@ -55,11 +55,11 @@ module set_inputs
   real(prec) :: xmax       = one
   real(prec) :: ymin       = zero
   real(prec) :: ymax       = one
-  real(prec) :: CFL        = 0.1_prec
+  real(prec) :: CFL        = 0.01_prec
   real(prec) :: beta_lim   = two
   real(prec) :: Lmms       = one
   real(prec) :: eps_roe    = 0.1_prec
-  real(prec) :: epsM       = zero
+  real(prec) :: epsM       = one
   real(prec) :: kappaM     = -one
 
   character(64) :: grid_name = "../grids/curvilinear-grids/curv2d257.grd"
