@@ -19,7 +19,7 @@ module set_inputs
   public :: grid_name, geometry_file
   public :: set_derived_inputs
    
-  logical :: limiter_freeze = .false.
+  logical :: limiter_freeze = .true.
   logical :: cons           = .false.
   logical :: isMMS          = .true.
   logical :: cart_grid      = .true.
@@ -59,7 +59,7 @@ module set_inputs
   real(prec) :: beta_lim   = two
   real(prec) :: Lmms       = one
   real(prec) :: eps_roe    = 0.1_prec
-  real(prec) :: epsM       = one
+  real(prec) :: epsM       = zero
   real(prec) :: kappaM     = -one
 
   character(64) :: grid_name = "../grids/curvilinear-grids/curv2d257.grd"
