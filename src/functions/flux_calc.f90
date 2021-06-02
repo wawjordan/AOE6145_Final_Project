@@ -95,7 +95,7 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
   !end do
   !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 
-  do j = j_low,j_high+1
+  do j = j_low,j_high
   !write(*,*) j
   do i = i_low,i_high+1
     !nx = one
@@ -106,7 +106,7 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
     Vtmp = soln%V(ind,j,:)
     psiPtmp = soln%psi_plus(ind,j,:,1)
     psiMtmp = soln%psi_minus(ind,j,:,1)
-    call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
+    !call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
     !write(*,*) i,j
     !write(*,*) ind
     !write(*,*) Vtmp(:,1)
@@ -118,9 +118,9 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
     !write(*,*) Vtmp(:,4)
     !write(*,*) left(4), right(4)
     !stop
-    !left =  soln%V(i,j,:)
+    left =  soln%V(i-1,j,:)
     !write(*,*) i,j,'left',left
-    !right = soln%V(i+1,j,:)
+    right = soln%V(i,j,:)
     !write(*,*) i,j,'right',right
     call flux_fun(left,right,nx,ny,Fnormal(i,j,:,1))
     !write(*,*) Fnormal(i,j,:,1)
@@ -130,7 +130,7 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
   !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
   do j = j_low,j_high+1
   !write(*,*) j
-  do i = i_low,i_high+1
+  do i = i_low,i_high
     !nx = zero
     !ny = one
     nx = grid%n_eta(i,j,1)
@@ -139,9 +139,9 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
     Vtmp = soln%V(i,ind,:)
     psiPtmp = soln%psi_plus(i,ind,:,2)
     psiMtmp = soln%psi_minus(i,ind,:,2)
-    call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
-    !left =  soln%V(i,j,:)
-    !right = soln%V(i,j+1,:)
+    !call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
+    left =  soln%V(i,j-1,:)
+    right = soln%V(i,j,:)
     call flux_fun(left,right,nx,ny,Fnormal(i,j,:,2))
     !write(*,*) Fnormal(i,j,:,2)
   end do
