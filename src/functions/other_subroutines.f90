@@ -15,7 +15,7 @@ module other_subroutines
   
   private
   
-  public :: output_file_headers, output_soln, MUSCL_extrap, calc_de
+  public :: output_file_headers, output_soln, MUSCL_extrap, calc_de, output_res
   public :: calc_sources, output_exact_soln, Limit
   
   contains
@@ -214,13 +214,20 @@ end subroutine MUSCL_extrap
     real(prec), dimension(1,1:neq), intent(out) :: DEnorm
     integer, intent(in) :: pnorm
     real(prec) :: Linv
+    !Linv = one/real( (i_high-i_low)*(j_high-j_low) )
+    !if (cons) then
+    !  DE = soln%U(i_low:i_high,j_low:j_high,1:neq) &
+    !   & - soln%Umms(i_low:i_high,j_low:j_high,1:neq)
+    !else
+    !  DE = soln%V(i_low:i_high,j_low:j_high,1:neq) &
+    !   & - soln%Vmms(i_low:i_high,j_low:j_high,1:neq)
+    !end if
+    DE = zero
     Linv = one/real( (i_high-i_low)*(j_high-j_low) )
     if (cons) then
-      DE = soln%U(i_low:i_high,j_low:j_high,1:neq) &
-       & - soln%Umms(i_low:i_high,j_low:j_high,1:neq)
+      DE = soln%U - soln%Umms
     else
-      DE = soln%V(i_low:i_high,j_low:j_high,1:neq) &
-       & - soln%Vmms(i_low:i_high,j_low:j_high,1:neq)
+      DE = soln%V - soln%Vmms
     end if
     
     if (pnorm == 0) then
@@ -319,21 +326,22 @@ end subroutine MUSCL_extrap
     !open(30,file='history.dat',status='unknown')
     !open(resunit,file= '../results/'//trim(adjustl(dirname_hist))//  &
     !&               trim(adjustl(filename))//'_history.dat',status='unknown')
-!    if(isMMS) then
-!      write(resunit,*) 'TITLE = "MMS ('// &
-!      & trim(adjustl(grid_name))//')"'
-!      write(resunit,*) 'variables="Iteration"   &
-!      &   "R<sub>1</sub>""R<sub>2</sub>"   &
-!      &   "R<sub>3</sub>""R<sub>4</sub>"   &
-!      &   "DE<sub>1</sub>""DE<sub>2</sub>" &
-!      &   "DE<sub>3</sub>""DE<sub>4</sub>"'
-!    else
-!      write(resunit,*) 'TITLE = "'// &
-!      & trim(adjustl(grid_name))//'"'
-!      write(resunit,*) 'variables="Iteration"   &
-!      &   "R<sub>1</sub>""R<sub>2</sub>"   &
-!      &   "R<sub>3</sub>""R<sub>4</sub>"'
-!    end if
+    open(resunit,file= '../results/example_res.dat')
+    if(isMMS) then
+      write(resunit,*) 'TITLE = "MMS ('// &
+      & trim(adjustl(grid_name))//')"'
+      write(resunit,*) 'variables="Iteration"   &
+      &   "R<sub>1</sub>""R<sub>2</sub>"   &
+      &   "R<sub>3</sub>""R<sub>4</sub>"   &
+      &   "DE<sub>1</sub>""DE<sub>2</sub>" &
+      &   "DE<sub>3</sub>""DE<sub>4</sub>"'
+    else
+      write(resunit,*) 'TITLE = "'// &
+      & trim(adjustl(grid_name))//'"'
+      write(resunit,*) 'variables="Iteration"   &
+      &   "R<sub>1</sub>""R<sub>2</sub>"   &
+      &   "R<sub>3</sub>""R<sub>4</sub>"'
+    end if
     
     open(fldunit,file= '../results/example_out.dat')
 !    open(fldunit,file= '../results/'//trim(adjustl(dirname_field))//  &
