@@ -100,8 +100,8 @@ A = fourth*reshape((/ one,-one,-one, one, &
 alpha = matmul(A,P(:,1))
 beta  = matmul(A,P(:,2))
 
-do i = 1,size(xi)
-  do j = 1,size(eta)
+do j = 1,size(eta)
+  do i = 1,size(xi)
     x(i,j) = sum( alpha*(/ one, xi(i), eta(j), xi(i)*eta(j) /) )
     y(i,j) = sum(  beta*(/ one, xi(i), eta(j), xi(i)*eta(j) /) )
     Jac = fourth*transpose( matmul( transpose( reshape(       &
