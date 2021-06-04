@@ -15,6 +15,8 @@ module soln_type
 
   type soln_t
     
+    sequence
+    
     real(prec), allocatable, dimension(:,:,:) :: U ! conserved variables
     real(prec), allocatable, dimension(:,:,:) :: Fxi  ! normal fluxes
     real(prec), allocatable, dimension(:,:,:) :: Feta ! normal fluxes
