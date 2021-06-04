@@ -43,11 +43,27 @@ module flux_calc
   
 contains
 
+subroutine calc_flux_xi(soln,grid)
+
+  type(soln_t), intent(inout) :: soln
+  type(grid_t), intent(inout) :: grid
+
+end subroutine calc_flux_xi
+
+
+subroutine calc_flux_xi(soln,grid)
+
+  type(soln_t), intent(inout) :: soln
+  type(grid_t), intent(inout) :: grid
+
+end subroutine calc_flux_xi
+  
+
 subroutine calc_flux_2D(soln,grid,Fnormal)
 
   type(soln_t), intent(in) :: soln
   type(grid_t), intent(in) :: grid
-  real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2), &
+  real(prec), dimension(neq,i_low:i_high+1,j_low:j_high+1,neq,2), &
                                                   intent(inout) :: Fnormal
   !real(prec), dimension(:,:,:,:), intent(inout) :: Fnormal
   real(prec), dimension(neq) :: left, right
@@ -56,44 +72,6 @@ subroutine calc_flux_2D(soln,grid,Fnormal)
   integer, dimension(4) :: ind
   real(prec), dimension(4,neq) :: Vtmp, psiPtmp, psiMtmp
   Fnormal(:,:,:,:) = zero
-  !write(*,*) lbound(Fnormal,1), ubound(Fnormal,1)
-  !write(*,*) lbound(Fnormal,2), ubound(Fnormal,2)
-  !write(*,*) lbound(Fnormal,3), ubound(Fnormal,3)
-  !write(*,*) lbound(Fnormal,4), ubound(Fnormal,4)
-  !stop
-  !write(*,*) i_low,i_high,j_low,j_high 
-  !call MUSCL_extrap(soln%V,soln%psi_plus,soln%psi_minus,left,right,ind1,ind2)
-  
-!  write(*,*) left(1,1,:,1)
-  !write(*,*) '(i)'
-  !do j = jg_low,jg_high
-  !write(*,*) (/(i,i=ig_low,ig_high)/)
-  !end do
-  !write(*,*) '(j)'
-  !do j = jg_low,jg_high
-  !write(*,*) (/(j,i=ig_low,ig_high)/)
-  !end do
-  !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
-  !write(*,*) 'rho'
-  !do j = jg_low,jg_high
-  !write(*,*) soln%V(:,j,1)
-  !end do
-  !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
-  !write(*,*) 'u'
-  !do j = jg_low,jg_high
-  !write(*,*) soln%V(:,j,2)
-  !end do
-  !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
-  !write(*,*) 'v'
-  !do j = jg_low,jg_high
-  !write(*,*) soln%V(:,j,3)
-  !end do
-  !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
-  !write(*,*) 'p'
-  !do j = jg_low,jg_high
-  !write(*,*) soln%V(:,j,4)
-  !end do
-  !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 
   do j = j_low,j_high
   !write(*,*) j
