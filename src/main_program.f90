@@ -54,37 +54,37 @@ program main_program
   call output_soln(grid,soln,0)
   do k = 1,100000
 !==============================================================================
-  !soln%V(i_low:i_high,j_low-1,1) = &
-  ! 2*rho_mms(Lmms,grid%x(i_low:i_high,j_low), grid%y(i_low:i_high,j_low) ) &
-  ! - soln%V(i_low:i_high,j_low,1)
-  !soln%V(i_low:i_high,j_low-1,2) = &
-  ! 2*uvel_mms(Lmms,grid%x(i_low:i_high,j_low), grid%y(i_low:i_high,j_low) ) &
-  ! - soln%V(i_low:i_high,j_low,2)
-  !soln%V(i_low:i_high,j_low-1,3) = &
-  ! 2*vvel_mms(Lmms,grid%x(i_low:i_high,j_low), grid%y(i_low:i_high,j_low) ) &
-  ! - soln%V(i_low:i_high,j_low,3)
-  !soln%V(i_low:i_high,j_low-1,4) = &
-  ! 2*press_mms(Lmms,grid%x(i_low:i_high,j_low), grid%y(i_low:i_high,j_low) ) &
-  ! - soln%V(i_low:i_high,j_low,4)
-  ! 
-  !!soln%V(i_low:i_high,j_low-2,:) = soln%V(i_low:i_high,j_low-1,:)
+  soln%V(i_low:i_high,j_low-1,1) = &
+   2*rho_mms(Lmms,grid%x(i_low:i_high,j_low), grid%y(i_low:i_high,j_low) ) &
+   - soln%V(i_low:i_high,j_low,1)
+  soln%V(i_low:i_high,j_low-1,2) = &
+   2*uvel_mms(Lmms,grid%x(i_low:i_high,j_low), grid%y(i_low:i_high,j_low) ) &
+   - soln%V(i_low:i_high,j_low,2)
+  soln%V(i_low:i_high,j_low-1,3) = &
+   2*vvel_mms(Lmms,grid%x(i_low:i_high,j_low), grid%y(i_low:i_high,j_low) ) &
+   - soln%V(i_low:i_high,j_low,3)
+  soln%V(i_low:i_high,j_low-1,4) = &
+   2*press_mms(Lmms,grid%x(i_low:i_high,j_low), grid%y(i_low:i_high,j_low) ) &
+   - soln%V(i_low:i_high,j_low,4)
+   
+  !soln%V(i_low:i_high,j_low-2,:) = soln%V(i_low:i_high,j_low-1,:)
   !soln%V(i_low:i_high,j_low-2,:) = 2*soln%V(i_low:i_high,j_low-1,:) - &
   !                                   soln%V(i_low:i_high,j_low,:)
-  !
-  !soln%V(i_low-1,j_low:j_high,1) = &
-  ! 2*rho_mms(Lmms,grid%x(i_low,j_low:j_high), grid%y(i_low,j_low:j_high) ) &
-  ! - soln%V(i_low-1,j_low:j_high,1)
-  !soln%V(i_low-1,j_low:j_high,2) = &
-  ! 2*uvel_mms(Lmms,grid%x(i_low,j_low:j_high), grid%y(i_low,j_low:j_high) ) &
-  ! - soln%V(i_low-1,j_low:j_high,2)
-  !soln%V(i_low-1,j_low:j_high,3) = &
-  ! 2*vvel_mms(Lmms,grid%x(i_low,j_low:j_high), grid%y(i_low,j_low:j_high) ) &
-  ! - soln%V(i_low-1,j_low:j_high,3)
-  !soln%V(i_low-1,j_low:j_high,4) = &
-  ! 2*press_mms(Lmms,grid%x(i_low,j_low:j_high), grid%y(i_low,j_low:j_high) ) &
-  ! - soln%V(i_low-1,j_low:j_high,4)
-  ! 
-  !!soln%V(i_low-2,j_low:j_high,:) = soln%V(i_low-1,j_low:j_high,:)
+  
+  soln%V(i_low-1,j_low:j_high,1) = &
+   2*rho_mms(Lmms,grid%x(i_low,j_low:j_high), grid%y(i_low,j_low:j_high) ) &
+   - soln%V(i_low-1,j_low:j_high,1)
+  soln%V(i_low-1,j_low:j_high,2) = &
+   2*uvel_mms(Lmms,grid%x(i_low,j_low:j_high), grid%y(i_low,j_low:j_high) ) &
+   - soln%V(i_low-1,j_low:j_high,2)
+  soln%V(i_low-1,j_low:j_high,3) = &
+   2*vvel_mms(Lmms,grid%x(i_low,j_low:j_high), grid%y(i_low,j_low:j_high) ) &
+   - soln%V(i_low-1,j_low:j_high,3)
+  soln%V(i_low-1,j_low:j_high,4) = &
+   2*press_mms(Lmms,grid%x(i_low,j_low:j_high), grid%y(i_low,j_low:j_high) ) &
+   - soln%V(i_low-1,j_low:j_high,4)
+   
+  !soln%V(i_low-2,j_low:j_high,:) = soln%V(i_low-1,j_low:j_high,:)
   !soln%V(i_low-2,j_low:j_high,:) = 2*soln%V(i_low-1,j_low:j_high,:) - &
   !                                 soln%V(i_low,j_low:j_high,:)
 !==============================================================================

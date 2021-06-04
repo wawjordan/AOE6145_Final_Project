@@ -55,11 +55,11 @@ module set_inputs
   real(prec) :: xmax       = one
   real(prec) :: ymin       = zero
   real(prec) :: ymax       = one
-  real(prec) :: CFL        = 0.01_prec
+  real(prec) :: CFL        = 0.1_prec
   real(prec) :: beta_lim   = two
   real(prec) :: Lmms       = one
   real(prec) :: eps_roe    = 0.1_prec
-  real(prec) :: epsM       = one
+  real(prec) :: epsM       = zero
   real(prec) :: kappaM     = -one
 
   character(64) :: grid_name = "../grids/curvilinear-grids/curv2d257.grd"
