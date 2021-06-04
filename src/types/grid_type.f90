@@ -4,6 +4,7 @@ module grid_type
   use set_constants, only : zero, one, two, half
   use set_inputs,    only : i_low, i_high, ig_low, ig_high
   use set_inputs,    only : j_low, j_high, jg_low, jg_high
+  
   implicit none
   
   private
@@ -12,7 +13,9 @@ module grid_type
   public :: ghost_shape, cell_geometry
   
   type grid_t
-
+    
+    sequence
+    
     integer :: imax, jmax, n_ghost
     integer :: i_low, i_high, ig_low, ig_high
     integer :: j_low, j_high, jg_low, jg_high
