@@ -16,13 +16,14 @@ module soln_type
   type soln_t
     
     real(prec), allocatable, dimension(:,:,:) :: U ! conserved variables
-    real(prec), allocatable, dimension(:,:,:,:) :: F ! normal fluxes
+    real(prec), allocatable, dimension(:,:,:) :: Fxi  ! normal fluxes
+    real(prec), allocatable, dimension(:,:,:) :: Feta ! normal fluxes
     real(prec), allocatable, dimension(:,:,:) :: S ! source terms
     real(prec), allocatable, dimension(:,:,:) :: V ! primitive variables
     real(prec), allocatable, dimension(:,:,:) :: L ! eigenvalues
     real(prec), allocatable, dimension(:,:,:) :: R ! residuals
-    real(prec), allocatable, dimension(:,:,:,:) :: psi_plus  ! limiters
-    real(prec), allocatable, dimension(:,:,:,:) :: psi_minus ! limiters
+    real(prec), allocatable, dimension(:,:,:) :: psi_plus  ! limiters
+    real(prec), allocatable, dimension(:,:,:) :: psi_minus ! limiters
     real(prec), allocatable, dimension(:,:,:) :: Umms ! MMS conserved variables
     real(prec), allocatable, dimension(:,:,:) :: Vmms ! MMS primitive variables
     real(prec), allocatable, dimension(:,:,:) :: Smms ! MMS source terms
@@ -55,12 +56,13 @@ module soln_type
     type(soln_t), intent(inout) :: soln
     
     allocate( &
-              soln%U( ig_low:ig_high, jg_low:jg_high, neq ), &
-              soln%F( i_low:i_high+1, j_low:j_high+1, neq, 2 ), &
-              soln%S( ig_low:ig_high, jg_low:jg_high, neq ), &
-              soln%V( ig_low:ig_high, jg_low:jg_high, neq ), &
-              soln%L( ig_low:ig_high, jg_low:jg_high, neq ), &
-              soln%R(  i_low:i_high,   j_low:j_high,  neq ), &
+              soln%U( neq, ig_low:ig_high, jg_low:jg_high ), &
+              soln%Fxi( neq, i_low:i_high+1, j_low:j_high+1 ), &
+              soln%Feta( neq, i_low:i_high+1, j_low:j_high+1 ), &
+              soln%S( neq, ig_low:ig_high, jg_low:jg_high ), &
+              soln%V( neq, ig_low:ig_high, jg_low:jg_high ), &
+              soln%L( neq, ig_low:ig_high, jg_low:jg_high ), &
+              soln%R(  neq,i_low:i_high,   j_low:j_high ), &
               soln%asnd( ig_low:ig_high, jg_low:jg_high ),   &
               soln%mach( ig_low:ig_high, jg_low:jg_high ),   &
               soln%temp( ig_low:ig_high, jg_low:jg_high ),   &
@@ -69,22 +71,23 @@ module soln_type
               soln%rold( neq ),  &
               soln%rinit( neq ) )
     allocate( &
-              soln%psi_plus(  ig_low:ig_high+1, jg_low:jg_high+1, neq,  2 ), &
-              soln%psi_minus(  ig_low:ig_high+1, jg_low:jg_high+1, neq, 2 )  )
+              soln%psi_plus(  neq, ig_low:ig_high+1, jg_low:jg_high+1 ), &
+              soln%psi_minus( neq,  ig_low:ig_high+1, jg_low:jg_high+1 )  )
     
     if (isMMS) then
-      allocate( soln%DE( ig_low:ig_high,  jg_low:jg_high, neq ),  &
-                soln%Vmms( ig_low:ig_high,  jg_low:jg_high, neq ),&
-                soln%Umms( ig_low:ig_high,  jg_low:jg_high, neq ),&
-                soln%Smms( ig_low:ig_high,  jg_low:jg_high, neq ),&
+      allocate( soln%DE(   neq, ig_low:ig_high,  jg_low:jg_high ),  &
+                soln%Vmms( neq, ig_low:ig_high,  jg_low:jg_high ),&
+                soln%Umms( neq, ig_low:ig_high,  jg_low:jg_high ),&
+                soln%Smms( neq, ig_low:ig_high,  jg_low:jg_high ),&
                 soln%DEnorm( neq ) )
       soln%DE     = zero
       soln%DEnorm = zero
     end if
     
-    soln%U     = one
-    soln%F     = one
-    soln%S     = one
+    soln%U     = zero
+    soln%Fxi   = zero
+    soln%Feta  = zero
+    soln%S     = zero
     soln%V     = zero
     soln%L     = one
     soln%R     = one
@@ -119,7 +122,8 @@ module soln_type
     
     deallocate( &
                soln%U,     &
-               soln%F,     &
+               soln%Fxi,   &
+               soln%Feta,  &
                soln%S,     &
                soln%V,     &
                soln%L,     &
