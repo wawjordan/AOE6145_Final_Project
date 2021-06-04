@@ -65,12 +65,12 @@ subroutine Limit(V,psi_plus,psi_minus)
     use set_inputs, only : limiter_freeze
     real(prec), dimension(:,:,:), intent(in)  :: V
     !real(prec), dimension(:,:,:,:), intent(inout)  :: psi_plus, psi_minus
-    real(prec), dimension(ig_low:ig_high, &
-                          jg_low:jg_high,neq,2),intent(inout) :: psi_plus, psi_minus
+    real(prec), dimension(neq,ig_low:ig_high, &
+                          jg_low:jg_high,2),intent(inout) :: psi_plus, psi_minus
     !real(prec), dimension(lbound(psi_plus,1):ubound(psi_plus,1), &
     !                      lbound(psi_plus,2):ubound(psi_plus,2),neq) :: r_plus, r_minus
-    real(prec), dimension(ig_low:ig_high, &
-                          jg_low:jg_high,neq) :: r_plus, r_minus
+    real(prec), dimension(neq,ig_low:ig_high, &
+                          jg_low:jg_high) :: r_plus, r_minus
     !write(*,*) lbound(psi_plus,1),ubound(psi_plus,1)
     !write(*,*) lbound(psi_plus,2),ubound(psi_plus,2)
     !stop
@@ -92,20 +92,20 @@ end subroutine Limit
 
 subroutine MUSCL_extrap(stencil,psi_plus,psi_minus,left,right)
 
-    real(prec), dimension(4,neq), intent(in)  :: stencil
-    real(prec), dimension(4,neq), intent(in)  :: psi_plus, psi_minus
+    real(prec), dimension(neq,4), intent(in)  :: stencil
+    real(prec), dimension(neq,4), intent(in)  :: psi_plus, psi_minus
     real(prec), dimension(neq), intent(out) :: left, right
     integer :: i
     
     i = 2
     
 
-    left  = stencil(i,:) + fourth*epsM*( &
-         & (one-kappaM)*psi_plus(i-1,:)*(stencil(i,:)-stencil(i-1,:)) + &
-         & (one+kappaM)*psi_minus(i,:)*(stencil(i+1,:)-stencil(i,:)) )
-    right = stencil(i+1,:) - fourth*epsM*( &
-         & (one+kappaM)*psi_minus(i+1,:)*(stencil(i+1,:)-stencil(i,:)) + &
-         & (one-kappaM)*psi_plus(i,:)*(stencil(i+2,:)-stencil(i+1,:)) )
+    left  = stencil(:,i) + fourth*epsM*( &
+         & (one-kappaM)*psi_plus(:,i-1)*(stencil(:,i)-stencil(:,i-1)) + &
+         & (one+kappaM)*psi_minus(:,i)*(stencil(:,i+1)-stencil(:,i)) )
+    right = stencil(:,i+1) - fourth*epsM*( &
+         & (one+kappaM)*psi_minus(:,i+1)*(stencil(:,i+1)-stencil(:,i)) + &
+         & (one-kappaM)*psi_plus(:,i)*(stencil(:,i+2)-stencil(:,i+1)) )
 end subroutine MUSCL_extrap
 !  subroutine MUSCL_extrap( V, psi_plus, psi_minus, left, right, i, j )
     
@@ -187,7 +187,7 @@ end subroutine MUSCL_extrap
     
     do j = grid%j_low,grid%j_high
       do i = grid%i_low,grid%i_high
-         call source_terms( soln%V(i,j,:), grid%y(i,j), isAxi, soln%S(i,j,:) )
+         call source_terms( soln%V(:,i,j), grid%y(i,j), isAxi, soln%S(:,i,j) )
       end do
     end do
     
@@ -211,7 +211,7 @@ end subroutine MUSCL_extrap
     type(soln_t), intent(in) :: soln
     logical, intent(in) :: cons
     real(prec), dimension(:,:,:), intent(out) :: DE
-    real(prec), dimension(1,1:neq), intent(out) :: DEnorm
+    real(prec), dimension(3,neq), intent(out) :: DEnorm
     integer, intent(in) :: pnorm
     real(prec) :: Linv
     !Linv = one/real( (i_high-i_low)*(j_high-j_low) )
@@ -231,20 +231,20 @@ end subroutine MUSCL_extrap
     end if
     
     if (pnorm == 0) then
-      DEnorm(1,1) = maxval( abs( DE(:,:,1) ) )
-      DEnorm(1,2) = maxval( abs( DE(:,:,2) ) )
-      DEnorm(1,3) = maxval( abs( DE(:,:,3) ) )
-      DEnorm(1,4) = maxval( abs( DE(:,:,4) ) )
+      DEnorm(1,1) = maxval( abs( DE(1,:,:) ) )
+      DEnorm(1,2) = maxval( abs( DE(2,:,:) ) )
+      DEnorm(1,3) = maxval( abs( DE(3,:,:) ) )
+      DEnorm(1,4) = maxval( abs( DE(4,:,:) ) )
     elseif (pnorm == 1) then
-      DEnorm(1,1) = Linv*sum( abs( DE(:,:,1) ) )
-      DEnorm(1,2) = Linv*sum( abs( DE(:,:,2) ) )
-      DEnorm(1,3) = Linv*sum( abs( DE(:,:,3) ) )
-      DEnorm(1,4) = Linv*sum( abs( DE(:,:,4) ) )
+      DEnorm(2,1) = Linv*sum( abs( DE(1,:,:) ) )
+      DEnorm(2,2) = Linv*sum( abs( DE(2,:,:) ) )
+      DEnorm(2,3) = Linv*sum( abs( DE(3,:,:) ) )
+      DEnorm(2,4) = Linv*sum( abs( DE(4,:,:) ) )
     elseif (pnorm == 2) then
-      DEnorm(1,1) = sqrt( Linv*sum( DE(:,:,1)*DE(:,:,1) ) )
-      DEnorm(1,2) = sqrt( Linv*sum( DE(:,:,2)*DE(:,:,2) ) )
-      DEnorm(1,3) = sqrt( Linv*sum( DE(:,:,3)*DE(:,:,3) ) )
-      DEnorm(1,4) = sqrt( Linv*sum( DE(:,:,4)*DE(:,:,4) ) )
+      DEnorm(3,1) = sqrt( Linv*sum( DE(1,:,:)**2 ) )
+      DEnorm(3,2) = sqrt( Linv*sum( DE(2,:,:)**2 ) )
+      DEnorm(3,3) = sqrt( Linv*sum( DE(3,:,:)**2 ) )
+      DEnorm(3,4) = sqrt( Linv*sum( DE(4,:,:)**2 ) )
     end if
     
   end subroutine calc_de
@@ -279,37 +279,37 @@ end subroutine MUSCL_extrap
     fldunit = 40
     
     ! Set up output directories
-    write (ncells_str  , "(A5,I0.3,A6,I0.3)") "imax=",imax,"_jmax=",jmax
-    write (CFL_str  , "(A4,F0.4)") "CFL=",cfl
-    
-    select case(flux_scheme)
-    case(1)
-      write (flux_str,"(A3)") "V-L"
-    case(2)
-      write (flux_str,"(A3)") "ROE"
-    case default
-    end select
-    if (nint(epsM).eq.0) then
-      write (order_str,"(A9)") "1st-order"
-    else
-      write (order_str,"(A9)") "2nd-order"
-    end if
-    
-    select case(limiter_scheme)
-    case(1)
-      write (limiter_str,"(A3)") "_VL"
-    case(2)
-      write (limiter_str,"(A3)") "_VA"
-    case(3)
-      write (limiter_str,"(A3)") "_MM"
-    case(4)
-      write (limiter_str,"(A2,I0.2,A1)") "_B",int(10*beta_lim),"_"
-    case default
-    end select
-    
-    write (kappa_str, "(A2,I3.2,A1)") "_K"  , int(10*kappaM),"_"
-    write (dirname_hist, *) adjustl(trim(MMS_str)),"/hist/"
-    write (dirname_field, *) adjustl(trim(MMS_str)),"/field/"
+!    write (ncells_str  , "(A5,I0.3,A6,I0.3)") "imax=",imax,"_jmax=",jmax
+!    write (CFL_str  , "(A4,F0.4)") "CFL=",cfl
+!    
+!    select case(flux_scheme)
+!    case(1)
+!      write (flux_str,"(A3)") "V-L"
+!    case(2)
+!      write (flux_str,"(A3)") "ROE"
+!    case default
+!    end select
+!    if (nint(epsM).eq.0) then
+!      write (order_str,"(A9)") "1st-order"
+!    else
+!      write (order_str,"(A9)") "2nd-order"
+!    end if
+!    
+!    select case(limiter_scheme)
+!    case(1)
+!      write (limiter_str,"(A3)") "_VL"
+!    case(2)
+!      write (limiter_str,"(A3)") "_VA"
+!    case(3)
+!      write (limiter_str,"(A3)") "_MM"
+!    case(4)
+!      write (limiter_str,"(A2,I0.2,A1)") "_B",int(10*beta_lim),"_"
+!    case default
+!    end select
+!    
+!    write (kappa_str, "(A2,I3.2,A1)") "_K"  , int(10*kappaM),"_"
+!    write (dirname_hist, *) adjustl(trim(MMS_str)),"/hist/"
+!    write (dirname_field, *) adjustl(trim(MMS_str)),"/field/"
     !write (filename,*)  trim(ncells_str)//  &
     !&                   trim(flux_str)//    &
     !&                   trim(order_str)//   &
@@ -344,8 +344,6 @@ end subroutine MUSCL_extrap
     end if
     
     open(fldunit,file= '../results/example_out.dat')
-!    open(fldunit,file= '../results/'//trim(adjustl(dirname_field))//  &
-!    &               trim(adjustl(filename))//'_field.dat',status='unknown')
     write(fldunit,*) 'TITLE = "blahblahblah"'
     if(isMMS) then
       write(fldunit,*) 'variables="x""y""<greek>r</greek>""u""v""p""M"&
@@ -392,21 +390,21 @@ end subroutine MUSCL_extrap
                      NEW_LINE('a'), j=jg_low,jg_high+1)    
     write(fldunit,*) ((grid%y(i,j),i=ig_low,ig_high+1),    & !  2
                      NEW_LINE('a'), j=jg_low,jg_high+1)    
-    write(fldunit,*) ((soln%Vmms(i,j,1),i=ig_low,ig_high), & !  3
+    write(fldunit,*) ((soln%Vmms(1,i,j),i=ig_low,ig_high), & !  3
                      NEW_LINE('a'), j=jg_low,jg_high)      
-    write(fldunit,*) ((soln%Vmms(i,j,2),i=ig_low,ig_high), & !  4
+    write(fldunit,*) ((soln%Vmms(2,i,j),i=ig_low,ig_high), & !  4
                      NEW_LINE('a'), j=jg_low,jg_high)      
-    write(fldunit,*) ((soln%Vmms(i,j,3),i=ig_low,ig_high), & !  5
+    write(fldunit,*) ((soln%Vmms(3,i,j),i=ig_low,ig_high), & !  5
                      NEW_LINE('a'), j=jg_low,jg_high)      
-    write(fldunit,*) ((soln%Vmms(i,j,4),i=ig_low,ig_high), & !  6
+    write(fldunit,*) ((soln%Vmms(4,i,j),i=ig_low,ig_high), & !  6
                      NEW_LINE('a'), j=jg_low,jg_high)      
-    write(fldunit,*) ((soln%Smms(i,j,1),i=ig_low,ig_high), & !  7
+    write(fldunit,*) ((soln%Smms(1,i,j),i=ig_low,ig_high), & !  7
                      NEW_LINE('a'), j=jg_low,jg_high)      
-    write(fldunit,*) ((soln%Smms(i,j,2),i=ig_low,ig_high), & !  8
+    write(fldunit,*) ((soln%Smms(2,i,j),i=ig_low,ig_high), & !  8
                      NEW_LINE('a'), j=jg_low,jg_high)      
-    write(fldunit,*) ((soln%Smms(i,j,3),i=ig_low,ig_high), & !  9
+    write(fldunit,*) ((soln%Smms(3,i,j),i=ig_low,ig_high), & !  9
                      NEW_LINE('a'), j=jg_low,jg_high)      
-    write(fldunit,*) ((soln%Smms(i,j,4),i=ig_low,ig_high), & ! 10
+    write(fldunit,*) ((soln%Smms(4,i,j),i=ig_low,ig_high), & ! 10
                      NEW_LINE('a'), j=jg_low,jg_high)      
     
   end subroutine output_exact_soln
@@ -491,23 +489,23 @@ end subroutine MUSCL_extrap
                        NEW_LINE('a'), j=jg_low,jg_high+1)    
       write(fldunit,*) ((grid%y(i,j),i=ig_low,ig_high+1),    & !  2
                        NEW_LINE('a'), j=jg_low,jg_high+1)    
-      write(fldunit,*) ((soln%V(i,j,1),i=ig_low,ig_high),    & !  3
+      write(fldunit,*) ((soln%V(1,i,j),i=ig_low,ig_high),    & !  3
                        NEW_LINE('a'), j=jg_low,jg_high)      
-      write(fldunit,*) ((soln%V(i,j,2),i=ig_low,ig_high),    & !  4
+      write(fldunit,*) ((soln%V(2,i,j),i=ig_low,ig_high),    & !  4
                        NEW_LINE('a'), j=jg_low,jg_high)      
-      write(fldunit,*) ((soln%V(i,j,3),i=ig_low,ig_high),    & !  5
+      write(fldunit,*) ((soln%V(3,i,j),i=ig_low,ig_high),    & !  5
                        NEW_LINE('a'), j=jg_low,jg_high)      
-      write(fldunit,*) ((soln%V(i,j,4),i=ig_low,ig_high),    & !  6
+      write(fldunit,*) ((soln%V(4,i,j),i=ig_low,ig_high),    & !  6
                        NEW_LINE('a'), j=jg_low,jg_high)      
       write(fldunit,*) ((soln%mach(i,j),i=ig_low,ig_high),   & !  7
                        NEW_LINE('a'), j=jg_low,jg_high)      
-      write(fldunit,*) ((soln%DE(i,j,1),i=ig_low,ig_high),   & !  8
+      write(fldunit,*) ((soln%DE(1,i,j),i=ig_low,ig_high),   & !  8
                        NEW_LINE('a'), j=jg_low,jg_high)      
-      write(fldunit,*) ((soln%DE(i,j,2),i=ig_low,ig_high),   & !  9
+      write(fldunit,*) ((soln%DE(2,i,j),i=ig_low,ig_high),   & !  9
                        NEW_LINE('a'), j=jg_low,jg_high)      
-      write(fldunit,*) ((soln%DE(i,j,3),i=ig_low,ig_high),   & ! 10
+      write(fldunit,*) ((soln%DE(3,i,j),i=ig_low,ig_high),   & ! 10
                        NEW_LINE('a'), j=jg_low,jg_high)      
-      write(fldunit,*) ((soln%DE(i,j,4),i=ig_low,ig_high),   & ! 11
+      write(fldunit,*) ((soln%DE(4,i,j),i=ig_low,ig_high),   & ! 11
                        NEW_LINE('a'), j=jg_low,jg_high)      
       
     else
@@ -521,13 +519,13 @@ end subroutine MUSCL_extrap
                        NEW_LINE('a'), j=jg_low,jg_high+1)    
       write(fldunit,*) ((grid%y(i,j),i=ig_low,ig_high+1),    & !  2
                        NEW_LINE('a'), j=jg_low,jg_high+1)    
-      write(fldunit,*) ((soln%V(i,j,1),i=ig_low,ig_high),    & !  3
+      write(fldunit,*) ((soln%V(1,i,j),i=ig_low,ig_high),    & !  3
                        NEW_LINE('a'), j=jg_low,jg_high)      
-      write(fldunit,*) ((soln%V(i,j,2),i=ig_low,ig_high),    & !  4
+      write(fldunit,*) ((soln%V(2,i,j),i=ig_low,ig_high),    & !  4
                        NEW_LINE('a'), j=jg_low,jg_high)      
-      write(fldunit,*) ((soln%V(i,j,3),i=ig_low,ig_high),    & !  5
+      write(fldunit,*) ((soln%V(3,i,j),i=ig_low,ig_high),    & !  5
                        NEW_LINE('a'), j=jg_low,jg_high)      
-      write(fldunit,*) ((soln%V(i,j,4),i=ig_low,ig_high),    & !  6
+      write(fldunit,*) ((soln%V(4,i,j),i=ig_low,ig_high),    & !  6
                        NEW_LINE('a'), j=jg_low,jg_high)      
       write(fldunit,*) ((soln%mach(i,j),i=ig_low,ig_high),   & !  7
                        NEW_LINE('a'), j=jg_low,jg_high)      
