@@ -75,10 +75,10 @@ contains
 !    real(prec), dimension(neq) :: den
 !    integer :: i, j, low, high
     
-    low1 = lbound(V,1)+n_ghost
-    high1 = ubound(V,1)-n_ghost
-    low2 = lbound(V,2)+n_ghost
-    high2 = ubound(V,2)-n_ghost
+    low1 = lbound(V,2)+n_ghost
+    high1 = ubound(V,2)-n_ghost
+    low2 = lbound(V,3)+n_ghost
+    high2 = ubound(V,3)-n_ghost
     
     !write(*,*) low1,high1
     !write(*,*) low2,high2
@@ -87,41 +87,41 @@ contains
     
     do j = low2,high2
       do i = low1,high1
-        den = V(i+1,j,:) - V(i,j,:)
+        den = V(:,i+1,j) - V(:,i,j)
         den = sign(one,den)*max(abs(den),1e-6_prec)
-        r_plus(i,j,:)   = ( V(i+2,j,:) - V(i+1,j,:) )/den
-        r_minus(i,j,:)  = ( V(i,j,:) - V(i-1,j,:) )/den
+        r_plus(:,i,j)   = ( V(:,i+2,j) - V(:,i+1,j) )/den
+        r_minus(:,i,j)  = ( V(:,i,j) - V(:,i-1,j) )/den
       end do
-      r_plus(low1-1,j,:) = r_plus(low1,j,:)
-      r_minus(low1-1,j,:) = r_minus(low1,j,:)
+      r_plus(:,low1-1,j) = r_plus(:,low1,j)
+      r_minus(:,low1-1,j) = r_minus(:,low1,j)
       
-      r_plus(low1-2,j,:) = r_plus(low1-1,j,:)
-      r_minus(low1-2,j,:) = r_minus(low1-1,j,:)
+      r_plus(:,low1-2,j) = r_plus(:,low1-1,j)
+      r_minus(:,low1-2,j) = r_minus(:,low1-1,j)
       
-      r_plus(high1+1,j,:) = r_plus(high1,j,:)
-      r_minus(high1+1,j,:) = r_minus(high1,j,:)
+      r_plus(:,high1+1,j) = r_plus(:,high1,j)
+      r_minus(:,high1+1,j) = r_minus(:,high1,j)
     end do
     
     elseif (dir==2) then
 
     do j = low2,high2
       do i = low1,high1
-        den = V(i,j+1,:) - V(i,j,:)
+        den = V(:,i,j+1) - V(:,i,j)
         den = sign(one,den)*max(abs(den),1e-6_prec)
-        r_plus(i,j,:)   = ( V(i,j+2,:) - V(i,j+1,:) )/den
-        r_minus(i,j,:)  = ( V(i,j,:) - V(i,j-1,:) )/den
+        r_plus(:,i,j)   = ( V(:,i,j+2) - V(:,i,j+1) )/den
+        r_minus(:,i,j)  = ( V(:,i,j) - V(:,i,j-1) )/den
       end do
     end do
     
     do i = low1,high1
-      r_plus(i,low2-1,:) = r_plus(i,low2,:)
-      r_minus(i,low2-1,:) = r_minus(i,low2,:)
+      r_plus(:,i,low2-1) = r_plus(:,i,low2)
+      r_minus(:,i,low2-1) = r_minus(:,i,low2)
       
-      r_plus(i,low2-2,:) = r_plus(i,low2-1,:)
-      r_minus(i,low2-2,:) = r_minus(i,low2-1,:)
+      r_plus(:,i,low2-2) = r_plus(:,i,low2-1)
+      r_minus(:,i,low2-2) = r_minus(:,i,low2-1)
       
-      r_plus(i,high2+1,:) = r_plus(i,high2,:)
-      r_minus(i,high2+1,:) = r_minus(i,high2,:)
+      r_plus(:,i,high2+1) = r_plus(:,i,high2)
+      r_minus(:,i,high2+1) = r_minus(:,i,high2)
     end do
     end if
    ! write(*,*) lbound(V)
