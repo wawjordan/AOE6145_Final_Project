@@ -1,66 +1,48 @@
 program main_program
   
   use set_precision, only : prec  
+  use set_constants, only : zero, one, set_derived_constants
+  use fluid_constants, only : set_fluid_constants
+  use set_inputs, only : set_derived_inputs, geometry_file
+  use set_inputs, only : i_low,i_high,j_low,j_high, n_ghost, cons, neq
+  use set_inputs, only : ig_low,ig_high,jg_low,jg_high
+  use set_inputs, only : res_save, res_out, soln_save, tol, Lmms
+  use file_handling, only : grid_out, output_file_headers, &
+                            output_exact_soln, output_soln, output_res
+  use geometry, only : setup_geometry, teardown_geometry
+  use variable_conversion, only : prim2cons, cons2prim, update_states, &
+                                  limit_primitives
+  use other_subroutines, only : calc_de, Limit, MUSCL_extrap
+  use time_integration, only : calc_time_step, explicit_RK, residual_norms
+  use limiter_calc, only : select_limiter, calc_consecutive_variations, limiter_fun
+  use mms_functions, only : rho_mms, uvel_mms, vvel_mms, press_mms
+  use init_problem, only : initialize_MMS
+  !use namelist, only : read_namelist
   use grid_type, only : grid_t
   use soln_type, only : soln_t, calc_mms
-  use point_type!, only : point_t, array_to_point
-  use set_constants, only : zero, one, set_derived_constants
+  !use flux_calc, only : select_flux, calc_flux_2D, flux_fun
   implicit none
   
-  type(point_t) :: point1
-  
-  point1 = (/one, one/)
-  
-  
-   
-!  use fluid_constants, only : set_fluid_constants
-!  use set_inputs, only : set_derived_inputs, geometry_file
-!  use set_inputs, only : i_low,i_high,j_low,j_high, n_ghost, cons, neq
-!  use set_inputs, only : ig_low,ig_high,jg_low,jg_high
-!  use set_inputs, only : res_save, res_out, soln_save, tol, Lmms
-!  use file_handling, only : grid_in, grid_out
-!  use geometry, only : setup_geometry, teardown_geometry
-!  use variable_conversion, only : prim2cons, cons2prim, update_states, &
-!                                  limit_primitives
-!  use other_subroutines, only : output_exact_soln, output_file_headers,&
-!                                output_soln, output_res, calc_de, Limit, MUSCL_extrap
-!  use time_integration, only : calc_time_step, explicit_RK, residual_norms
-!  use limiter_calc, only : select_limiter, calc_consecutive_variations, limiter_fun
-!  use mms_functions, only : rho_mms, uvel_mms, vvel_mms, press_mms
-!  !use init_problem, only : initialize
-!  !use namelist, only : read_namelist
-!  use bc_type, only : dirichlet_mms_bc_t
-!  use grid_type, only : grid_t
-!  use soln_type, only : soln_t, calc_mms
-!  use flux_calc, only : select_flux, calc_flux_2D, flux_fun
-!  implicit none
-!  
-!  integer :: i, j, k
-!  type( grid_t )      :: grid
-!  type( soln_t )      :: soln
+  integer :: i, j, k
+  type( grid_t )      :: grid
+  type( soln_t )      :: soln
 !  real(prec), dimension(4) :: left, right
 !  real(prec) :: nx, ny
 !  integer :: i1,j1,k1
 !  integer, dimension(4) :: ind
 !  real(prec), dimension(4,4) :: Vtmp, psiPtmp, psiMtmp
-!
-!
-!  
-!  call set_derived_constants
-!  call set_fluid_constants
-!  call select_flux()
-!  call select_limiter()
-!  call set_derived_inputs
-!  call setup_geometry(grid,soln)
-!  
-!  call calc_mms(grid,soln)
-!  call output_exact_soln(grid,soln)
-!  call output_file_headers
-!  soln%V = soln%Vmms
-!  
-!  call prim2cons(soln%Umms,soln%Vmms)
-!  soln%U = soln%Umms
-!  soln%S = soln%Smms
+
+
+  
+  call set_derived_constants
+  call set_fluid_constants
+  !call select_flux()
+  call select_limiter()
+  call set_derived_inputs
+  call setup_geometry(grid,soln)
+  call initialize_MMS(grid,soln)
+  call output_exact_soln(grid,soln)
+  call output_file_headers
 !  
 !  call output_soln(grid,soln,0)
 !  do k = 1,100000
@@ -193,10 +175,10 @@ program main_program
 !  end do
 !  call calc_DE(soln,soln%DE,soln%DEnorm,0,cons)
 !  call output_res(soln,k)
-!  call output_soln(grid,soln,k)
-!  
-!  call grid_out(geometry_file,grid)
-!  call teardown_geometry(grid,soln)
-!  close(50)
-!  write(*,*) 'Program End'
+  call output_soln(grid,soln,k)
+  
+  call grid_out(geometry_file,grid)
+  call teardown_geometry(grid,soln)
+  close(50)
+  write(*,*) 'Program End'
 end program main_program
