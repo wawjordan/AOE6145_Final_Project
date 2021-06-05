@@ -29,8 +29,8 @@ subroutine cv_averages(grid,N,fun,val)
   allocate(xi(N),w(N))
   call gauss_pts(xi,w,N)
   
-  do i = lbound(grid%V,1),ubound(grid%V,1)
-    do j = lbound(grid%V,2),ubound(grid%V,2)
+  do j = lbound(grid%V,2),ubound(grid%V,2)
+    do i = lbound(grid%V,1),ubound(grid%V,1)
       !P = transpose( reshape( (/ &
       !    grid%x(i,j),     grid%y(i,j),      &
       !    grid%x(i+1,j),   grid%y(i+1,j),    &
