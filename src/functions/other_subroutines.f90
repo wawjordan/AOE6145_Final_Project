@@ -7,7 +7,7 @@ module other_subroutines
   use set_inputs, only : epsM, kappaM, isMMS, n_ghost
   use fluid_constants, only : gamma
   use variable_conversion, only : speed_of_sound
-  use limiter_calc, only : limiter_fun, calc_consecutive_variations
+  use limiter_calc, only : limiter_fun
   use soln_type, only : soln_t
   use grid_type, only : grid_t
   
@@ -15,7 +15,7 @@ module other_subroutines
   
   private
   
-  public :: MUSCL_extrap, calc_de, calc_sources, Limit
+  public :: MUSCL_extrap, calc_de, calc_sources
   
   contains
   
@@ -59,35 +59,35 @@ module other_subroutines
   !!              right :
   !<
   !===========================================================================80
-  subroutine Limit(V,psi_plus,psi_minus)
-    
-    use set_inputs, only : limiter_freeze
-    real(prec), dimension(:,:,:), intent(in)  :: V
-    !real(prec), dimension(:,:,:,:), intent(inout)  :: psi_plus, psi_minus
-    real(prec), dimension(neq,ig_low:ig_high, &
-                          jg_low:jg_high,2),intent(inout) :: psi_plus, psi_minus
-    !real(prec), dimension(lbound(psi_plus,1):ubound(psi_plus,1), &
-    !                      lbound(psi_plus,2):ubound(psi_plus,2),neq) :: r_plus, r_minus
-    real(prec), dimension(neq,ig_low:ig_high, &
-                          jg_low:jg_high) :: r_plus, r_minus
-    !write(*,*) lbound(psi_plus,1),ubound(psi_plus,1)
-    !write(*,*) lbound(psi_plus,2),ubound(psi_plus,2)
-    !stop
-    r_plus = zero
-    r_minus = zero
-    if (limiter_freeze) then
-      continue
-    else
-      call calc_consecutive_variations(V,r_plus,r_minus,1)
-      call limiter_fun(r_plus,psi_plus(:,:,:,1))
-      call limiter_fun(r_minus,psi_minus(:,:,:,1))
-      
-      call calc_consecutive_variations(V,r_plus,r_minus,2)
-      call limiter_fun(r_plus,psi_plus(:,:,:,2))
-      call limiter_fun(r_minus,psi_minus(:,:,:,2))
-    end if
-  
-  end subroutine Limit
+!  subroutine Limit(V,psi_plus,psi_minus)
+!    
+!    use set_inputs, only : limiter_freeze
+!    real(prec), dimension(:,:,:), intent(in)  :: V
+!    !real(prec), dimension(:,:,:,:), intent(inout)  :: psi_plus, psi_minus
+!    real(prec), dimension(neq,ig_low:ig_high, &
+!                          jg_low:jg_high,2),intent(inout) :: psi_plus, psi_minus
+!    !real(prec), dimension(lbound(psi_plus,1):ubound(psi_plus,1), &
+!    !                      lbound(psi_plus,2):ubound(psi_plus,2),neq) :: r_plus, r_minus
+!    real(prec), dimension(neq,ig_low:ig_high, &
+!                          jg_low:jg_high) :: r_plus, r_minus
+!    !write(*,*) lbound(psi_plus,1),ubound(psi_plus,1)
+!    !write(*,*) lbound(psi_plus,2),ubound(psi_plus,2)
+!    !stop
+!    r_plus = zero
+!    r_minus = zero
+!    if (limiter_freeze) then
+!      continue
+!    else
+!      call calc_consecutive_variations(V,r_plus,r_minus,1)
+!      call limiter_fun(r_plus,psi_plus(:,:,:,1))
+!      call limiter_fun(r_minus,psi_minus(:,:,:,1))
+!      
+!      call calc_consecutive_variations(V,r_plus,r_minus,2)
+!      call limiter_fun(r_plus,psi_plus(:,:,:,2))
+!      call limiter_fun(r_minus,psi_minus(:,:,:,2))
+!    end if
+!  
+!  end subroutine Limit
 
   subroutine MUSCL_extrap(stencil,psi_plus,psi_minus,left,right)
 
