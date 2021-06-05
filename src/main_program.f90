@@ -12,9 +12,9 @@ program main_program
   use geometry, only : setup_geometry, teardown_geometry
   use variable_conversion, only : prim2cons, cons2prim, update_states, &
                                   limit_primitives
-  use other_subroutines, only : calc_de, Limit, MUSCL_extrap
+  use other_subroutines, only : calc_de, MUSCL_extrap
   use time_integration, only : calc_time_step, explicit_RK, residual_norms
-  use limiter_calc, only : select_limiter, calc_consecutive_variations, limiter_fun
+  use limiter_calc, only : select_limiter, limiter_fun, calculate_limiters
   use mms_functions, only : rho_mms, uvel_mms, vvel_mms, press_mms
   use init_problem, only : initialize_MMS
   !use namelist, only : read_namelist
