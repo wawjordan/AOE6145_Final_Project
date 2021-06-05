@@ -15,7 +15,7 @@ module soln_type
 
   type soln_t
     
-    sequence
+    !sequence
     
     real(prec), allocatable, dimension(:,:,:) :: U ! conserved variables
     real(prec), allocatable, dimension(:,:,:) :: Fxi  ! normal fluxes
@@ -155,36 +155,49 @@ module soln_type
                               wrap_ymtmconv, wrap_energyconv
     use mms_functions, only : rho_mms, uvel_mms, vvel_mms, press_mms, &
                          rmassconv, xmtmconv, ymtmconv, energyconv
-    use quadrature, only : cv_averages
+    use quadrature, only : gauss_quad, gauss_pts
     use grid_type, only : grid_t
     
     type(soln_t), intent(inout) :: soln
     type(grid_t), intent(inout) :: grid
+    real(prec), dimension(:), allocatable :: xi, w
+    real(prec), dimension(4,2) :: P
     real(prec) :: L
-    integer :: N
+    integer :: N, i, j
     
     N = 5
     L = one
     
-    call cv_averages(grid,N,wrap_rho_mms,soln%Vmms(:,:,1))
-    call cv_averages(grid,N,wrap_uvel_mms,soln%Vmms(:,:,2))
-    call cv_averages(grid,N,wrap_vvel_mms,soln%Vmms(:,:,3))
-    call cv_averages(grid,N,wrap_press_mms,soln%Vmms(:,:,4))
+    allocate(xi(N),w(N))
     
-!    soln%Vmms(:,:,1) = rho_mms(L,grid%xc,grid%yc)
-!    soln%Vmms(:,:,2) = uvel_mms(L,grid%xc,grid%yc)
-!    soln%Vmms(:,:,3) = vvel_mms(L,grid%xc,grid%yc)
-!    soln%Vmms(:,:,4) = press_mms(L,grid%xc,grid%yc)
+    call gauss_pts(xi,w,N)
     
-!    call cv_averages(grid,1,wrap_rmassconv,soln%Smms(:,:,1))
-!    call cv_averages(grid,1,wrap_xmtmconv,soln%Smms(:,:,2))
-!    call cv_averages(grid,1,wrap_ymtmconv,soln%Smms(:,:,3))
-!    call cv_averages(grid,1,wrap_energyconv,soln%Smms(:,:,4))
-    soln%Smms(:,:,1) = rmassconv(L,grid%xc,grid%yc)
-    soln%Smms(:,:,2) = xmtmconv(L,grid%xc,grid%yc)
-    soln%Smms(:,:,3) = ymtmconv(L,grid%xc,grid%yc)
-    soln%Smms(:,:,4) = energyconv(gamma,L,grid%xc,grid%yc)
-
+    soln%Smms(1,:,:) = rmassconv(L,grid%xc,grid%yc)
+    soln%Smms(2,:,:) = xmtmconv(L,grid%xc,grid%yc)
+    soln%Smms(3,:,:) = ymtmconv(L,grid%xc,grid%yc)
+    soln%Smms(4,:,:) = energyconv(gamma,L,grid%xc,grid%yc)
+    do j = jg_low, jg_high
+      do i = ig_low, ig_high
+        P = transpose( reshape( (/ &
+          grid%x(i,j),     grid%y(i,j),      &
+          grid%x(i+1,j),   grid%y(i+1,j),    &
+          grid%x(i+1,j+1), grid%y(i+1,j+1),  &
+          grid%x(i,j+1),   grid%y(i,j+1) /), (/2,4/) ) )
+        call gauss_quad(P,xi,xi,w,w,wrap_rho_mms,soln%Vmms(1,i,j))
+        call gauss_quad(P,xi,xi,w,w,wrap_uvel_mms,soln%Vmms(2,i,j))
+        call gauss_quad(P,xi,xi,w,w,wrap_vvel_mms,soln%Vmms(3,i,j))
+        call gauss_quad(P,xi,xi,w,w,wrap_press_mms,soln%Vmms(4,i,j))
+        soln%Vmms(:,i,j) = soln%Vmms(:,i,j)/grid%V(i,j)
+        !call gauss_quad(P,xi,xi,w,w,wrap_rmassconv,soln%Smms(1,i,j))
+        !call gauss_quad(P,xi,xi,w,w,wrap_xmtmconv,soln%Smms(2,i,j))
+        !call gauss_quad(P,xi,xi,w,w,wrap_ymtmconv,soln%Smms(3,i,j))
+        !call gauss_quad(P,xi,xi,w,w,wrap_energyconv,soln%Smms(4,i,j))
+        !soln%Smms(:,i,j) = soln%Smms(:,i,j)/grid%V(i,j)
+      end do
+    end do
+    
+    deallocate(xi,w)
+    
   end subroutine calc_mms
   
 end module soln_type
