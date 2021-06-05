@@ -4,15 +4,15 @@ module init_problem
   use set_constants,   only : zero, one, two, half
   use fluid_constants, only : R_gas, gamma
   use set_inputs,      only : p0, T0, eps, ig_low, ig_high
-  use soln_type
-  use grid_type
-  !use variable_conversion
+  use soln_type,       only : soln_t
+  use grid_type,       only : grid_t
+  use variable_conversion, only : prim2cons
   
   implicit none
   
   private
   
-  public :: initialize
+  public :: initialize, initialize_MMS
   
   contains
   
@@ -32,20 +32,23 @@ module init_problem
     implicit none
     
     integer :: i
-    type( soln_t ), intent(inout) :: soln
     type( grid_t ), intent(inout) :: grid
+    type( soln_t ), intent(inout) :: soln
     
-    !soln%mach = 0.9_prec*grid%xc + one
     
-    !do i = ig_low,ig_high
-    !  if ( soln%mach(i) < eps ) then
-    !    soln%mach(i) = eps
-    !  end if
-    !end do
-    
-    !call isentropic_relations(soln%mach,soln%V)
-    !call prim2cons(soln%U,soln%V)
 
   end subroutine initialize
-
+  
+  subroutine initialize_MMS( grid, soln )
+    
+    use soln_type, only : calc_MMS
+    type( grid_t ), intent(inout) :: grid
+    type( soln_t ), intent(inout) :: soln
+    call calc_mms(grid,soln)
+    call prim2cons(soln%Umms,soln%Vmms)
+    soln%V = soln%Vmms
+    soln%U = soln%Umms
+    soln%S = soln%Smms
+    
+  end subroutine initialize_MMS
 end module init_problem
