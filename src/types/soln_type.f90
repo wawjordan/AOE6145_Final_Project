@@ -20,12 +20,14 @@ module soln_type
     real(prec), allocatable, dimension(:,:,:) :: U ! conserved variables
     real(prec), allocatable, dimension(:,:,:) :: Fxi  ! normal fluxes
     real(prec), allocatable, dimension(:,:,:) :: Feta ! normal fluxes
+    real(prec), allocatable, dimension(:,:,:) :: psi_p_xi  ! limiters
+    real(prec), allocatable, dimension(:,:,:) :: psi_p_eta  ! limiters
+    real(prec), allocatable, dimension(:,:,:) :: psi_m_xi  ! limiters
+    real(prec), allocatable, dimension(:,:,:) :: psi_m_eta  ! limiters
     real(prec), allocatable, dimension(:,:,:) :: S ! source terms
     real(prec), allocatable, dimension(:,:,:) :: V ! primitive variables
     real(prec), allocatable, dimension(:,:,:) :: L ! eigenvalues
     real(prec), allocatable, dimension(:,:,:) :: R ! residuals
-    real(prec), allocatable, dimension(:,:,:) :: psi_plus  ! limiters
-    real(prec), allocatable, dimension(:,:,:) :: psi_minus ! limiters
     real(prec), allocatable, dimension(:,:,:) :: Umms ! MMS conserved variables
     real(prec), allocatable, dimension(:,:,:) :: Vmms ! MMS primitive variables
     real(prec), allocatable, dimension(:,:,:) :: Smms ! MMS source terms
@@ -73,8 +75,10 @@ module soln_type
               soln%rold( neq ),  &
               soln%rinit( neq ) )
     allocate( &
-              soln%psi_plus(  neq, ig_low:ig_high+1, jg_low:jg_high+1 ), &
-              soln%psi_minus( neq,  ig_low:ig_high+1, jg_low:jg_high+1 )  )
+              soln%psi_p_xi(  neq, i_low:i_high+1, j_low:j_high ), &
+              soln%psi_m_xi(  neq, i_low:i_high+1, j_low:j_high ), &
+              soln%psi_p_eta( neq, i_low:i_high, j_low:j_high+1 ), &
+              soln%psi_m_eta( neq, i_low:i_high, j_low:j_high+1 )  )
     
     if (isMMS) then
       allocate( soln%DE(   neq, ig_low:ig_high,  jg_low:jg_high ),  &
@@ -101,8 +105,10 @@ module soln_type
     soln%rold  = one
     soln%rinit = one
     
-    soln%psi_plus  = one
-    soln%psi_minus = one
+    soln%psi_p_xi  = one
+    soln%psi_m_xi  = one
+    soln%psi_p_eta = one
+    soln%psi_m_eta = one
 
   end subroutine allocate_soln
   
@@ -138,8 +144,8 @@ module soln_type
                soln%rold,  &
                soln%rinit   )
     deallocate( &
-               soln%psi_plus,  &
-               soln%psi_minus  )
+               soln%psi_p_xi,  soln%psi_m_xi, &
+               soln%psi_p_eta, soln%psi_m_eta )
     
     if (isMMS) then
       deallocate( soln%DE, soln%Vmms, soln%Umms, soln%Smms, soln%DEnorm )
