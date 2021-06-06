@@ -51,7 +51,6 @@ module variable_conversion
     
     real(prec), intent(in)  :: pressure, rho
     real(prec), intent(out) :: sound_speed
-    
     sound_speed = sqrt(gamma*pressure/rho)
     
   end subroutine speed_of_sound
@@ -119,8 +118,8 @@ module variable_conversion
     real(prec), dimension(:,:,:), intent(inout) :: V
     integer :: i, j
     
-    do j = lbound(V,2),ubound(V,2)
-      do i = lbound(V,1),ubound(V,1)
+    do j = lbound(V,3),ubound(V,3)
+      do i = lbound(V,2),ubound(V,2)
         V(1,i,j) = max(0.001_prec,V(1,i,j))
         V(4,i,j) = max(50.0_prec,V(4,i,j))
       end do
