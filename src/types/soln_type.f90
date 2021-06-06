@@ -61,8 +61,8 @@ module soln_type
     
     allocate( &
               soln%U( neq, ig_low:ig_high, jg_low:jg_high ), &
-              soln%Fxi( neq, i_low:i_high+1, j_low:j_high+1 ), &
-              soln%Feta( neq, i_low:i_high+1, j_low:j_high+1 ), &
+              soln%Fxi(  neq, i_low-1:i_high, j_low:j_high ), &
+              soln%Feta( neq, i_low:i_high, j_low-1:j_high ), &
               soln%S( neq, ig_low:ig_high, jg_low:jg_high ), &
               soln%V( neq, ig_low:ig_high, jg_low:jg_high ), &
               soln%L( neq, ig_low:ig_high, jg_low:jg_high ), &
@@ -75,10 +75,10 @@ module soln_type
               soln%rold( neq ),  &
               soln%rinit( neq ) )
     allocate( &
-              soln%psi_p_xi(  neq, i_low:i_high+1, j_low:j_high ), &
-              soln%psi_m_xi(  neq, i_low:i_high+1, j_low:j_high ), &
-              soln%psi_p_eta( neq, i_low:i_high, j_low:j_high+1 ), &
-              soln%psi_m_eta( neq, i_low:i_high, j_low:j_high+1 )  )
+              soln%psi_p_xi(  neq, ig_low-1:ig_high, j_low:j_high ), &
+              soln%psi_m_xi(  neq, ig_low-1:ig_high, j_low:j_high ), &
+              soln%psi_p_eta( neq, i_low:i_high, jg_low-1:jg_high ), &
+              soln%psi_m_eta( neq, i_low:i_high, jg_low-1:jg_high )  )
     
     if (isMMS) then
       allocate( soln%DE(   neq, ig_low:ig_high,  jg_low:jg_high ),  &
@@ -178,10 +178,10 @@ module soln_type
     
     call gauss_pts(xi,w,N)
     
-    soln%Smms(1,:,:) = rmassconv(L,grid%xc,grid%yc)
-    soln%Smms(2,:,:) = xmtmconv(L,grid%xc,grid%yc)
-    soln%Smms(3,:,:) = ymtmconv(L,grid%xc,grid%yc)
-    soln%Smms(4,:,:) = energyconv(gamma,L,grid%xc,grid%yc)
+    !soln%Smms(1,:,:) = rmassconv(L,grid%xc,grid%yc)
+    !soln%Smms(2,:,:) = xmtmconv(L,grid%xc,grid%yc)
+    !soln%Smms(3,:,:) = ymtmconv(L,grid%xc,grid%yc)
+    !soln%Smms(4,:,:) = energyconv(gamma,L,grid%xc,grid%yc)
     do j = jg_low, jg_high
       do i = ig_low, ig_high
         P = transpose( reshape( (/ &
@@ -194,11 +194,11 @@ module soln_type
         call gauss_quad(P,xi,xi,w,w,wrap_vvel_mms,soln%Vmms(3,i,j))
         call gauss_quad(P,xi,xi,w,w,wrap_press_mms,soln%Vmms(4,i,j))
         soln%Vmms(:,i,j) = soln%Vmms(:,i,j)/grid%V(i,j)
-        !call gauss_quad(P,xi,xi,w,w,wrap_rmassconv,soln%Smms(1,i,j))
-        !call gauss_quad(P,xi,xi,w,w,wrap_xmtmconv,soln%Smms(2,i,j))
-        !call gauss_quad(P,xi,xi,w,w,wrap_ymtmconv,soln%Smms(3,i,j))
-        !call gauss_quad(P,xi,xi,w,w,wrap_energyconv,soln%Smms(4,i,j))
-        !soln%Smms(:,i,j) = soln%Smms(:,i,j)/grid%V(i,j)
+        call gauss_quad(P,xi,xi,w,w,wrap_rmassconv,soln%Smms(1,i,j))
+        call gauss_quad(P,xi,xi,w,w,wrap_xmtmconv,soln%Smms(2,i,j))
+        call gauss_quad(P,xi,xi,w,w,wrap_ymtmconv,soln%Smms(3,i,j))
+        call gauss_quad(P,xi,xi,w,w,wrap_energyconv,soln%Smms(4,i,j))
+        soln%Smms(:,i,j) = soln%Smms(:,i,j)/grid%V(i,j)
       end do
     end do
     
