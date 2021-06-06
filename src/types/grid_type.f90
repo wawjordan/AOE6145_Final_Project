@@ -217,16 +217,16 @@ module grid_type
       grid%n_xi(i,j,2)   = -( (grid%x(i,j+1)-grid%x(i,j)) )/grid%A_xi(i,j)
       grid%n_eta(i,j,1)  = -( (grid%y(i+1,j)-grid%y(i,j)) )/grid%A_eta(i,j)
       grid%n_eta(i,j,2)  = ( (grid%x(i+1,j)-grid%x(i,j)) )/grid%A_eta(i,j)
-     ! call cell_volume( (/ grid%x(i,j), grid%y(i,j) /), &
-     !               (/ grid%x(i+1,j), grid%y(i+1,j) /), &
-     !           (/ grid%x(i+1,j+1), grid%y(i+1,j+1) /), &
-     !               (/ grid%x(i,j+1), grid%y(i,j+1) /), &
-     !                                 grid%V(i,j)       )
      call volume_calc( (/ grid%x(i,j), grid%x(i+1,j), grid%x(i+1,j+1), &
                                          grid%x(i,j+1),grid%x(i,j) /), &
                        (/ grid%y(i,j), grid%y(i+1,j), grid%y(i+1,j+1), &
                                          grid%y(i,j+1),grid%y(i,j) /), &
                        grid%xc(i,j), grid%yc(i,j), grid%V(i,j) )
+      call cell_volume( (/ grid%x(i,j), grid%y(i,j) /), &
+                    (/ grid%x(i+1,j), grid%y(i+1,j) /), &
+                (/ grid%x(i+1,j+1), grid%y(i+1,j+1) /), &
+                    (/ grid%x(i,j+1), grid%y(i,j+1) /), &
+                                      grid%V(i,j)       )
     end do
     end do
     
