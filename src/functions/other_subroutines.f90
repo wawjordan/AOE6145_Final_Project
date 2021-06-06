@@ -59,52 +59,42 @@ module other_subroutines
   !!              right :
   !<
   !===========================================================================80
-!  subroutine Limit(V,psi_plus,psi_minus)
-!    
-!    use set_inputs, only : limiter_freeze
-!    real(prec), dimension(:,:,:), intent(in)  :: V
-!    !real(prec), dimension(:,:,:,:), intent(inout)  :: psi_plus, psi_minus
-!    real(prec), dimension(neq,ig_low:ig_high, &
-!                          jg_low:jg_high,2),intent(inout) :: psi_plus, psi_minus
-!    !real(prec), dimension(lbound(psi_plus,1):ubound(psi_plus,1), &
-!    !                      lbound(psi_plus,2):ubound(psi_plus,2),neq) :: r_plus, r_minus
-!    real(prec), dimension(neq,ig_low:ig_high, &
-!                          jg_low:jg_high) :: r_plus, r_minus
-!    !write(*,*) lbound(psi_plus,1),ubound(psi_plus,1)
-!    !write(*,*) lbound(psi_plus,2),ubound(psi_plus,2)
-!    !stop
-!    r_plus = zero
-!    r_minus = zero
-!    if (limiter_freeze) then
-!      continue
-!    else
-!      call calc_consecutive_variations(V,r_plus,r_minus,1)
-!      call limiter_fun(r_plus,psi_plus(:,:,:,1))
-!      call limiter_fun(r_minus,psi_minus(:,:,:,1))
-!      
-!      call calc_consecutive_variations(V,r_plus,r_minus,2)
-!      call limiter_fun(r_plus,psi_plus(:,:,:,2))
-!      call limiter_fun(r_minus,psi_minus(:,:,:,2))
-!    end if
-!  
-!  end subroutine Limit
-
-  subroutine MUSCL_extrap(stencil,psi_plus,psi_minus,left,right)
-
-    real(prec), dimension(neq,4), intent(in)  :: stencil
-    real(prec), dimension(neq,4), intent(in)  :: psi_plus, psi_minus
-    real(prec), dimension(neq), intent(out) :: left, right
+  subroutine MUSCL_extrap(soln,Lxi,Rxi,Leta,Reta)
+    type(soln_t), intent(inout) :: soln
+    real(prec), dimension(neq,i_low-1:i_high,j_low:j_high) :: Lxi, Rxi
+    real(prec), dimension(neq,i_low:i_high,j_low-1:j_high) :: Leta, Reta
     integer :: i
     
-    i = 2
-    
+    Lxi  = soln%V(:,i_low-1:i_high  ,j_low:j_high) + fourth*epsM*(      &
+           (one-kappaM)*soln%psi_p_xi(:,i_low-2:i_high-1,j_low:j_high)* &
+                             ( soln%V(:,i_low-1:i_high  ,j_low:j_high)  &
+                             - soln%V(:,i_low-2:i_high-1,j_low:j_high) )&
+         + (one+kappaM)*soln%psi_m_xi(:,i_low-1:i_high  ,j_low:j_high)* &
+                             ( soln%V(:,i_low  :i_high+1,j_low:j_high)  &
+                             - soln%V(:,i_low-1:i_high  ,j_low:j_high) ))
+    Rxi  = soln%V(:,i_low  :i_high+1,j_low:j_high) + fourth*epsM*(      &
+           (one-kappaM)*soln%psi_p_xi(:,i_low  :i_high+1,j_low:j_high)* &
+                             ( soln%V(:,i_low+1:i_high+2,j_low:j_high)  &
+                             - soln%V(:,i_low  :i_high+1,j_low:j_high) )&
+         + (one+kappaM)*soln%psi_m_xi(:,i_low-1:i_high  ,j_low:j_high)* &
+                             ( soln%V(:,i_low  :i_high+1,j_low:j_high)  &
+                             - soln%V(:,i_low-1:i_high  ,j_low:j_high) ))
 
-    left  = stencil(:,i) + fourth*epsM*( &
-         & (one-kappaM)*psi_plus(:,i-1)*(stencil(:,i)-stencil(:,i-1)) + &
-         & (one+kappaM)*psi_minus(:,i)*(stencil(:,i+1)-stencil(:,i)) )
-    right = stencil(:,i+1) - fourth*epsM*( &
-         & (one+kappaM)*psi_minus(:,i+1)*(stencil(:,i+1)-stencil(:,i)) + &
-         & (one-kappaM)*psi_plus(:,i)*(stencil(:,i+2)-stencil(:,i+1)) )
+    Leta = soln%V(:,i_low:i_high,j_low-1:j_high  ) + fourth*epsM*(       &
+           (one-kappaM)*soln%psi_p_eta(:,i_low:i_high,j_low-2:j_high-1)* &
+                              ( soln%V(:,i_low:i_high,j_low-1:j_high  )  &
+                              - soln%V(:,i_low:i_high,j_low-2:j_high-1) )&
+         + (one+kappaM)*soln%psi_m_eta(:,i_low:i_high,j_low-1:j_high  )* &
+                              ( soln%V(:,i_low:i_high,j_low  :j_high+1)  &
+                              - soln%V(:,i_low:i_high,j_low-1:j_high  ) ))
+    Reta = soln%V(:,i_low:i_high,j_low  :j_high+1) + fourth*epsM*(      &
+           (one-kappaM)*soln%psi_p_eta(:,i_low:i_high,j_low  :j_high+1)* &
+                              ( soln%V(:,i_low:i_high,j_low+1:j_high+2)  &
+                              - soln%V(:,i_low:i_high,j_low  :j_high+1) )&
+         + (one+kappaM)*soln%psi_m_eta(:,i_low:i_high,j_low-1:j_high  )* &
+                              ( soln%V(:,i_low:i_high,j_low  :j_high+1)  &
+                              - soln%V(:,i_low:i_high,j_low-1:j_high  ) ))
+    
   end subroutine MUSCL_extrap
   
   !================================== calc_sources ==========================80
