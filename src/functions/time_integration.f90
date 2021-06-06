@@ -23,34 +23,52 @@ module time_integration
   !!              dt     : 
   !<
   !===========================================================================80
-  subroutine calc_time_step( A_xi, A_eta, n_xi_avg, n_eta_avg, vol, V, dt )
+  subroutine calc_time_step(grid,soln)
+    use set_inputs, only : CFL
+    type(grid_t), intent(in)    :: grid
+    type(soln_t), intent(inout) :: soln
+    real(prec), dimension(ig_low:ig_high,jg_low:jg_high) :: Lam_xi,Lam_eta
     
-    use set_inputs,          only : CFL
+    call speed_of_sound(soln%V(4,:,:),soln%V(1,:,:),soln%asnd)
     
-    real(prec), dimension(:,:,:), intent(in)  :: V
-    real(prec), dimension(:,:), intent(in)    :: A_xi, A_eta, vol
-    real(prec), dimension(:,:,:), intent(in)  :: n_xi_avg, n_eta_avg
-    real(prec), dimension(lbound(V,1):ubound(V,1),lbound(V,2):ubound(V,2)) &
-                                         :: asnd, lambda_xi, lambda_eta
-    real(prec), dimension(:,:),   intent(out) :: dt
-    integer :: low1, low2, high1, high2
-    
-    low1  = lbound(V,2)
-    high1 = ubound(V,2)
-    low2  = lbound(V,3)
-    high2 = ubound(V,3)
-
-
-    call speed_of_sound(V(4,:,:),V(1,:,:),asnd)
-    lambda_xi  = abs(V(2,:,:)*n_xi_avg(1,:,:) + &
-                     V(3,:,:)*n_xi_avg(2,:,:)) + asnd
-    lambda_eta = abs(V(2,:,:)*n_eta_avg(1,:,:) + &
-                     V(3,:,:)*n_eta_avg(2,:,:)) + asnd
-    dt = CFL*vol/(lambda_xi*A_xi(low1:high1,low2:high2) + &
-                  lambda_eta*A_eta(low1:high1,low2:high2))
-    dt = CFL*minval(dt)
+    Lam_xi  = abs(soln%V(2,:,:)*grid%n_xi_avg(:,:,1)   + &
+                  soln%V(3,:,:)*grid%n_xi_avg(:,:,2))  + soln%asnd
+    Lam_eta = abs(soln%V(2,:,:)*grid%n_eta_avg(:,:,1)  + &
+                  soln%V(3,:,:)*grid%n_eta_avg(:,:,2)) + soln%asnd
+    soln%dt = CFL*grid%V/( &
+               Lam_xi*grid%A_xi(ig_low:ig_high,jg_low:jg_high) + &
+               Lam_eta*grid%A_eta(ig_low:ig_high,jg_low:jg_high) )
+    soln%dt = CFL*minval(soln%dt)
     
   end subroutine calc_time_step
+!  subroutine calc_time_step( A_xi, A_eta, n_xi_avg, n_eta_avg, vol, V, dt )
+!    
+!    use set_inputs,          only : CFL
+!    
+!    real(prec), dimension(:,:,:), intent(in)  :: V
+!    real(prec), dimension(:,:), intent(in)    :: A_xi, A_eta, vol
+!    real(prec), dimension(:,:,:), intent(in)  :: n_xi_avg, n_eta_avg
+!    real(prec), dimension(lbound(V,1):ubound(V,1),lbound(V,2):ubound(V,2)) &
+!                                         :: asnd, lambda_xi, lambda_eta
+!    real(prec), dimension(:,:),   intent(out) :: dt
+!    integer :: low1, low2, high1, high2
+!    
+!    low1  = lbound(V,2)
+!    high1 = ubound(V,2)
+!    low2  = lbound(V,3)
+!    high2 = ubound(V,3)
+!
+!
+!    call speed_of_sound(V(4,:,:),V(1,:,:),asnd)
+!    lambda_xi  = abs(V(2,:,:)*n_xi_avg(1,:,:) + &
+!                     V(3,:,:)*n_xi_avg(2,:,:)) + asnd
+!    lambda_eta = abs(V(2,:,:)*n_eta_avg(1,:,:) + &
+!                     V(3,:,:)*n_eta_avg(2,:,:)) + asnd
+!    dt = CFL*vol/(lambda_xi*A_xi(low1:high1,low2:high2) + &
+!                  lambda_eta*A_eta(low1:high1,low2:high2))
+!    dt = CFL*minval(dt)
+!    
+!  end subroutine calc_time_step
   
   !============================= explicit_euler ==============================80
   !>
@@ -134,10 +152,10 @@ module time_integration
     integer :: i,j
     do j = j_low,j_high
     do i = i_low,i_high
-      soln%R(i,j,:) = grid%A_xi(i+1,j)*soln%Fxi(:,i+1,j) &
-                    - grid%A_xi(i,j)*soln%Fxi(:,i,j)  &
-                    + grid%A_eta(i,j+1)*soln%Feta(:,i,j+1) &
-                    - grid%A_eta(i,j)*soln%Feta(:,i,j) &
+      soln%R(:,i,j) = grid%A_xi(i+1,j)*soln%Fxi(:,i,j) &
+                    - grid%A_xi(i,j)*soln%Fxi(:,i-1,j)  &
+                    + grid%A_eta(i,j+1)*soln%Feta(:,i,j) &
+                    - grid%A_eta(i,j)*soln%Feta(:,i,j-1) &
                     - grid%V(i,j)*soln%S(:,i,j)
     end do
     end do
@@ -203,8 +221,8 @@ module time_integration
   subroutine residual_norms( R, Rnorm, pnorm, rinit )
     
     real(prec), dimension(neq,i_low:i_high,j_low:j_high), intent(in) :: R
-    real(prec), dimension(neq,3), intent(in)  :: rinit
-    real(prec), dimension(neq,3), intent(out) :: Rnorm
+    real(prec), dimension(neq), intent(in)  :: rinit
+    real(prec), dimension(neq), intent(out) :: Rnorm
     integer, intent(in) :: pnorm
     real(prec) :: Linv
     integer :: i
@@ -212,9 +230,9 @@ module time_integration
     Linv = one/real(size(R(1,:,:)),prec)
     
     do i = 1,neq
-      Rnorm(i,1) = maxval(abs(R(i,:,:)))
-      Rnorm(i,2) = Linv*sum(abs(R(i,:,:)))
-      Rnorm(i,3) = sqrt(Linv*sum(R(i,:,:)**2))
+      !Rnorm(i,1) = maxval(abs(R(i,:,:)))
+      Rnorm(i) = Linv*sum(abs(R(i,:,:)))
+      !Rnorm(i,3) = sqrt(Linv*sum(R(i,:,:)**2))
     end do
     Rnorm = Rnorm/rinit
      
