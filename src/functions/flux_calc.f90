@@ -33,9 +33,9 @@ module flux_calc
   subroutine calc_flux(left_state, right_state, nx, ny, F)
     
     import :: prec, i_low, i_high, j_low, j_high, neq
-    real(prec), dimension(:), intent(in) :: left_state, right_state
+    real(prec), dimension(neq), intent(in) :: left_state, right_state
     real(prec), intent(in) :: nx, ny
-    real(prec), dimension(:), intent(out) :: F
+    real(prec), dimension(neq), intent(out) :: F
     
   end subroutine calc_flux
     
@@ -43,88 +43,37 @@ module flux_calc
   
 contains
 
-subroutine calc_flux_xi(soln,grid)
+subroutine calc_flux_2D(grid,soln)
 
+  type(grid_t), intent(in)    :: grid
   type(soln_t), intent(inout) :: soln
-  type(grid_t), intent(inout) :: grid
-
-end subroutine calc_flux_xi
-
-
-subroutine calc_flux_xi(soln,grid)
-
-  type(soln_t), intent(inout) :: soln
-  type(grid_t), intent(inout) :: grid
-
-end subroutine calc_flux_xi
-  
-
-subroutine calc_flux_2D(soln,grid,Fnormal)
-
-  type(soln_t), intent(in) :: soln
-  type(grid_t), intent(in) :: grid
-  real(prec), dimension(neq,i_low:i_high+1,j_low:j_high+1,neq,2), &
-                                                  intent(inout) :: Fnormal
-  !real(prec), dimension(:,:,:,:), intent(inout) :: Fnormal
-  real(prec), dimension(neq) :: left, right
+  real(prec), dimension(neq,i_low-1:i_high,j_low:j_high) :: Lxi, Rxi
+  real(prec), dimension(neq,i_low:i_high,j_low-1:j_high) :: Leta, Reta
   real(prec) :: nx, ny
   integer :: i,j,k
-  integer, dimension(4) :: ind
-  real(prec), dimension(4,neq) :: Vtmp, psiPtmp, psiMtmp
-  Fnormal(:,:,:,:) = zero
-
+  
+  call MUSCL_extrap(soln,Lxi,Rxi,Leta,Reta)
+  
   do j = j_low,j_high
-  !write(*,*) j
-  do i = i_low,i_high+1
-    !nx = one
-    !ny = zero
-    nx = grid%n_xi(i,j,1)
-    ny = grid%n_xi(i,j,2)
-    ind = (/ ( k,k=i-2,i+1 ) /)
-    Vtmp = soln%V(ind,j,:)
-    psiPtmp = soln%psi_plus(ind,j,:,1)
-    psiMtmp = soln%psi_minus(ind,j,:,1)
-    call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
-    !write(*,*) i,j
-    !write(*,*) ind
-    !write(*,*) Vtmp(:,1)
-    !write(*,*) left(1), right(1)
-    !write(*,*) Vtmp(:,2)
-    !write(*,*) left(2), right(2)
-    !write(*,*) Vtmp(:,3)
-    !write(*,*) left(3), right(3)
-    !write(*,*) Vtmp(:,4)
-    !write(*,*) left(4), right(4)
-    !stop
-    !left =  soln%V(i-1,j,:)
-    !write(*,*) i,j,'left',left
-    !right = soln%V(i,j,:)
-    !write(*,*) i,j,'right',right
-    call flux_fun(left,right,nx,ny,Fnormal(i,j,:,1))
-    !write(*,*) Fnormal(i,j,:,1)
+  do i = i_low-1,i_high
+    !nx = grid%n_xi(i,j,1)
+    !ny = grid%n_xi(i,j,2)
+    nx = one
+    ny = zero
+    call flux_fun(Lxi(:,i,j),Rxi(:,i,j),nx,ny,soln%Fxi(:,i,j))
+    !call flux_fun(soln%V(:,i,j),soln%V(:,i+1,j),nx,ny,soln%Fxi(:,i,j))
   end do
   end do
-  !stop
-  !write(*,*)'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
-  do j = j_low,j_high+1
-  !write(*,*) j
+  do j = j_low-1,j_high
   do i = i_low,i_high
-    !nx = zero
-    !ny = one
-    nx = grid%n_eta(i,j,1)
-    ny = grid%n_eta(i,j,2)
-    ind = (/ ( k,k=j-2,j+1 ) /)
-    Vtmp = soln%V(i,ind,:)
-    psiPtmp = soln%psi_plus(i,ind,:,2)
-    psiMtmp = soln%psi_minus(i,ind,:,2)
-    call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
-    !left =  soln%V(i,j-1,:)
-    !right = soln%V(i,j,:)
-    call flux_fun(left,right,nx,ny,Fnormal(i,j,:,2))
-    !write(*,*) Fnormal(i,j,:,2)
+    !nx = grid%n_eta(i,j,1)
+    !ny = grid%n_eta(i,j,2)
+    nx = zero
+    ny = one
+    call flux_fun(Leta(1:neq,i,j),Reta(1:neq,i,j),nx,ny,soln%Feta(:,i,j))
+    !call flux_fun(soln%V(:,i,j),soln%V(:,i,j+1),nx,ny,soln%Feta(:,i,j))
   end do
   end do
-  !stop
   
 end subroutine calc_flux_2D
 
@@ -184,8 +133,8 @@ end subroutine calc_flux_2D
   !===========================================================================80
   subroutine van_leer_flux(left, right, nx, ny, F)
     
-    real(prec), dimension(:), intent(in)  :: left, right
-    real(prec), dimension(:), intent(out) :: F
+    real(prec), dimension(neq), intent(in)  :: left, right
+    real(prec), dimension(neq), intent(out) :: F
     real(prec), intent(in) :: nx, ny
     real(prec) :: rhoL, uL, vL, pL, aL, htL, unL, ML, beta_L
     real(prec) :: rhoR, uR, vR, pR, aR, htR, unR, MR, beta_R
@@ -207,8 +156,10 @@ end subroutine calc_flux_2D
     unL = uL*nx + vL*ny
     unR = uR*nx + vR*ny
     
-    htL = aL**2/(gamma-one) + half*unL**2
-    htR = aR**2/(gamma-one) + half*unR**2
+    !htL = aL**2/(gamma-one) + half*unL**2
+    !htR = aR**2/(gamma-one) + half*unR**2
+    htL = aL**2/(gamma-one) + half*(uL**2+vL**2)
+    htR = aR**2/(gamma-one) + half*(uR**2+vR**2)
     
     ML = unL/aL
     MR = unR/aR
@@ -248,8 +199,8 @@ end subroutine calc_flux_2D
   !===========================================================================80
   subroutine roe_flux( left, right, nx, ny, F )
     
-    real(prec), dimension(:), intent(in)  :: left, right
-    real(prec), dimension(:), intent(out) :: F
+    real(prec), dimension(neq), intent(in)  :: left, right
+    real(prec), dimension(neq), intent(out) :: F
     real(prec), intent(in) :: nx, ny
     real(prec), dimension(size(left)) :: rvec1, rvec2, rvec3, rvec4
     real(prec), dimension(size(left)) :: lambda, FL, FR
@@ -273,15 +224,15 @@ end subroutine calc_flux_2D
     unL = uL*nx + vL*ny
     unR = uR*nx + vR*ny
     
-    htL = aL*aL/(gamma-one) + half*(uL*uL + vL*vL)
-    htR = aR*aR/(gamma-one) + half*(uR*uR + vR*vR)
+    htL = aL**2/(gamma-one) + half*(uL**2 + vL**2)
+    htR = aR**2/(gamma-one) + half*(uR**2 + vR**2)
     
     R = sqrt(rhoR/rhoL)
     rho2 = R*rhoL
     u2   = (R*uR + uL)/(R + one)
     v2   = (R*vR + vL)/(R + one)
     ht2  = (R*htR + htL)/(R + one)
-    a2   = sqrt((gamma-one)*(ht2 - half*(u2*u2 + v2*v2)))
+    a2   = sqrt((gamma-one)*(ht2 - half*(u2**2 + v2**2)))
     un2 = u2*nx + v2*ny
     !a2   = sqrt((gamma-one)*(ht2 - half*(un2**2)))
     
