@@ -36,7 +36,7 @@ module test_roe_flux
       F_expected(1) = 212.106735979666_prec
       F_expected(2) = 120210.673597967_prec
       F_expected(3) = 22555.8607596992_prec
-      F_expected(4) = 38342072.6061922_prec
+      F_expected(4) = 38444345.8963145_prec
       
       call flux_fun(left,right,nx,ny,F)
       
@@ -125,10 +125,10 @@ module test_roe_flux
       left  = (/ 2.0_prec, 1000.0_prec, 50.0_prec, 100000.0_prec /)
       right = (/ 2.1_prec,  800.0_prec, 40.0_prec,  90000.0_prec /)
       
-      F_expected(1) = 2456.04599498267_prec
-      F_expected(2) = 2391182.31577846_prec
-      F_expected(3) = 151181.218775777_prec
-      F_expected(4) = 1498155491.12444_prec
+      F_expected(1) = 2449.88241657841_prec
+      F_expected(2) = 2386003.14484853_prec
+      F_expected(3) = 150955.606652913_prec
+      F_expected(4) = 1503665971.71949_prec
       
       call flux_fun(left,right,nx,ny,F)
       
