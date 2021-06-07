@@ -38,7 +38,7 @@ module time_integration
     soln%dt = CFL*grid%V/( &
                Lam_xi*grid%A_xi(ig_low:ig_high,jg_low:jg_high) + &
                Lam_eta*grid%A_eta(ig_low:ig_high,jg_low:jg_high) )
-    soln%dt = CFL*minval(soln%dt)
+    !soln%dt = CFL*minval(soln%dt)
     
   end subroutine calc_time_step
 !  subroutine calc_time_step( A_xi, A_eta, n_xi_avg, n_eta_avg, vol, V, dt )
@@ -87,63 +87,59 @@ module time_integration
   !<
   !===========================================================================80
 
-  subroutine explicit_RK( grid, soln)
-    
-    type(grid_t), intent(inout) :: grid
-    type(soln_t), intent(inout) :: soln
-    integer :: i, j
-    
-    call calc_residual(grid,soln)
-    !call calc_residual(grid%A_xi(i_low:i_high+1,j_low:j_high),&
-    !                  grid%A_eta(i_low:i_high,j_low:j_high+1),&
-    !                  grid%V(i_low:i_high,j_low:j_high),&
-    !                  soln%S(i_low:i_high,j_low:j_high,:),&
-    !                  soln%F(i_low:i_high+1,j_low:j_high+1,:,:),&
-    !                  soln%R(i_low:i_high,j_low:j_high,:))
-    do i = 1,4
-    soln%U(i,i_low:i_high,j_low:j_high) = &
-         soln%U(i,i_low:i_high,j_low:j_high) - &
-       ( soln%R(i,i_low:i_high,j_low:j_high)*  &
-        soln%dt(i_low:i_high,j_low:j_high) )/  &
-         grid%V(i_low:i_high,j_low:j_high)
-    end do
-    
-  end subroutine explicit_RK
-  !subroutine explicit_RK( grid, soln )
+  !subroutine explicit_RK( grid, soln)
   !  
   !  type(grid_t), intent(inout) :: grid
   !  type(soln_t), intent(inout) :: soln
-  !  !real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq),&
-  !  !                                           intent(inout) :: U
-  !  !real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
-  !  !                                           intent(inout) :: R
-  !  !real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2),&
-  !  !                                           intent(in) :: F
-  !  !real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
-  !  !                                           intent(in) :: S
-  !  !real(prec), dimension(i_low:i_high,j_low:j_high), intent(in) :: dt
-  !  !integer, intent(in) :: N
-  !  real(prec), dimension(4) :: k
   !  integer :: i, j
   !  
-  !  k = (/ fourth, third, half, one /)
-  !  do j = 1,4
-  !  call calc_residual(grid%A_xi(i_low:i_high+1,j_low:j_high),&
-  !                    grid%A_eta(i_low:i_high,j_low:j_high+1),&
-  !                    grid%V(i_low:i_high,j_low:j_high),&
-  !                    soln%S(i_low:i_high,j_low:j_high,:),&
-  !                    soln%F(i_low:i_high+1,j_low:j_high+1,:,:),&
-  !                    soln%R(i_low:i_high,j_low:j_high,:))
+  !  call calc_residual(grid,soln)
+  !  !call calc_residual(grid%A_xi(i_low:i_high+1,j_low:j_high),&
+  !  !                  grid%A_eta(i_low:i_high,j_low:j_high+1),&
+  !  !                  grid%V(i_low:i_high,j_low:j_high),&
+  !  !                  soln%S(i_low:i_high,j_low:j_high,:),&
+  !  !                  soln%F(i_low:i_high+1,j_low:j_high+1,:,:),&
+  !  !                  soln%R(i_low:i_high,j_low:j_high,:))
   !  do i = 1,4
-  !  soln%U(i_low:i_high,j_low:j_high,i) = &
-  !       soln%U(i_low:i_high,j_low:j_high,i) - &
-  !     k(j)*( soln%R(i_low:i_high,j_low:j_high,i)*  &
+  !  soln%U(i,i_low:i_high,j_low:j_high) = &
+  !       soln%U(i,i_low:i_high,j_low:j_high) - &
+  !     ( soln%R(i,i_low:i_high,j_low:j_high)*  &
   !      soln%dt(i_low:i_high,j_low:j_high) )/  &
   !       grid%V(i_low:i_high,j_low:j_high)
   !  end do
-  !  end do
   !  
   !end subroutine explicit_RK
+  subroutine explicit_RK( grid, soln )
+    
+    type(grid_t), intent(inout) :: grid
+    type(soln_t), intent(inout) :: soln
+    !real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq),&
+    !                                           intent(inout) :: U
+    !real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
+    !                                           intent(inout) :: R
+    !real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2),&
+    !                                           intent(in) :: F
+    !real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
+    !                                           intent(in) :: S
+    !real(prec), dimension(i_low:i_high,j_low:j_high), intent(in) :: dt
+    !integer, intent(in) :: N
+    real(prec), dimension(4) :: k
+    integer :: i, j
+    
+    k = (/ fourth, third, half, one /)
+    do j = 1,4
+    call calc_residual(grid,soln)
+    
+    do i = 1,4
+    soln%U(i,i_low:i_high,j_low:j_high) = &
+         soln%U(i,i_low:i_high,j_low:j_high) - &
+       k(j)*( soln%R(i,i_low:i_high,j_low:j_high)*  &
+        soln%dt(i_low:i_high,j_low:j_high) )/  &
+         grid%V(i_low:i_high,j_low:j_high)
+    end do
+    end do
+    
+  end subroutine explicit_RK
   
   subroutine calc_residual(grid,soln)
     
