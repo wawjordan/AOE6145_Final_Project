@@ -56,20 +56,16 @@ subroutine calc_flux_2D(grid,soln)
   
   do j = j_low,j_high
   do i = i_low-1,i_high
-    !nx = grid%n_xi(i,j,1)
-    !ny = grid%n_xi(i,j,2)
-    nx = one
-    ny = zero
+    nx = grid%n_xi(i,j,1)
+    ny = grid%n_xi(i,j,2)
     call flux_fun(Lxi(:,i,j),Rxi(:,i,j),nx,ny,soln%Fxi(:,i,j))
     !call flux_fun(soln%V(:,i,j),soln%V(:,i+1,j),nx,ny,soln%Fxi(:,i,j))
   end do
   end do
   do j = j_low-1,j_high
   do i = i_low,i_high
-    !nx = grid%n_eta(i,j,1)
-    !ny = grid%n_eta(i,j,2)
-    nx = zero
-    ny = one
+    nx = grid%n_eta(i,j,1)
+    ny = grid%n_eta(i,j,2)
     call flux_fun(Leta(1:neq,i,j),Reta(1:neq,i,j),nx,ny,soln%Feta(:,i,j))
     !call flux_fun(soln%V(:,i,j),soln%V(:,i,j+1),nx,ny,soln%Feta(:,i,j))
   end do
@@ -202,8 +198,8 @@ end subroutine calc_flux_2D
     real(prec), dimension(neq), intent(in)  :: left, right
     real(prec), dimension(neq), intent(out) :: F
     real(prec), intent(in) :: nx, ny
-    real(prec), dimension(size(left)) :: rvec1, rvec2, rvec3, rvec4
-    real(prec), dimension(size(left)) :: lambda, FL, FR
+    real(prec), dimension(neq) :: rvec1, rvec2, rvec3, rvec4
+    real(prec), dimension(neq) :: lambda, FL, FR
     real(prec) :: rhoL, uL, vL, pL, aL, htL, unL
     real(prec) :: rhoR, uR, vR, pR, aR, htR, unR
     real(prec) :: rho2, u2, v2, a2, ht2, un2
@@ -232,9 +228,9 @@ end subroutine calc_flux_2D
     u2   = (R*uR + uL)/(R + one)
     v2   = (R*vR + vL)/(R + one)
     ht2  = (R*htR + htL)/(R + one)
+    
     a2   = sqrt((gamma-one)*(ht2 - half*(u2**2 + v2**2)))
     un2 = u2*nx + v2*ny
-    !a2   = sqrt((gamma-one)*(ht2 - half*(un2**2)))
     
     rvec1 = (/ one, u2, v2, half*(u2**2 +v2**2) /)
     rvec2 = (/ zero, ny*rho2, nx*rho2, rho2*(ny*u2-nx*v2) /)
@@ -247,6 +243,10 @@ end subroutine calc_flux_2D
            & + half*(one-sign(one,lambda-two*eps_roe*a2))*&
            & (lambda**2/(four*eps_roe*a2) + eps_roe*a2)
     
+    !dw1 = (rhoR - rhoL) - (pR - pL)/a2**2
+    !dw2 = ny*(uR - uL) - nx*(vR - vL)
+    !dw3 = nx*(uR - uL) + ny*(vR - vL) + (pR - pL)/(rho2*a2)
+    !dw4 = nx*(uR - uL) + ny*(vR - vL) - (pR - pL)/(rho2*a2)
     dw1 = (rhoR - rhoL) - (pR - pL)/a2**2
     dw2 = ny*(uR - uL) - nx*(vR - vL)
     dw3 = nx*(uR - uL) + ny*(vR - vL) + (pR - pL)/(rho2*a2)
@@ -257,6 +257,29 @@ end subroutine calc_flux_2D
     
     F = half*( (FL+FR) - lambda(1)*dw1*rvec1 - lambda(2)*dw2*rvec2 &
                        - lambda(3)*dw3*rvec3 - lambda(4)*dw4*rvec4 )
+    
+!    write(*,*) 'rho = ', rhoL, rhoR, rho2
+!    write(*,*) 'u   = ', uL, uR, u2
+!    write(*,*) 'v   = ', vL, vR, v2
+!    write(*,*) 'p   = ', pL, pR
+!    write(*,*) 'a   = ', aL, aR, a2
+!    write(*,*) 'ht  = ', htL, htR, ht2
+!    write(*,*) 'un  = ', unL, unR, un2
+!    write(*,*)
+!    write(*,*) 'r1  = ', rvec1
+!    write(*,*) 'r2  = ', rvec2
+!    write(*,*) 'r3  = ', rvec3
+!    write(*,*) 'r4  = ', rvec4
+!    write(*,*)
+!    write(*,*) 'dw1 = ', dw1
+!    write(*,*) 'dw2 = ', dw2
+!    write(*,*) 'dw3 = ', dw3
+!    write(*,*) 'dw4 = ', dw4
+!    write(*,*)
+!    write(*,*) 'F(1)= ', FL(1), FR(1), F(1)
+!    write(*,*) 'F(2)= ', FL(2), FR(2), F(2)
+!    write(*,*) 'F(3)= ', FL(3), FR(3), F(3)
+!    write(*,*) 'F(4)= ', FL(4), FR(4), F(4)
     
   end subroutine roe_flux
   
