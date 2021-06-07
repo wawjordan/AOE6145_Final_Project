@@ -36,7 +36,7 @@ module soln_type
     real(prec), allocatable, dimension(:,:)   :: mach
     real(prec), allocatable, dimension(:,:)   :: temp
     real(prec), allocatable, dimension(:,:)   :: dt
-    real(prec), allocatable, dimension(:)     :: DEnorm
+    real(prec), allocatable, dimension(:,:)     :: DEnorm
     real(prec), allocatable, dimension(:)     :: rnorm
     real(prec), allocatable, dimension(:)     :: rold
     real(prec), allocatable, dimension(:)     :: rinit
@@ -85,7 +85,7 @@ module soln_type
                 soln%Vmms( neq, ig_low:ig_high,  jg_low:jg_high ),&
                 soln%Umms( neq, ig_low:ig_high,  jg_low:jg_high ),&
                 soln%Smms( neq, ig_low:ig_high,  jg_low:jg_high ),&
-                soln%DEnorm( neq ) )
+                soln%DEnorm( neq,3 ) )
       soln%DE     = zero
       soln%DEnorm = zero
     end if
