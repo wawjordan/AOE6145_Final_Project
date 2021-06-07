@@ -19,14 +19,14 @@ module set_inputs
   public :: grid_name, geometry_file
   public :: set_derived_inputs
    
-  logical :: limiter_freeze = .true.
+  logical :: limiter_freeze = .false.
   logical :: cons           = .false.
   logical :: isMMS          = .true.
-  logical :: cart_grid      = .true.
+  logical :: cart_grid      = .false.
   logical :: isAxi          = .false.
   
-  integer :: imax           = 65
-  integer :: jmax           = 65
+  integer :: imax           = 129
+  integer :: jmax           = 129
   integer :: i_low          = 0
   integer :: i_high         = 0
   integer :: ig_low         = 0
@@ -39,11 +39,11 @@ module set_inputs
   integer :: n_ghost        = 2
   integer :: counter        = 1
   integer :: max_iter       = 150000
-  integer :: soln_save      = 20000
-  integer :: res_save       = 100
+  integer :: soln_save      = 5000
+  integer :: res_save       = 10
   integer :: res_out        = 100
-  integer :: flux_scheme    = 2
-  integer :: limiter_scheme = 2
+  integer :: flux_scheme    = 1
+  integer :: limiter_scheme = 3
 
   real(prec) :: tol        = 1.0e-9_prec
   real(prec) :: eps        = 1.0e-3_prec
@@ -55,14 +55,14 @@ module set_inputs
   real(prec) :: xmax       = one
   real(prec) :: ymin       = zero
   real(prec) :: ymax       = one
-  real(prec) :: CFL        = 0.01_prec
+  real(prec) :: CFL        = 0.1_prec
   real(prec) :: beta_lim   = two
   real(prec) :: Lmms       = one
   real(prec) :: eps_roe    = 0.1_prec
   real(prec) :: epsM       = one
-  real(prec) :: kappaM     = -one
+  real(prec) :: kappaM     = zero
 
-  character(64) :: grid_name = "../grids/curvilinear-grids/curv2d257.grd"
+  character(64) :: grid_name = "../grids/curvilinear-grids/curv2d33.grd"
   !character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.extra-coarse.27x14.grd"
   !character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.fine.385x105.grd"
   character(64) :: geometry_file = "example.dat"
