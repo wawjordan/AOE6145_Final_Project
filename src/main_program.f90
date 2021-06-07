@@ -29,6 +29,7 @@ program main_program
   real(prec), dimension(4) :: left, right
   real(prec) :: nx, ny
   integer :: i1,j1,k1
+  logical :: freeze_BC = .false.
 !  integer, dimension(4) :: ind
 !  real(prec), dimension(4,4) :: Vtmp, psiPtmp, psiMtmp
 
@@ -58,7 +59,7 @@ program main_program
   !soln%V(i_high+2,j_low-2,:) = 2*soln%V(i_high+1,j_low-1,:) - &
   !                                       soln%V(i_high,j_low,:)
   
-  do k = 1,100000
+  do k = 1,250000
     !==========================================================================
 !    soln%V(1,i_low:i_high,j_low-1) = &
 !      2*rho_mms(Lmms,grid%x(i_low:i_high,j_low), grid%y(i_low:i_high,j_low) ) &
@@ -106,15 +107,13 @@ program main_program
     call limit_primitives(soln%V)
     call prim2cons(soln%U,soln%V)
     call update_states(soln)
-    call calculate_limiters(soln)
+    !call calculate_limiters(soln)
     call calc_flux_2D(grid,soln)
   
 !  i1 = i_high
 !  do j1 = j_low,j_high
-!    nx = one
-!    ny = zero
-!    !nx = grid%n_xi(i1,j1,1)
-!    !ny = grid%n_xi(i1,j1,2)
+!    nx = grid%n_xi(i1,j1,1)
+!    ny = grid%n_xi(i1,j1,2)
 !    !ind = (/ ( k1,k1=i1-2,i1+1 ) /)
 !    !Vtmp(1,:) = soln%V(ind(1),j1,:)
 !    !Vtmp(2,:) = soln%Vmms(ind(2),j1,:)
@@ -123,16 +122,14 @@ program main_program
 !    !psiPtmp = soln%psi_plus(ind,j1,:,1)
 !    !psiMtmp = soln%psi_minus(ind,j1,:,1)
 !    !call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
-!    left = soln%V(:,i1-1,j1)
-!    right = soln%Vmms(:,i1,j1)
+!    left = soln%V(:,i1,j1)
+!    right = soln%Vmms(:,i1+1,j1)
 !    call flux_fun(left,right,nx,ny,soln%Fxi(:,i1,j1))
 !  end do
 !  j1 = j_high
 !  do i1 = i_low,i_high
-!    nx = zero
-!    ny = one
-!    !nx = grid%n_eta(i1,j1,1)
-!    !ny = grid%n_eta(i1,j1,2)
+!    nx = grid%n_eta(i1,j1,1)
+!    ny = grid%n_eta(i1,j1,2)
 !    !ind = (/ ( k1,k1=j1-2,j1+1 ) /)
 !    !Vtmp(1,:) = soln%V(i1,ind(1),:)
 !    !Vtmp(2,:) = soln%V(i1,ind(2),:)
@@ -141,8 +138,8 @@ program main_program
 !    !psiPtmp = soln%psi_plus(i1,ind,:,2)
 !    !psiMtmp = soln%psi_minus(i1,ind,:,2)
 !    !call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
-!    left = soln%V(:,i1,j1-1)
-!    right = soln%Vmms(:,i1,j1)
+!    left = soln%V(:,i1,j1)
+!    right = soln%Vmms(:,i1,j1+1)
 !    call flux_fun(left,right,nx,ny,soln%Feta(:,i1,j1))
 !  end do
 
