@@ -34,7 +34,7 @@ module test_van_leer_flux
       F_expected(1) = 217.996930994173_prec
       F_expected(2) = 116945.287537063_prec
       F_expected(3) = 24879.2814158901_prec
-      F_expected(4) = 40417241.2705487_prec
+      F_expected(4) = 40566468.5822385_prec
       
       call flux_fun(left,right,nx,ny,F)
       
@@ -124,7 +124,7 @@ module test_van_leer_flux
       F_expected(1) = 1994.10673597967_prec
       F_expected(2) = 2093106.73597967_prec
       F_expected(3) = 113812.072778649_prec
-      F_expected(4) = 1340154805.10201_prec
+      F_expected(4) = 1348514680.20625_prec
       
       call flux_fun(left,right,nx,ny,F)
       
