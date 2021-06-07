@@ -138,14 +138,14 @@ module other_subroutines
   !!              DEnorm : 
   !<
   !===========================================================================80
-  subroutine calc_de( soln, DE, DEnorm, pnorm, cons )
+  subroutine calc_de( soln, DE, DEnorm, cons )
     
     type(soln_t), intent(in) :: soln
     logical, intent(in) :: cons
     real(prec), dimension(:,:,:), intent(out) :: DE
-    real(prec), dimension(3,neq), intent(out) :: DEnorm
-    integer, intent(in) :: pnorm
+    real(prec), dimension(neq,3), intent(out) :: DEnorm
     real(prec) :: Linv
+    integer :: i
     !Linv = one/real( (i_high-i_low)*(j_high-j_low) )
     !if (cons) then
     !  DE = soln%U(i_low:i_high,j_low:j_high,1:neq) &
@@ -161,23 +161,11 @@ module other_subroutines
     else
       DE = soln%V - soln%Vmms
     end if
-    
-    if (pnorm == 0) then
-      DEnorm(1,1) = maxval( abs( DE(1,:,:) ) )
-      DEnorm(1,2) = maxval( abs( DE(2,:,:) ) )
-      DEnorm(1,3) = maxval( abs( DE(3,:,:) ) )
-      DEnorm(1,4) = maxval( abs( DE(4,:,:) ) )
-    elseif (pnorm == 1) then
-      DEnorm(2,1) = Linv*sum( abs( DE(1,:,:) ) )
-      DEnorm(2,2) = Linv*sum( abs( DE(2,:,:) ) )
-      DEnorm(2,3) = Linv*sum( abs( DE(3,:,:) ) )
-      DEnorm(2,4) = Linv*sum( abs( DE(4,:,:) ) )
-    elseif (pnorm == 2) then
-      DEnorm(3,1) = sqrt( Linv*sum( DE(1,:,:)**2 ) )
-      DEnorm(3,2) = sqrt( Linv*sum( DE(2,:,:)**2 ) )
-      DEnorm(3,3) = sqrt( Linv*sum( DE(3,:,:)**2 ) )
-      DEnorm(3,4) = sqrt( Linv*sum( DE(4,:,:)**2 ) )
-    end if
+    do i = 1,neq
+      DEnorm(i,1) = maxval( abs( DE(i,i_low:i_high,j_low:j_high) ) )
+      DEnorm(i,2) = Linv*sum( abs( DE(i,i_low:i_high,j_low:j_high) ) )
+      DEnorm(i,3) = sqrt( Linv*sum( DE(i,i_low:i_high,j_low:j_high)**2 ) )
+    end do
     
   end subroutine calc_de
   
