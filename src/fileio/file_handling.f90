@@ -392,14 +392,15 @@ subroutine grid_out(filename,grid)
 
     type( soln_t), intent(in) :: soln
     integer, intent(in) :: num_iter
-    integer :: i, resunit
+    integer :: i, j, resunit
 
     resunit = 30
-
+    i = 1
+    open(resunit,status='unknown')
     if(isMMS) then
-      write(resunit,*) num_iter,(soln%rnorm(i),i=1,neq),(soln%DEnorm(i),i=1,neq)
+      write(resunit,*) num_iter,(soln%rnorm(i),j=1,neq),(soln%DEnorm(j,i),j=1,neq)
     else
-      write(resunit,*) num_iter,(soln%rnorm(i),i=1,neq)
+      write(resunit,*) num_iter,(soln%rnorm(i),j=1,neq)
     end if
 
   end subroutine output_res
