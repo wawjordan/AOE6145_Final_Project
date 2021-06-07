@@ -39,10 +39,10 @@ module set_inputs
   integer :: n_ghost        = 2
   integer :: counter        = 1
   integer :: max_iter       = 150000
-  integer :: soln_save      = 2000
+  integer :: soln_save      = 20000
   integer :: res_save       = 100
   integer :: res_out        = 100
-  integer :: flux_scheme    = 1
+  integer :: flux_scheme    = 2
   integer :: limiter_scheme = 2
 
   real(prec) :: tol        = 1.0e-9_prec
@@ -55,11 +55,11 @@ module set_inputs
   real(prec) :: xmax       = one
   real(prec) :: ymin       = zero
   real(prec) :: ymax       = one
-  real(prec) :: CFL        = 0.1_prec
+  real(prec) :: CFL        = 0.01_prec
   real(prec) :: beta_lim   = two
   real(prec) :: Lmms       = one
   real(prec) :: eps_roe    = 0.1_prec
-  real(prec) :: epsM       = zero
+  real(prec) :: epsM       = one
   real(prec) :: kappaM     = -one
 
   character(64) :: grid_name = "../grids/curvilinear-grids/curv2d257.grd"
