@@ -95,30 +95,49 @@ contains
     call limiter_fun(r_plus_eta,psi_p_eta)
     call limiter_fun(r_minus_eta,psi_m_eta)
     
-    soln%psi_p_xi( :,i_low-1:i_high,:) = psi_p_xi
-    soln%psi_m_xi( :,i_low-1:i_high,:) = psi_m_xi
-    soln%psi_p_eta(:,:,j_low-1:j_high) = psi_p_eta
-    soln%psi_m_eta(:,:,j_low-1:j_high) = psi_m_eta
+    soln%psi_p_xi( :,i_low-1:i_high,j_low:j_high) = psi_p_xi
+    soln%psi_m_xi( :,i_low-1:i_high,j_low:j_high) = psi_m_xi
+    soln%psi_p_eta(:,i_low:i_high,j_low-1:j_high) = psi_p_eta
+    soln%psi_m_eta(:,i_low:i_high,j_low-1:j_high) = psi_m_eta
     
     do i = 1,n_ghost
     soln%psi_p_xi( :,i_low-1-i,:) = &
-         two*soln%psi_p_xi(:,i_low-i,:) - soln%psi_p_xi(:,i_low+1-i,:)
+         soln%psi_p_xi(:,i_low-i,:)
     soln%psi_m_xi( :,i_low-1-i,:) = &
-         two*soln%psi_m_xi(:,i_low-i,:) - soln%psi_m_xi(:,i_low+1-i,:)
+         soln%psi_m_xi(:,i_low-i,:)
     soln%psi_p_xi( :,i_high+i,:) = &
-         two*soln%psi_p_xi(:,i_high-1+i,:) - soln%psi_p_xi(:,i_high-2+i,:)
+         soln%psi_p_xi(:,i_high-1+i,:)
     soln%psi_m_xi( :,i_high+i,:) = &
-         two*soln%psi_m_xi(:,i_high-1+i,:) - soln%psi_m_xi(:,i_high-2+i,:)
+         soln%psi_m_xi(:,i_high-1+i,:)
     
     soln%psi_p_eta( :,:,j_low-1-i) = &
-         two*soln%psi_p_eta(:,:,j_low-i) - soln%psi_p_eta(:,:,j_low+1-i)
+         soln%psi_p_eta(:,:,j_low-i)
     soln%psi_m_eta( :,:,j_low-1-i) = &
-         two*soln%psi_m_eta(:,:,j_low-i) - soln%psi_m_eta(:,:,j_low+1-i)
+         soln%psi_m_eta(:,:,j_low-i)
     soln%psi_p_eta( :,:,j_high+i) = &
-         two*soln%psi_p_eta(:,:,j_high-1+i) - soln%psi_p_eta(:,:,j_high-2+i)
+         soln%psi_p_eta(:,:,j_high-1+i)
     soln%psi_m_eta( :,:,j_high+i) = &
-         two*soln%psi_m_eta(:,:,j_high-1+i) - soln%psi_m_eta(:,:,j_high-2+i)
+         soln%psi_m_eta(:,:,j_high-1+i)
     end do
+    !do i = 1,n_ghost
+    !soln%psi_p_xi( :,i_low-1-i,:) = &
+    !     two*soln%psi_p_xi(:,i_low-i,:) - soln%psi_p_xi(:,i_low+1-i,:)
+    !soln%psi_m_xi( :,i_low-1-i,:) = &
+    !     two*soln%psi_m_xi(:,i_low-i,:) - soln%psi_m_xi(:,i_low+1-i,:)
+    !soln%psi_p_xi( :,i_high+i,:) = &
+    !     two*soln%psi_p_xi(:,i_high-1+i,:) - soln%psi_p_xi(:,i_high-2+i,:)
+    !soln%psi_m_xi( :,i_high+i,:) = &
+    !     two*soln%psi_m_xi(:,i_high-1+i,:) - soln%psi_m_xi(:,i_high-2+i,:)
+    !
+    !soln%psi_p_eta( :,:,j_low-1-i) = &
+    !     two*soln%psi_p_eta(:,:,j_low-i) - soln%psi_p_eta(:,:,j_low+1-i)
+    !soln%psi_m_eta( :,:,j_low-1-i) = &
+    !     two*soln%psi_m_eta(:,:,j_low-i) - soln%psi_m_eta(:,:,j_low+1-i)
+    !soln%psi_p_eta( :,:,j_high+i) = &
+    !     two*soln%psi_p_eta(:,:,j_high-1+i) - soln%psi_p_eta(:,:,j_high-2+i)
+    !soln%psi_m_eta( :,:,j_high+i) = &
+    !     two*soln%psi_m_eta(:,:,j_high-1+i) - soln%psi_m_eta(:,:,j_high-2+i)
+    !end do
 
   end subroutine calculate_limiters
   
