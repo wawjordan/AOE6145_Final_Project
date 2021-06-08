@@ -155,16 +155,16 @@ module other_subroutines
     !   & - soln%Vmms(i_low:i_high,j_low:j_high,1:neq)
     !end if
     DE = zero
-    Linv = one/real( (i_high-i_low)*(j_high-j_low) )
+    Linv = one/real( (i_high-i_low)*(j_high-j_low),prec )
     if (cons) then
       DE = soln%U - soln%Umms
     else
       DE = soln%V - soln%Vmms
     end if
     do i = 1,neq
-      DEnorm(i,1) = maxval( abs( DE(i,i_low:i_high,j_low:j_high) ) )
-      DEnorm(i,2) = Linv*sum( abs( DE(i,i_low:i_high,j_low:j_high) ) )
-      DEnorm(i,3) = sqrt( Linv*sum( DE(i,i_low:i_high,j_low:j_high)**2 ) )
+      DEnorm(i,1) = Linv*sum( abs( DE(i,i_low:i_high,j_low:j_high) ) )
+      DEnorm(i,2) = sqrt( Linv*sum( DE(i,i_low:i_high,j_low:j_high)**2 ) )
+      DEnorm(i,3) = maxval( abs( DE(i,i_low:i_high,j_low:j_high) ) )
     end do
     
   end subroutine calc_de
