@@ -1,17 +1,13 @@
 module namelist
   
   use fluid_constants, only : R_gas, gamma
-  use set_inputs, only : imax, i_high, i_low, ig_high, ig_low
-  use set_inputs, only : imax, neq, xmin, xmax, n_ghost
-  use set_inputs, only : i_high, i_low, ig_high, ig_low
-  use set_inputs, only : Astar, area, darea
-  use set_inputs, only : CFL, k2, k4, eps, tol, eps_roe, beta_lim, epsM, kappaM
-  use set_inputs, only : max_iter, max_newton_iter, newton_tol, counter
-  use set_inputs, only : soln_save, res_save, res_out
-  use set_inputs, only : p0, T0, a0, rho0, pb, p_ratio
-  use set_inputs, only : set_derived_inputs, flux_scheme, limiter_scheme, cons
-  use set_inputs, only : leftV, rightV, leftU, rightU
-  use set_inputs, only : grid_name
+  use set_inputs, only : grid_name, cart_grid, imax, jmax, n_ghost
+  use set_inputs, only : xmin, xmax, ymin, ymax, isAxi, Lmms
+  use set_inputs, only : isMMS, p0, T0
+  use set_inputs, only : CFL, max_iter, eps, tol
+  use set_inputs, only : flux_scheme, limiter_scheme, eps_roe, beta_lim
+  use set_inputs, only : geometry_file, soln_save, res_save,res_out, cons
+  use set_inputs, only : epsM, kappaM, limiter_freeze
   implicit none
   private
   
@@ -30,16 +26,14 @@ contains
     logical :: fexist
     logical :: fopen = .false.
     !character(len=20) :: file_path = 'q1d.nml'
-    namelist /grid/ imax, xmin, xmax, n_ghost
-    namelist /geometry/ Astar
+    namelist /grid/ grid_name, cart_grid, imax, jmax, n_ghost
+    namelist /geometry/ xmin, xmax, ymin, ymax, isAxi, Lmms
     namelist /constants/ R_gas, gamma
-    namelist /initial/ p0, T0, p_ratio, shock
-    namelist /numerical/ CFL, eps, tol, max_iter, &
-            & max_newton_iter, newton_tol, ramp, counter
-    namelist /flux/ flux_scheme, limiter_scheme, &
-            & k2, k4, eps_roe, beta_lim
-    namelist /output/ soln_save, res_save, res_out, cons
-    namelist /reconstruction/ epsM, kappaM
+    namelist /initial/ isMMS, p0, T0
+    namelist /numerical/ CFL, max_iter, eps, tol
+    namelist /flux/ flux_scheme, limiter_scheme, eps_roe, beta_lim
+    namelist /output/ geometry_file, soln_save, res_save, res_out, cons
+    namelist /reconstruction/ epsM, kappaM, limiter_freeze
     
     inquire( file=file_path,exist=fexist )
     if ( .not. fexist ) then
