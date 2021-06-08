@@ -222,11 +222,11 @@ module grid_type
                        (/ grid%y(i,j), grid%y(i+1,j), grid%y(i+1,j+1), &
                                          grid%y(i,j+1),grid%y(i,j) /), &
                        grid%xc(i,j), grid%yc(i,j), grid%V(i,j) )
-      call cell_volume( (/ grid%x(i,j), grid%y(i,j) /), &
-                    (/ grid%x(i+1,j), grid%y(i+1,j) /), &
-                (/ grid%x(i+1,j+1), grid%y(i+1,j+1) /), &
-                    (/ grid%x(i,j+1), grid%y(i,j+1) /), &
-                                      grid%V(i,j)       )
+      !call cell_volume( (/ grid%x(i,j), grid%y(i,j) /), &
+      !              (/ grid%x(i+1,j), grid%y(i+1,j) /), &
+      !          (/ grid%x(i+1,j+1), grid%y(i+1,j+1) /), &
+      !              (/ grid%x(i,j+1), grid%y(i,j+1) /), &
+      !                                grid%V(i,j)       )
     end do
     end do
     
