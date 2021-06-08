@@ -39,7 +39,7 @@ module set_inputs
   integer :: n_ghost        = 2
   integer :: counter        = 1
   integer :: max_iter       = 150000
-  integer :: soln_save      = 5000
+  integer :: soln_save      = 100
   integer :: res_save       = 10
   integer :: res_out        = 100
   integer :: flux_scheme    = 1
@@ -62,10 +62,10 @@ module set_inputs
   real(prec) :: epsM       = one
   real(prec) :: kappaM     = zero
 
-  character(64) :: grid_name = "../grids/curvilinear-grids/curv2d33.grd"
+  character(200) :: grid_name = "../grids/curvilinear-grids/curv2d65.grd"
   !character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.extra-coarse.27x14.grd"
   !character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.fine.385x105.grd"
-  character(64) :: geometry_file = "example.dat"
+  character(200) :: geometry_file = "example.dat"
   contains
 
   !=========================== set_derived_inputs ============================80
