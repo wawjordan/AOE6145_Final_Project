@@ -31,8 +31,13 @@
 *.out
 *.app
 
+# Namelists
+*.nml
+
 # Data Files
 *.dat
+*.txt
+!CMakeLists.txt
 
 # Build Directory
 build/
