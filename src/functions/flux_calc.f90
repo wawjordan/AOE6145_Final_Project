@@ -20,7 +20,7 @@ module flux_calc
   
   abstract interface
   
-  !================================ calc_flux ================================80
+  !================================ calc_flux ===============================80
   !>
   !! Description:
   !!
@@ -29,7 +29,7 @@ module flux_calc
   !!
   !! Outputs:     F     :
   !<
-  !===========================================================================80
+  !==========================================================================80
   subroutine calc_flux(left_state, right_state, nx, ny, F)
     
     import :: prec, i_low, i_high, j_low, j_high, neq
@@ -74,11 +74,11 @@ subroutine calc_flux_2D(grid,soln)
 end subroutine calc_flux_2D
 
 
-  !================================ select_flux ==============================80
+  !================================ select_flux =============================80
   !>
   !! Description:
   !<
-  !===========================================================================80
+  !==========================================================================80
   subroutine select_flux()
     
     use set_inputs, only : flux_scheme
@@ -117,7 +117,8 @@ end subroutine calc_flux_2D
     F(4) = rho*ht*un
     
   end subroutine exact_flux
-  !============================== van_leer_flux ==============================80
+  
+  !============================== van_leer_flux =============================80
   !>
   !! Description:
   !!
@@ -126,7 +127,7 @@ end subroutine calc_flux_2D
   !!
   !! Outputs:     F     :
   !<
-  !===========================================================================80
+  !==========================================================================80
   subroutine van_leer_flux(left, right, nx, ny, F)
     
     real(prec), dimension(neq), intent(in)  :: left, right
@@ -152,8 +153,6 @@ end subroutine calc_flux_2D
     unL = uL*nx + vL*ny
     unR = uR*nx + vR*ny
     
-    !htL = aL**2/(gamma-one) + half*unL**2
-    !htR = aR**2/(gamma-one) + half*unR**2
     htL = aL**2/(gamma-one) + half*(uL**2+vL**2)
     htR = aR**2/(gamma-one) + half*(uR**2+vR**2)
     
@@ -183,7 +182,7 @@ end subroutine calc_flux_2D
     
   end subroutine van_leer_flux
   
-  !================================ roe_flux =================================80
+  !================================ roe_flux ================================80
   !>
   !! Description:
   !!
@@ -192,7 +191,7 @@ end subroutine calc_flux_2D
   !!
   !! Outputs:     F     :
   !<
-  !===========================================================================80
+  !==========================================================================80
   subroutine roe_flux( left, right, nx, ny, F )
     
     real(prec), dimension(neq), intent(in)  :: left, right
