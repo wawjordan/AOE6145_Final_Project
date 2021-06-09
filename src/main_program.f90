@@ -1,13 +1,14 @@
 program main_program
   
   use set_precision, only : prec  
-  use set_constants, only : zero, one, set_derived_constants
+  use set_constants, only : pi, zero, one, set_derived_constants
   use fluid_constants, only : set_fluid_constants
   use set_inputs, only : set_derived_inputs, geometry_file, limiter_freeze
   use set_inputs, only : i_low,i_high,j_low,j_high, n_ghost, cons, neq
   use set_inputs, only : ig_low,ig_high,jg_low,jg_high, max_iter
   use set_inputs, only : res_save, res_out, soln_save, tol, Lmms, CFL, isMMS
-  use file_handling, only : grid_out, output_file_headers, &
+  use set_inputs, only : alpha, rho_inf, u_inf, p_inf, u0, v0
+  use file_handling, only : grid_out, output_file_headers, output_flux, &
                             output_exact_soln, output_soln, output_res
   use geometry, only : setup_geometry, teardown_geometry
   use variable_conversion, only : prim2cons, cons2prim, update_states, &
@@ -16,11 +17,11 @@ program main_program
   use time_integration, only : calc_time_step, explicit_RK, residual_norms
   use limiter_calc, only : select_limiter, limiter_fun, calculate_limiters
   use mms_functions, only : rho_mms, uvel_mms, vvel_mms, press_mms
-  use init_problem, only : initialize_MMS
+  use init_problem, only : initialize_MMS, initialize_const
   use namelist, only : read_namelist
   use grid_type, only : grid_t
   use soln_type, only : soln_t, calc_mms
-  use flux_calc, only : select_flux, calc_flux_2D, flux_fun
+  use flux_calc, only : select_flux, calc_flux_2D, flux_fun, exact_flux
   implicit none
   
   integer :: i, j, k
@@ -33,8 +34,7 @@ program main_program
   logical :: freeze_BC = .false.
 !  integer, dimension(4) :: ind
 !  real(prec), dimension(4,4) :: Vtmp, psiPtmp, psiMtmp
-
-
+  
   
   call set_derived_constants
   call set_fluid_constants
@@ -44,8 +44,13 @@ program main_program
   call select_flux()
   call select_limiter()
   call initialize_MMS(grid,soln)
+  !call initialize_const(grid,soln,&
+  !     (/one,u_inf*cos((pi/180.0_prec)*alpha),&
+  !           u_inf*sin((pi/180.0_prec)*alpha),p_inf/) )
+  !call initialize_const(grid,soln,&
+  !     (/one,u0,v0,p_inf/) )
   call output_exact_soln(grid,soln)
-  call output_file_headers  
+  call output_file_headers
   call output_soln(grid,soln,0)
   !call calc_sources(soln,grid)
   
@@ -53,6 +58,15 @@ program main_program
  
   do k = 1,max_iter
 !!==============================================================================
+    !soln%U(:,i_low:i_high,jg_high-1) = 2*soln%U(:,i_low:i_high,j_high  ) &
+    !                                   - soln%U(:,i_low:i_high,j_high-1)
+    !soln%U(:,i_low:i_high,jg_high)   = 2*soln%U(:,i_low:i_high,j_high-1) &
+    !                                   - soln%U(:,i_low:i_high,j_high-2)
+    !soln%U(:,ig_high-1,j_low:j_high) = 2*soln%U(:,i_high  ,j_low:j_high) &
+    !                                   - soln%U(:,i_high-1,j_low:j_high)
+    !soln%U(:,ig_high,j_low:j_high)   = 2*soln%U(:,i_high-1,j_low:j_high) &
+    !                                   - soln%U(:,i_high-2,j_low:j_high)
+    !call cons2prim(soln%U,soln%V)
     !soln%V(:,i_low:i_high,jg_high-1) = 2*soln%V(:,i_low:i_high,j_high  ) &
     !                                   - soln%V(:,i_low:i_high,j_high-1)
     !soln%V(:,i_low:i_high,jg_high)   = 2*soln%V(:,i_low:i_high,j_high-1) &
@@ -69,7 +83,6 @@ program main_program
     !  call calculate_limiters(soln)
     !end if
     call calc_flux_2D(grid,soln)
-  
   i1 = i_high
   do j1 = j_low,j_high
     nx = grid%n_xi(i1+1,j1,1)
@@ -83,8 +96,13 @@ program main_program
     !psiMtmp = soln%psi_minus(ind,j1,:,1)
     !call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
     left = soln%V(:,i1,j1)
-    right = soln%Vmms(:,i1+1,j1)
-    call flux_fun(left,right,nx,ny,soln%Fxi(:,i1,j1))
+    right(1) = rho_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
+    right(2) = uvel_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
+    right(3) = vvel_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
+    right(4) = press_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
+    !right = soln%Vmms(:,i1+1,j1)
+    call exact_flux(left,nx,ny,soln%Fxi(:,i1,j1))
+    !call flux_fun(left,right,nx,ny,soln%Fxi(:,i1,j1))
   end do
   j1 = j_high
   do i1 = i_low,i_high
@@ -99,8 +117,14 @@ program main_program
     !psiMtmp = soln%psi_minus(i1,ind,:,2)
     !call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
     left = soln%V(:,i1,j1)
-    right = soln%Vmms(:,i1,j1+1)
-    call flux_fun(left,right,nx,ny,soln%Feta(:,i1,j1))
+    right(1) = rho_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
+    right(2) = uvel_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
+    right(3) = vvel_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
+    right(4) = press_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
+    !right = soln%Vmms(:,i1,j1+1)
+    
+    call exact_flux(left,nx,ny,soln%Feta(:,i1,j1))
+    !call flux_fun(left,right,nx,ny,soln%Feta(:,i1,j1))
   end do
 
     call calc_time_step(grid,soln)
@@ -127,6 +151,7 @@ program main_program
     if (mod(k,soln_save)==0) then
       call calc_DE(soln,soln%DE,soln%DEnorm,cons)
       call output_soln(grid,soln,k)
+      call output_flux(grid,soln,k)
     end if
     
     if (all(soln%Rnorm<1e-2)) then
@@ -145,6 +170,16 @@ program main_program
     end if
     
   end do
+  write(*,*) '!================================================================'
+  write(*,*) 'F(1,1) = ', maxval(soln%Fxi(1,:,:))
+  write(*,*) 'F(1,2) = ', maxval(soln%Fxi(2,:,:))
+  write(*,*) 'F(1,3) = ', maxval(soln%Fxi(3,:,:))
+  write(*,*) 'F(1,4) = ', maxval(soln%Fxi(4,:,:))
+  write(*,*) 'F(2,1) = ', maxval(soln%Feta(1,:,:))
+  write(*,*) 'F(2,2) = ', maxval(soln%Feta(2,:,:))
+  write(*,*) 'F(2,3) = ', maxval(soln%Feta(3,:,:))
+  write(*,*) 'F(2,4) = ', maxval(soln%Feta(4,:,:))
+  write(*,*) '!================================================================'
   call calc_DE(soln,soln%DE,soln%DEnorm,cons)
   call output_res(soln,k)
   call output_soln(grid,soln,k)
