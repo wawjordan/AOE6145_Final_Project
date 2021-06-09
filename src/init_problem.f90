@@ -3,7 +3,7 @@ module init_problem
   use set_precision,   only : prec
   use set_constants,   only : zero, one, two, half
   use fluid_constants, only : R_gas, gamma
-  use set_inputs,      only : p0, T0, eps, ig_low, ig_high
+  use set_inputs,      only : p_inf, T_inf, eps, ig_low, ig_high
   use soln_type,       only : soln_t
   use grid_type,       only : grid_t
   use variable_conversion, only : prim2cons
@@ -12,7 +12,7 @@ module init_problem
   
   private
   
-  public :: initialize, initialize_MMS
+  public :: initialize, initialize_MMS, initialize_const
   
   contains
   
@@ -51,4 +51,23 @@ module init_problem
     soln%S = soln%Smms
     
   end subroutine initialize_MMS
+  
+  subroutine initialize_const( grid, soln, V )
+    
+    type( grid_t ), intent(inout) :: grid
+    type( soln_t ), intent(inout) :: soln
+    real(prec), dimension(4), intent(in) :: V
+    soln%Vmms(1,:,:) = V(1)
+    soln%Vmms(2,:,:) = V(2)
+    soln%Vmms(3,:,:) = V(3)
+    soln%Vmms(4,:,:) = V(4)
+    soln%Smms(:,:,:) = zero
+    call prim2cons(soln%Umms,soln%Vmms)
+    soln%V = soln%Vmms
+    soln%U = soln%Umms
+    soln%S = soln%Smms
+    
+  end subroutine initialize_const
+
+  
 end module init_problem
