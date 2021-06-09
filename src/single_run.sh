@@ -31,18 +31,18 @@ Lmms=1.0
 gamma=1.4
 
 isMMS="T"
-u0=-800.0
+u0=-200.0
 v0=0.0
-u_inf=800.0
+u_inf=200.0
 alpha=90.0
 p_inf=100000.0
 T_inf=500.0
 
 
-CFL=0.01 #0.1 0.5 0.9
+CFL=0.1 #0.1 0.5 0.9
 max_iter=800
 
-flux_scheme=2
+flux_scheme=1
 limiter_scheme=2
 beta_lim=2.0
 eps_roe=0.1
