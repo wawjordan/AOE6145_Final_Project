@@ -4,8 +4,8 @@ program main_program
   use set_constants, only : pi, zero, one, set_derived_constants
   use fluid_constants, only : set_fluid_constants
   use set_inputs, only : set_derived_inputs, geometry_file, limiter_freeze
-  use set_inputs, only : i_low,i_high,j_low,j_high, n_ghost, cons, neq
-  use set_inputs, only : ig_low,ig_high,jg_low,jg_high, max_iter
+  use set_inputs, only : imax, i_low,i_high,j_low,j_high, n_ghost, cons, neq
+  use set_inputs, only : jmax, ig_low,ig_high,jg_low,jg_high, max_iter
   use set_inputs, only : res_save, res_out, soln_save, tol, Lmms, CFL, isMMS
   use set_inputs, only : alpha, rho_inf, u_inf, p_inf, u0, v0
   use file_handling, only : grid_out, output_file_headers, output_flux, &
@@ -32,8 +32,6 @@ program main_program
   real(prec), dimension(4) :: Rnorm2
   integer :: i1,j1,k1
   logical :: freeze_BC = .false.
-!  integer, dimension(4) :: ind
-!  real(prec), dimension(4,4) :: Vtmp, psiPtmp, psiMtmp
   
   
   call set_derived_constants
@@ -49,7 +47,7 @@ program main_program
   !           u_inf*sin((pi/180.0_prec)*alpha),p_inf/) )
   !call initialize_const(grid,soln,&
   !     (/one,u0,v0,p_inf/) )
-  call output_exact_soln(grid,soln)
+  !call output_exact_soln(grid,soln)
   call output_file_headers
   call output_soln(grid,soln,0)
   !call calc_sources(soln,grid)
@@ -58,23 +56,18 @@ program main_program
  
   do k = 1,max_iter
 !!==============================================================================
-    !soln%U(:,i_low:i_high,jg_high-1) = 2*soln%U(:,i_low:i_high,j_high  ) &
-    !                                   - soln%U(:,i_low:i_high,j_high-1)
-    !soln%U(:,i_low:i_high,jg_high)   = 2*soln%U(:,i_low:i_high,j_high-1) &
-    !                                   - soln%U(:,i_low:i_high,j_high-2)
-    !soln%U(:,ig_high-1,j_low:j_high) = 2*soln%U(:,i_high  ,j_low:j_high) &
-    !                                   - soln%U(:,i_high-1,j_low:j_high)
-    !soln%U(:,ig_high,j_low:j_high)   = 2*soln%U(:,i_high-1,j_low:j_high) &
-    !                                   - soln%U(:,i_high-2,j_low:j_high)
-    !call cons2prim(soln%U,soln%V)
-    !soln%V(:,i_low:i_high,jg_high-1) = 2*soln%V(:,i_low:i_high,j_high  ) &
-    !                                   - soln%V(:,i_low:i_high,j_high-1)
-    !soln%V(:,i_low:i_high,jg_high)   = 2*soln%V(:,i_low:i_high,j_high-1) &
-    !                                   - soln%V(:,i_low:i_high,j_high-2)
-    !soln%V(:,ig_high-1,j_low:j_high) = 2*soln%V(:,i_high  ,j_low:j_high) &
-    !                                   - soln%V(:,i_high-1,j_low:j_high)
-    !soln%V(:,ig_high,j_low:j_high)   = 2*soln%V(:,i_high-1,j_low:j_high) &
-    !                                   - soln%V(:,i_high-2,j_low:j_high)
+    soln%V(:,i_low:i_high,jg_high-1) = 2*soln%V(:,i_low:i_high,j_high  ) &
+                                       - soln%V(:,i_low:i_high,j_high-1)
+    soln%V(:,i_low:i_high,jg_high)   = 2*soln%V(:,i_low:i_high,j_high-1) &
+                                       - soln%V(:,i_low:i_high,j_high-2)
+    soln%V(:,ig_high-1,j_low:j_high) = 2*soln%V(:,i_high  ,j_low:j_high) &
+                                       - soln%V(:,i_high-1,j_low:j_high)
+    soln%V(:,ig_high,j_low:j_high)   = 2*soln%V(:,i_high-1,j_low:j_high) &
+                                       - soln%V(:,i_high-2,j_low:j_high)
+    !soln%V(:,i_low:i_high,jg_high-1) = soln%V(:,i_low:i_high,j_high  )
+    !soln%V(:,i_low:i_high,jg_high)   = soln%V(:,i_low:i_high,j_high-1)
+    !soln%V(:,ig_high-1,j_low:j_high) = soln%V(:,i_high  ,j_low:j_high)
+    !soln%V(:,ig_high,j_low:j_high)   = soln%V(:,i_high-1,j_low:j_high)
      
     call limit_primitives(soln%V)
     call prim2cons(soln%U,soln%V)
@@ -83,49 +76,32 @@ program main_program
     !  call calculate_limiters(soln)
     !end if
     call calc_flux_2D(grid,soln)
-  i1 = i_high
-  do j1 = j_low,j_high
-    nx = grid%n_xi(i1+1,j1,1)
-    ny = grid%n_xi(i1+1,j1,2)
-    !ind = (/ ( k1,k1=i1-2,i1+1 ) /)
-    !Vtmp(1,:) = soln%V(ind(1),j1,:)
-    !Vtmp(2,:) = soln%Vmms(ind(2),j1,:)
-    !Vtmp(3,:) = soln%Vmms(ind(3),j1,:)
-    !Vtmp(4,:) = soln%Vmms(ind(4),j1,:)
-    !psiPtmp = soln%psi_plus(ind,j1,:,1)
-    !psiMtmp = soln%psi_minus(ind,j1,:,1)
-    !call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
-    left = soln%V(:,i1,j1)
-    right(1) = rho_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
-    right(2) = uvel_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
-    right(3) = vvel_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
-    right(4) = press_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
-    !right = soln%Vmms(:,i1+1,j1)
-    call exact_flux(left,nx,ny,soln%Fxi(:,i1,j1))
-    !call flux_fun(left,right,nx,ny,soln%Fxi(:,i1,j1))
-  end do
-  j1 = j_high
-  do i1 = i_low,i_high
-    nx = grid%n_eta(i1,j1+1,1)
-    ny = grid%n_eta(i1,j1+1,2)
-    !ind = (/ ( k1,k1=j1-2,j1+1 ) /)
-    !Vtmp(1,:) = soln%V(i1,ind(1),:)
-    !Vtmp(2,:) = soln%V(i1,ind(2),:)
-    !Vtmp(3,:) = soln%V(i1,ind(3),:)
-    !Vtmp(4,:) = soln%Vmms(i1,ind(4),:)
-    !psiPtmp = soln%psi_plus(i1,ind,:,2)
-    !psiMtmp = soln%psi_minus(i1,ind,:,2)
-    !call MUSCL_extrap(Vtmp, psiPtmp, psiMtmp, left, right)
-    left = soln%V(:,i1,j1)
-    right(1) = rho_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
-    right(2) = uvel_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
-    right(3) = vvel_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
-    right(4) = press_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
-    !right = soln%Vmms(:,i1,j1+1)
-    
-    call exact_flux(left,nx,ny,soln%Feta(:,i1,j1))
-    !call flux_fun(left,right,nx,ny,soln%Feta(:,i1,j1))
-  end do
+!  i1 = i_high
+!  do j1 = j_low,j_high
+!    nx = grid%n_xi(i1+1,j1,1)
+!    ny = grid%n_xi(i1+1,j1,2)
+!    left = soln%V(:,i1,j1)
+!    right(1) = rho_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
+!    right(2) = uvel_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
+!    right(3) = vvel_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
+!    right(4) = press_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
+!    !right = soln%Vmms(:,i1+1,j1)
+!    call exact_flux(left,nx,ny,soln%Fxi(:,i1,j1))
+!    !call flux_fun(left,right,nx,ny,soln%Fxi(:,i1,j1))
+!  end do
+!  j1 = j_high
+!  do i1 = i_low,i_high
+!    nx = grid%n_eta(i1,j1+1,1)
+!    ny = grid%n_eta(i1,j1+1,2)
+!    left = soln%V(:,i1,j1)
+!    right(1) = rho_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
+!    right(2) = uvel_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
+!    right(3) = vvel_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
+!    right(4) = press_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
+!    !right = soln%Vmms(:,i1,j1+1)
+!    call exact_flux(left,nx,ny,soln%Feta(:,i1,j1))
+!    !call flux_fun(left,right,nx,ny,soln%Feta(:,i1,j1))
+!  end do
 
     call calc_time_step(grid,soln)
     call explicit_RK(grid,soln)
@@ -170,16 +146,16 @@ program main_program
     end if
     
   end do
-  write(*,*) '!================================================================'
-  write(*,*) 'F(1,1) = ', maxval(soln%Fxi(1,:,:))
-  write(*,*) 'F(1,2) = ', maxval(soln%Fxi(2,:,:))
-  write(*,*) 'F(1,3) = ', maxval(soln%Fxi(3,:,:))
-  write(*,*) 'F(1,4) = ', maxval(soln%Fxi(4,:,:))
-  write(*,*) 'F(2,1) = ', maxval(soln%Feta(1,:,:))
-  write(*,*) 'F(2,2) = ', maxval(soln%Feta(2,:,:))
-  write(*,*) 'F(2,3) = ', maxval(soln%Feta(3,:,:))
-  write(*,*) 'F(2,4) = ', maxval(soln%Feta(4,:,:))
-  write(*,*) '!================================================================'
+!  write(*,*) '!================================================================'
+!  write(*,*) 'F(1,1) = ', sum(soln%Fxi(1,:,:))/real(imax*j_high,prec)
+!  write(*,*) 'F(1,2) = ', sum(soln%Fxi(2,:,:))/real(imax*j_high,prec)
+!  write(*,*) 'F(1,3) = ', sum(soln%Fxi(3,:,:))/real(imax*j_high,prec)
+!  write(*,*) 'F(1,4) = ', sum(soln%Fxi(4,:,:))/real(imax*j_high,prec)
+!  write(*,*) 'F(2,1) = ', sum(soln%Feta(1,:,:))/real(i_high*jmax,prec)
+!  write(*,*) 'F(2,2) = ', sum(soln%Feta(2,:,:))/real(i_high*jmax,prec)
+!  write(*,*) 'F(2,3) = ', sum(soln%Feta(3,:,:))/real(i_high*jmax,prec)
+!  write(*,*) 'F(2,4) = ', sum(soln%Feta(4,:,:))/real(i_high*jmax,prec)
+!  write(*,*) '!================================================================'
   call calc_DE(soln,soln%DE,soln%DEnorm,cons)
   call output_res(soln,k)
   call output_soln(grid,soln,k)
