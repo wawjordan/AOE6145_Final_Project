@@ -3,7 +3,7 @@ module variable_conversion
   use set_precision,   only : prec
   use set_constants,   only : one, half
   use fluid_constants, only : gamma
-  use set_inputs,      only : p0,T0
+  use set_inputs,      only : p_inf,T_inf
   use soln_type,       only : soln_t
 
   implicit none
