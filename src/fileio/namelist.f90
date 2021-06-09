@@ -3,7 +3,7 @@ module namelist
   use fluid_constants, only : R_gas, gamma
   use set_inputs, only : grid_name, cart_grid, imax, jmax, n_ghost
   use set_inputs, only : xmin, xmax, ymin, ymax, isAxi, Lmms
-  use set_inputs, only : isMMS, p0, T0
+  use set_inputs, only : isMMS, u_inf, alpha, p_inf, T_inf, u0, v0
   use set_inputs, only : CFL, max_iter, eps, tol
   use set_inputs, only : flux_scheme, limiter_scheme, eps_roe, beta_lim
   use set_inputs, only : geometry_file, soln_save, res_save,res_out, cons
@@ -29,7 +29,7 @@ contains
     namelist /grid/ grid_name, cart_grid, imax, jmax, n_ghost
     namelist /geometry/ xmin, xmax, ymin, ymax, isAxi, Lmms
     namelist /constants/ R_gas, gamma
-    namelist /initial/ isMMS, p0, T0
+    namelist /initial/ isMMS, p_inf, u0, v0, u_inf, alpha, T_inf
     namelist /numerical/ CFL, max_iter, eps, tol
     namelist /flux/ flux_scheme, limiter_scheme, eps_roe, beta_lim
     namelist /output/ geometry_file, soln_save, res_save, res_out, cons
