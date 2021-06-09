@@ -15,8 +15,8 @@ test_str=""
 #grid_name+="/curvilinear-grids/"
 #grid_name+="curv2d17.grd"
 grid_name="../grids/curvilinear-grids/"
-grid_name+="curv2d257.grd"
-cart_grid="F"
+grid_name+="curv2d33.grd"
+cart_grid="T"
 imax=33
 jmax=33
 n_ghost=2
@@ -31,52 +31,56 @@ Lmms=1.0
 gamma=1.4
 
 isMMS="T"
-p0=100000.0
-T0=500.0
+u0=-800.0
+v0=0.0
+u_inf=800.0
+alpha=90.0
+p_inf=100000.0
+T_inf=500.0
 
 
-CFL=0.1 #0.1 0.5 0.9
-max_iter=150000
+CFL=0.01 #0.1 0.5 0.9
+max_iter=800
 
-flux_scheme=1
+flux_scheme=2
 limiter_scheme=2
 beta_lim=2.0
 eps_roe=0.1
 
 geometry_file="example.dat"
-soln_save=50000
-res_save=100
-res_out=100
+soln_save=8
+res_save=1
+res_out=1
 cons="T"
 
-epsM=1.0
+epsM=0.0
 kappaM=-1.0
 limiter_freeze="T"
-if [ "$MMS" = "T" ]; then
+if [ "$isMMS" = "T" ]; then
   MMS_str="MMS"
 else
   MMS_str="$test_str"
 fi
-if [ $flux -eq 1 ]; then
+if [ $flux_scheme -eq 1 ]; then
   flux_str="van Leer flux"
-elif [ $flux -eq 2 ]; then
+elif [ $flux_scheme -eq 2 ]; then
   flux_str="Roe's flux"
 fi
 
-if [ $limiter -eq 1 ]; then
+if [ $limiter_scheme -eq 1 ]; then
   limiter_str="van Leer limiter"
-elif [ $limiter -eq 2 ]; then
+elif [ $limiter_scheme -eq 2 ]; then
   limiter_str="van Albada limiter"
-elif [ $limiter -eq 3 ]; then
+elif [ $limiter_scheme -eq 3 ]; then
   limiter_str="minmod limiter"
-elif [ $limiter -eq 4 ]; then
+elif [ $limiter_scheme -eq 4 ]; then
   limiter_str="beta ($beta_lim) limiter"
 fi
 echo ""
 echo "!==============================================================================!"
 echo "| N=$imax | $MMS_str "
 echo "--------------------------------------------------------------------------------"
-echo "| $flux_str | $limiter_str | CFL=$cfl "
+echo "| $flux_str | $limiter_str | CFL=$CFL "
 echo "!==============================================================================!"
 
 echo "&grid" > $input
@@ -102,8 +106,12 @@ echo "/" >> $input
 echo "" >> $input
 echo "&initial" >> $input
 echo "  isMMS = $isMMS" >> $input
-echo "  p0 = $p0" >> $input
-echo "  T0 = $T0" >> $input
+echo "  u_inf = $u_inf" >> $input
+echo "  alpha = $alpha" >> $input
+echo "  p_inf = $p_inf" >> $input
+echo "  T_inf = $T_inf" >> $input
+echo "  u0 = $u0" >> $input
+echo "  v0 = $v0" >> $input
 echo "/" >> $input
 echo "" >> $input
 echo "&numerical" >> $input
