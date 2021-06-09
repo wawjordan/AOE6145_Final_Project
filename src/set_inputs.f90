@@ -15,7 +15,7 @@ module set_inputs
   public :: j_high, j_low, jg_high, jg_low
   public :: max_iter, soln_save, res_save, res_out , counter
   public :: CFL, eps, tol, eps_roe, beta_lim, epsM, kappaM
-  public :: p0, T0, a0, rho0, Lmms
+  public :: rho_inf, u_inf, p_inf, a_inf, T_inf, alpha, u0, v0, Lmms
   public :: grid_name, geometry_file
   public :: set_derived_inputs
    
@@ -47,10 +47,14 @@ module set_inputs
 
   real(prec) :: tol        = 1.0e-9_prec
   real(prec) :: eps        = 1.0e-3_prec
-  real(prec) :: p0         = 300.0_prec
-  real(prec) :: T0         = 600.0_prec
-  real(prec) :: a0         = zero
-  real(prec) :: rho0       = zero
+  real(prec) :: p_inf      = 1.0e5_prec
+  real(prec) :: T_inf      = 600.0_prec
+  real(prec) :: u_inf      = 200.0_prec
+  real(prec) :: u0         = zero
+  real(prec) :: v0         = zero
+  real(prec) :: alpha      = zero
+  real(prec) :: a_inf      = zero
+  real(prec) :: rho_inf    = zero
   real(prec) :: xmin       = zero
   real(prec) :: xmax       = one
   real(prec) :: ymin       = zero
@@ -75,8 +79,8 @@ module set_inputs
   !===========================================================================80
   subroutine set_derived_inputs
     
-    a0   = sqrt(gamma*R_gas*T0)
-    rho0 = 1000.0_prec*p0/(R_gas*T0)
+    a_inf   = sqrt(gamma*R_gas*T_inf)
+    rho_inf = p_inf/(R_gas*T_inf)
     i_low = 1
     j_low = 1
     i_high = imax-1
