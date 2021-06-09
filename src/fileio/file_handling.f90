@@ -12,8 +12,8 @@ module file_handling
   
   private
   
-  public :: grid_in, grid_out, output_soln, output_exact_soln, output_res, &
-            output_file_headers
+  public :: grid_in, grid_out, output_file_headers, &
+           output_soln, output_exact_soln, output_flux, output_res
   
 contains
   !=============================== grid_in  =================================80
@@ -163,8 +163,9 @@ subroutine grid_out(filename,grid)
     character(len=64) ::   order_str
     character(len=64) ::   limiter_str
     character(len=64) ::   kappa_str
-    integer :: resunit, fldunit
-
+    integer :: flxunit, resunit, fldunit
+    
+    flxunit = 10
     resunit = 30
     fldunit = 40
     ! Set up output directories
@@ -215,7 +216,19 @@ subroutine grid_out(filename,grid)
     !open(30,file='history.dat',status='unknown')
     !open(resunit,file= '../results/'//trim(adjustl(dirname_hist))//  &
     !&               trim(adjustl(filename))//'_history.dat',status='unknown')
-    
+    open(flxunit,file= '../results/example_flux.dat')
+    write(flxunit,*) 'TITLE = "bloody flux"'
+    write(flxunit,*) 'variables="x""y" &
+      & "F<sub><greek>x</greek>1</sub>"&
+      & "F<sub><greek>x</greek>2</sub>"&
+      & "F<sub><greek>x</greek>3</sub>"&
+      & "F<sub><greek>x</greek>4</sub>"&
+      & "F<sub><greek>e</greek>1</sub>"&
+      & "F<sub><greek>e</greek>2</sub>"&
+      & "F<sub><greek>e</greek>3</sub>"&
+      & "F<sub><greek>e</greek>4</sub>"&
+      & "<greek>r</greek>""u""v""p"'
+      
     open(resunit,file= '../results/example_res.dat')
     if(isMMS) then
       write(resunit,*) 'TITLE = "MMS ('// &
@@ -458,6 +471,68 @@ subroutine grid_out(filename,grid)
 !    endif
 !
 !  end subroutine output_soln
+  !============================= output_flux ================================80
+  !>
+  !! Description:
+  !!
+  !! Inputs:      grid     :
+  !!              soln     :
+  !!              num_iter :
+  !<
+  !==========================================================================80
+  subroutine output_flux(grid,soln,num_iter)
+
+    type( grid_t ), intent(in) :: grid
+    type( soln_t ), intent(in) :: soln
+    integer,        intent(in) :: num_iter
+    
+    integer :: i, j, flxunit
+    flxunit = 10
+    
+    open(flxunit,status='unknown')
+    write(flxunit,*) 'ZONE'
+    write(flxunit,*) 'T= "',num_iter,'"'
+    write(flxunit,*) 'I=',i_high-i_low+2,' J=',j_high-j_low+2
+    write(flxunit,*) 'DT = ( DOUBLE, DOUBLE, DOUBLE, DOUBLE, &
+                           & DOUBLE, DOUBLE, DOUBLE, DOUBLE, &
+                           & DOUBLE, DOUBLE, DOUBLE, DOUBLE, &
+                           & DOUBLE, DOUBLE )'
+    write(flxunit,*) 'DATAPACKING = BLOCK'
+    write(flxunit,*) 'VARLOCATION = ([3-14]=CELLCENTERED)'
+   
+
+
+ 
+    write(flxunit,*) ((grid%x(i,j),i=i_low,i_high+1),      & !  1
+                     NEW_LINE('a'), j=j_low,j_high+1)      
+    write(flxunit,*) ((grid%y(i,j),i=i_low,i_high+1),      & !  2
+                     NEW_LINE('a'), j=j_low,j_high+1)      
+    write(flxunit,*) ((soln%Fxi(1,i-1,j),i=i_low,i_high),& !  3
+                     NEW_LINE('a'), j=j_low,j_high)        
+    write(flxunit,*) ((soln%Fxi(2,i-1,j),i=i_low,i_high),& !  4
+                     NEW_LINE('a'), j=j_low,j_high)        
+    write(flxunit,*) ((soln%Fxi(3,i-1,j),i=i_low,i_high),& !  5
+                     NEW_LINE('a'), j=j_low,j_high)        
+    write(flxunit,*) ((soln%Fxi(4,i-1,j),i=i_low,i_high),& !  6
+                     NEW_LINE('a'), j=j_low,j_high)        
+    write(flxunit,*) ((soln%Feta(1,i,j-1),i=i_low,i_high), & !  7
+                     NEW_LINE('a'), j=j_low,j_high)      
+    write(flxunit,*) ((soln%Feta(2,i,j-1),i=i_low,i_high), & !  8
+                     NEW_LINE('a'), j=j_low,j_high)      
+    write(flxunit,*) ((soln%Feta(3,i,j-1),i=i_low,i_high), & !  9
+                     NEW_LINE('a'), j=j_low,j_high)      
+    write(flxunit,*) ((soln%Feta(4,i,j-1),i=i_low,i_high), & ! 10
+                     NEW_LINE('a'), j=j_low,j_high)      
+    write(flxunit,*) ((soln%V(1,i,j),i=i_low,i_high),      & ! 11
+                     NEW_LINE('a'), j=j_low,j_high)        
+    write(flxunit,*) ((soln%V(2,i,j),i=i_low,i_high),      & ! 12
+                     NEW_LINE('a'), j=j_low,j_high)        
+    write(flxunit,*) ((soln%V(3,i,j),i=i_low,i_high),      & ! 13
+                     NEW_LINE('a'), j=j_low,j_high)        
+    write(flxunit,*) ((soln%V(4,i,j),i=i_low,i_high),      & ! 14
+                     NEW_LINE('a'), j=j_low,j_high)        
+    
+  end subroutine output_flux
   
   !============================= output_res ==================================80
   !>
