@@ -52,22 +52,22 @@ subroutine calc_flux_2D(grid,soln)
   real(prec) :: nx, ny
   integer :: i,j,k
   
-  call MUSCL_extrap(soln,Lxi,Rxi,Leta,Reta)
+  !call MUSCL_extrap(soln,Lxi,Rxi,Leta,Reta)
   
   do j = j_low,j_high
   do i = i_low-1,i_high
     nx = grid%n_xi(i+1,j,1)
     ny = grid%n_xi(i+1,j,2)
-    call flux_fun(Lxi(:,i,j),Rxi(:,i,j),nx,ny,soln%Fxi(:,i,j))
-    !call flux_fun(soln%V(:,i,j),soln%V(:,i+1,j),nx,ny,soln%Fxi(:,i,j))
+    !call flux_fun(Lxi(:,i,j),Rxi(:,i,j),nx,ny,soln%Fxi(:,i,j))
+    call flux_fun(soln%V(:,i,j),soln%V(:,i+1,j),nx,ny,soln%Fxi(:,i,j))
   end do
   end do
   do j = j_low-1,j_high
   do i = i_low,i_high
     nx = grid%n_eta(i,j+1,1)
     ny = grid%n_eta(i,j+1,2)
-    call flux_fun(Leta(1:neq,i,j),Reta(1:neq,i,j),nx,ny,soln%Feta(:,i,j))
-    !call flux_fun(soln%V(:,i,j),soln%V(:,i,j+1),nx,ny,soln%Feta(:,i,j))
+    !call flux_fun(Leta(:,i,j),Reta(:,i,j),nx,ny,soln%Feta(:,i,j))
+    call flux_fun(soln%V(:,i,j),soln%V(:,i,j+1),nx,ny,soln%Feta(:,i,j))
   end do
   end do
   
@@ -110,7 +110,7 @@ end subroutine calc_flux_2D
     p    = V(4)
     call speed_of_sound(p,rho,a)
     un = uvel*nx + vvel*ny
-    ht = a**2/(gamma-one) + half*un**2
+    ht = a**2/(gamma-one) + half*(uvel**2 + vvel**2)
     F(1) = rho*un
     F(2) = rho*uvel*un + nx*p
     F(3) = rho*vvel*un + ny*p
