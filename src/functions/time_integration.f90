@@ -12,7 +12,7 @@ module time_integration
   
   contains
   
-  !============================= calc_time_step ==============================80
+  !=========================== calc_time_step ===============================80
   !>
   !! Description: 
   !!
@@ -22,7 +22,7 @@ module time_integration
   !! Outputs:     lambda : 
   !!              dt     : 
   !<
-  !===========================================================================80
+  !==========================================================================80
   subroutine calc_time_step(grid,soln)
     use set_inputs, only : CFL
     type(grid_t), intent(in)    :: grid
@@ -38,7 +38,7 @@ module time_integration
     soln%dt = CFL*grid%V/( &
                Lam_xi*grid%A_xi(ig_low:ig_high,jg_low:jg_high) + &
                Lam_eta*grid%A_eta(ig_low:ig_high,jg_low:jg_high) )
-    !soln%dt = CFL*minval(soln%dt)
+    soln%dt = CFL*minval(soln%dt)
     
   end subroutine calc_time_step
 !  subroutine calc_time_step( A_xi, A_eta, n_xi_avg, n_eta_avg, vol, V, dt )
@@ -70,58 +70,22 @@ module time_integration
 !    
 !  end subroutine calc_time_step
   
-  !============================= explicit_euler ==============================80
+  !============================= explicit_RK ================================80
   !>
   !! Description: 
   !!
   !! Inputs:      grid : 
-  !!              S    : 
-  !!              F    :
-  !!              dt   : 
-  !!              U    :
+  !!              soln : 
   !!
-  !! Outputs:     lambda : 
-  !!              dt     : 
-  !!              R      : 
-  !!              U      : 
+  !! Outputs:     grid : 
+  !!              soln : 
   !<
-  !===========================================================================80
+  !==========================================================================80
 
-  !subroutine explicit_RK( grid, soln)
-  !  
-  !  type(grid_t), intent(inout) :: grid
-  !  type(soln_t), intent(inout) :: soln
-  !  integer :: i, j
-  !  
-  !  call calc_residual(grid,soln)
-  !  !call calc_residual(grid%A_xi(i_low:i_high+1,j_low:j_high),&
-  !  !                  grid%A_eta(i_low:i_high,j_low:j_high+1),&
-  !  !                  grid%V(i_low:i_high,j_low:j_high),&
-  !  !                  soln%S(i_low:i_high,j_low:j_high,:),&
-  !  !                  soln%F(i_low:i_high+1,j_low:j_high+1,:,:),&
-  !  !                  soln%R(i_low:i_high,j_low:j_high,:))
-  !  do i = 1,4
-  !  soln%U(i,i_low:i_high,j_low:j_high) = &
-  !       soln%U(i,i_low:i_high,j_low:j_high) - &
-  !     ( soln%R(i,i_low:i_high,j_low:j_high)*  &
-  !      soln%dt(i_low:i_high,j_low:j_high) )/  &
-  !       grid%V(i_low:i_high,j_low:j_high)
-  !  end do
-  !  
-  !end subroutine explicit_RK
   subroutine explicit_RK( grid, soln )
     
     type(grid_t), intent(inout) :: grid
     type(soln_t), intent(inout) :: soln
-    !real(prec), dimension(ig_low:ig_high,jg_low:jg_high,neq),&
-    !                                           intent(inout) :: U
-    !real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
-    !                                           intent(inout) :: R
-    !real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2),&
-    !                                           intent(in) :: F
-    !real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
-    !                                           intent(in) :: S
-    !real(prec), dimension(i_low:i_high,j_low:j_high), intent(in) :: dt
     !integer, intent(in) :: N
     real(prec), dimension(4) :: k
     integer :: i, j
@@ -141,6 +105,17 @@ module time_integration
     
   end subroutine explicit_RK
   
+  !============================= calc_residual ==============================80
+  !>
+  !! Description: 
+  !!
+  !! Inputs:      grid : 
+  !!              soln : 
+  !!
+  !! Outputs:     grid : 
+  !!              soln : 
+  !<
+  !==========================================================================80
   subroutine calc_residual(grid,soln)
     
     type(grid_t), intent(inout) :: grid
@@ -156,55 +131,7 @@ module time_integration
     end do
     end do
   end subroutine calc_residual
-  !***subroutine calc_residual(A_xi,A_eta,V,S,F,R)
-  !  
-  !  real(prec), dimension(:,:), intent(in) :: A_xi
-  !  real(prec), dimension(:,:), intent(in) :: A_eta
-  !  real(prec), dimension(:,:), intent(in) :: V
-  !  real(prec), dimension(:,:,:), intent(in) :: S
-  !  real(prec), dimension(:,:,:,:), intent(in) :: F
-  !  real(prec), dimension(:,:,:), intent(inout) :: R
-  !  integer :: i,j,lowi,highi,lowj,highj
-  !  lowi  = lbound(R,1)
-  !  highi = ubound(R,1)
-  !  lowj  = lbound(R,2)
-  !  highj = ubound(R,2)
-  !  do j = lowj,highj
-  !  do i = lowi,highi
-  !    !R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1) - A_xi(i,j)*F(i,j,:,1)  &
-  !    !         + A_eta(i,j+1)*F(i,j+1,:,2) - A_eta(i,j)*F(i,j,:,2) &
-  !    !         - V(i,j)*S(i,j,:)
-  !    R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1) - A_xi(i,j)*F(i,j,:,1)  &
-  !             + A_eta(i,j+1)*F(i,j+1,:,2) - A_eta(i,j)*F(i,j,:,2) &
-  !             - V(i,j)*S(i,j,:)
-  !  end do
-  !  end do
-  !end subroutine calc_residual
-  !subroutine calc_residual(A_xi,A_eta,V,S,F,R)
-  !  
-  !  real(prec), dimension(ig_low:ig_high+1,jg_low:jg_high),&
-  !                                                intent(in) :: A_xi
-  !  real(prec), dimension(ig_low:ig_high,jg_low:jg_high+1),&
-  !                                                intent(in) :: A_eta
-  !  real(prec), dimension(ig_low:ig_high,jg_low:jg_high),&
-  !                                                intent(in) :: V
-  !  real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
-  !                                                intent(in) :: S
-  !  real(prec), dimension(i_low:i_high+1,j_low:j_high+1,neq,2),&
-  !                                                intent(in) :: F
-  !  real(prec), dimension(i_low:i_high,j_low:j_high,neq),&
-  !                                               intent(inout) :: R
-  !  
-  !  integer :: i,j
-  !  
-  !  do j = j_low,j_high
-  !  do i = i_low,i_high
-  !    R(i,j,:) = A_xi(i+1,j)*F(i+1,j,:,1) - A_xi(i,j)*F(i,j,:,1)  &
-  !             + A_eta(i,j+1)*F(i,j+1,:,2) - A_eta(i,j)*F(i,j,:,2) &
-  !             - V(i,j)*S(i,j,:)
-  !  end do
-  !  end do
-  !end subroutine calc_residual
+  
   !============================= residual_norms ==============================80
   !>
   !! Description: 
