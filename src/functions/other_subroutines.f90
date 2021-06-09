@@ -19,7 +19,7 @@ module other_subroutines
   
   contains
   
-  !============================= calculate_sources ===========================80
+  !============================= calculate_sources ==========================80
   !>
   !! Description: 
   !!
@@ -28,7 +28,7 @@ module other_subroutines
   !!
   !! Outputs:     S  : 
   !<
-  !===========================================================================80
+  !==========================================================================80
   subroutine source_terms(V,y,isAxi,S)
     
     real(prec), dimension(:),   intent(in) :: V
@@ -49,7 +49,7 @@ module other_subroutines
     
   end subroutine source_terms
   
-  !================================ MUSCL_extrap =============================80
+  !================================ MUSCL_extrap ============================80
   !>
   !! Description: 
   !!
@@ -58,7 +58,7 @@ module other_subroutines
   !! Outputs:     left  : 
   !!              right :
   !<
-  !===========================================================================80
+  !==========================================================================80
   subroutine MUSCL_extrap(soln,Lxi,Rxi,Leta,Reta)
     type(soln_t), intent(inout) :: soln
     real(prec), dimension(neq,i_low-1:i_high,j_low:j_high) :: Lxi, Rxi
@@ -108,7 +108,7 @@ module other_subroutines
   !! Outputs:     DE     : 
   !!              DEnorm : 
   !<
-  !===========================================================================80
+  !==========================================================================80
   subroutine calc_sources( soln, grid )
     
     use set_inputs, only : isAxi
@@ -126,7 +126,7 @@ module other_subroutines
   end subroutine calc_sources
      
   
-  !================================== calc_de ==== ===========================80
+  !================================== calc_de ===============================80
   !>
   !! Description: 
   !!
@@ -137,7 +137,7 @@ module other_subroutines
   !! Outputs:     DE     : 
   !!              DEnorm : 
   !<
-  !===========================================================================80
+  !==========================================================================80
   subroutine calc_de( soln, DE, DEnorm, cons )
     
     type(soln_t), intent(in) :: soln
@@ -146,7 +146,6 @@ module other_subroutines
     real(prec), dimension(neq,3), intent(out) :: DEnorm
     real(prec) :: Linv
     integer :: i
-    !Linv = one/real( (i_high-i_low)*(j_high-j_low) )
     !if (cons) then
     !  DE = soln%U(i_low:i_high,j_low:j_high,1:neq) &
     !   & - soln%Umms(i_low:i_high,j_low:j_high,1:neq)
