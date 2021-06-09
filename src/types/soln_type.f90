@@ -189,11 +189,16 @@ module soln_type
           grid%x(i+1,j),   grid%y(i+1,j),    &
           grid%x(i+1,j+1), grid%y(i+1,j+1),  &
           grid%x(i,j+1),   grid%y(i,j+1) /), (/2,4/) ) )
-        call gauss_quad(P,xi,xi,w,w,wrap_rho_mms,soln%Vmms(1,i,j))
-        call gauss_quad(P,xi,xi,w,w,wrap_uvel_mms,soln%Vmms(2,i,j))
-        call gauss_quad(P,xi,xi,w,w,wrap_vvel_mms,soln%Vmms(3,i,j))
-        call gauss_quad(P,xi,xi,w,w,wrap_press_mms,soln%Vmms(4,i,j))
-        soln%Vmms(:,i,j) = soln%Vmms(:,i,j)/grid%V(i,j)
+        
+        soln%Vmms(1,:,:) = rho_mms(L,grid%xc,grid%yc)
+        soln%Vmms(2,:,:) = uvel_mms(L,grid%xc,grid%yc)
+        soln%Vmms(3,:,:) = vvel_mms(L,grid%xc,grid%yc)
+        soln%Vmms(4,:,:) = press_mms(L,grid%xc,grid%yc)
+        !call gauss_quad(P,xi,xi,w,w,wrap_rho_mms,soln%Vmms(1,i,j))
+        !call gauss_quad(P,xi,xi,w,w,wrap_uvel_mms,soln%Vmms(2,i,j))
+        !call gauss_quad(P,xi,xi,w,w,wrap_vvel_mms,soln%Vmms(3,i,j))
+        !call gauss_quad(P,xi,xi,w,w,wrap_press_mms,soln%Vmms(4,i,j))
+        !soln%Vmms(:,i,j) = soln%Vmms(:,i,j)/grid%V(i,j)
         !call gauss_quad(P,xi,xi,w,w,wrap_rmassconv,soln%Smms(1,i,j))
         !call gauss_quad(P,xi,xi,w,w,wrap_xmtmconv,soln%Smms(2,i,j))
         !call gauss_quad(P,xi,xi,w,w,wrap_ymtmconv,soln%Smms(3,i,j))
