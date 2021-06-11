@@ -14,9 +14,11 @@ test_str=""
 #grid_name="/home/grad3/wajordan/AOE_6145/AOE_6145_Final_project/grids"
 #grid_name+="/curvilinear-grids/"
 #grid_name+="curv2d17.grd"
-grid_name="../grids/curvilinear-grids/"
-grid_name+="curv2d33.grd"
-cart_grid="T"
+#grid_name="../grids/curvilinear-grids/"
+#grid_name+="curv2d33.grd"
+grid_name="../grids/inlet-grids/"
+grid_name+="Inlet.33x17.grd"
+cart_grid="F"
 imax=33
 jmax=33
 n_ghost=2
@@ -31,16 +33,18 @@ Lmms=1.0
 gamma=1.4
 
 isMMS="T"
-u0=-200.0
+u0=0.0
 v0=0.0
-u_inf=200.0
+u_inf=1000.0
 alpha=90.0
-p_inf=100000.0
-T_inf=500.0
+p_inf=12270.0
+T_inf=217.0
+M_inf=4.0
 
 
 CFL=0.1 #0.1 0.5 0.9
-max_iter=800
+max_iter=100000
+locTime="F"
 
 flux_scheme=1
 limiter_scheme=2
@@ -48,9 +52,9 @@ beta_lim=2.0
 eps_roe=0.1
 
 geometry_file="example.dat"
-soln_save=8
-res_save=1
-res_out=1
+soln_save=1000
+res_save=10
+res_out=100
 cons="T"
 
 epsM=0.0
@@ -110,6 +114,7 @@ echo "  u_inf = $u_inf" >> $input
 echo "  alpha = $alpha" >> $input
 echo "  p_inf = $p_inf" >> $input
 echo "  T_inf = $T_inf" >> $input
+echo "  M_inf = $M_inf" >> $input
 echo "  u0 = $u0" >> $input
 echo "  v0 = $v0" >> $input
 echo "/" >> $input
@@ -117,6 +122,7 @@ echo "" >> $input
 echo "&numerical" >> $input
 echo "  CFL = $CFL" >> $input
 echo "  max_iter = $max_iter" >> $input
+echo "  locTime = $locTime" >> $input
 echo "/" >> $input
 echo "" >> $input
 echo "&flux" >> $input
