@@ -2,7 +2,7 @@ module variable_conversion
    
   use set_precision,   only : prec
   use set_constants,   only : one, half
-  use fluid_constants, only : gamma
+  use fluid_constants, only : R_gas, gamma
   use set_inputs,      only : p_inf,T_inf
   use soln_type,       only : soln_t
 
@@ -34,6 +34,7 @@ module variable_conversion
     call speed_of_sound(soln%V(4,:,:),soln%V(1,:,:),soln%asnd)
     
     soln%mach = sqrt(soln%V(2,:,:)**2 + soln%V(3,:,:)**2)/soln%asnd
+    soln%temp = soln%V(4,:,:)/( soln%V(1,:,:)*R_gas )
     
   end subroutine update_states
   
