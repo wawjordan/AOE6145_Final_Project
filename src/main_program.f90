@@ -21,12 +21,14 @@ program main_program
   use namelist, only : read_namelist
   use grid_type, only : grid_t
   use soln_type, only : soln_t, calc_mms
+  use bc_type, only : bc_t
   use flux_calc, only : select_flux, calc_flux_2D, flux_fun, exact_flux
   implicit none
   
   integer :: i, j, k
   type( grid_t )      :: grid
   type( soln_t )      :: soln
+  type(bc_t)   :: Lbnd, Rbnd, Bbnd, Tbnd
   real(prec), dimension(4) :: left, right
   real(prec) :: nx, ny
   real(prec), dimension(4) :: Rnorm2
@@ -41,37 +43,75 @@ program main_program
   call setup_geometry(grid,soln)
   call select_flux()
   call select_limiter()
-  call initialize_MMS(grid,soln)
+  !call initialize_MMS(grid,soln)
+  !call update_states(soln)
   !call initialize_const(grid,soln,&
   !     (/one,u_inf*cos((pi/180.0_prec)*alpha),&
   !           u_inf*sin((pi/180.0_prec)*alpha),p_inf/) )
-  !call initialize_const(grid,soln,&
-  !     (/one,u0,v0,p_inf/) )
-  !call output_exact_soln(grid,soln)
+  call initialize_const(grid,soln,&
+       (/rho_inf,one,one,p_inf/) )
+  call output_exact_soln(grid,soln)
   call output_file_headers
   call output_soln(grid,soln,0)
   !call calc_sources(soln,grid)
+! For Cartesian Mesh
+!  call Lbnd%set_bc(grid,1,(/0,1/),ig_low,ig_low+1,j_low,j_high)
+!  call Rbnd%set_bc(grid,4,(/0,-1/),ig_high-1,ig_high,j_low,j_high)
+!  call Bbnd%set_bc(grid,1,(/1,0/),i_low,i_high,jg_low,jg_low+1)
+!  call Tbnd%set_bc(grid,4,(/-1,0/),i_low,i_high,jg_high-1,jg_high)
+! For Curvilinear Mesh...
+!  call Rbnd%set_bc(grid,1,(/0,1/),ig_low,ig_low+1,j_low,j_high)
+!  call Lbnd%set_bc(grid,4,(/0,-1/),ig_high-1,ig_high,j_low,j_high)
+!  call Tbnd%set_bc(grid,1,(/1,0/),i_low,i_high,jg_low,jg_low+1)
+!  call Bbnd%set_bc(grid,4,(/-1,0/),i_low,i_high,jg_high-1,jg_high)
+! For Inlet Mesh
+  call Lbnd%set_bc(grid,2,(/0,1/),ig_low,ig_low+1,j_low,j_high)
+  call Rbnd%set_bc(grid,4,(/0,-1/),ig_high-1,ig_high,j_low,j_high)
+  call Bbnd%set_bc(grid,5,(/1,0/),i_low,i_high,jg_low,jg_low+1)
+  call Tbnd%set_bc(grid,5,(/-1,0/),i_low,i_high,jg_high-1,jg_high)
   
    open(42,file='temp.txt',status='unknown')
  
   do k = 1,max_iter
 !!==============================================================================
-    soln%V(:,i_low:i_high,jg_high-1) = 2*soln%V(:,i_low:i_high,j_high  ) &
-                                       - soln%V(:,i_low:i_high,j_high-1)
-    soln%V(:,i_low:i_high,jg_high)   = 2*soln%V(:,i_low:i_high,j_high-1) &
-                                       - soln%V(:,i_low:i_high,j_high-2)
-    soln%V(:,ig_high-1,j_low:j_high) = 2*soln%V(:,i_high  ,j_low:j_high) &
-                                       - soln%V(:,i_high-1,j_low:j_high)
-    soln%V(:,ig_high,j_low:j_high)   = 2*soln%V(:,i_high-1,j_low:j_high) &
-                                       - soln%V(:,i_high-2,j_low:j_high)
-    !soln%V(:,i_low:i_high,jg_high-1) = soln%V(:,i_low:i_high,j_high  )
-    !soln%V(:,i_low:i_high,jg_high)   = soln%V(:,i_low:i_high,j_high-1)
-    !soln%V(:,ig_high-1,j_low:j_high) = soln%V(:,i_high  ,j_low:j_high)
-    !soln%V(:,ig_high,j_low:j_high)   = soln%V(:,i_high-1,j_low:j_high)
+  
+  call Lbnd%set_val(soln)
+  call Rbnd%set_val(soln)
+  call Bbnd%set_val(soln)
+  call Tbnd%set_val(soln)
+!  do i = Tbnd%i1(1),Tbnd%i1(2)
+!  do j = Tbnd%j1(1),Tbnd%j1(1)
+!   write(*,*) i,j,Tbnd%uvel(i,j),Tbnd%vvel(i,j),soln%V(2,i,j-1),soln%V(3,i,j-1)
+!  end do
+!  end do
+!stop
+   
+  call Lbnd%enforce(soln)
+  call Rbnd%enforce(soln)
+  !call Bbnd%enforce(soln)
+  !call Tbnd%enforce(soln)
+  
+!    soln%V(:,i_low:i_high,jg_high-1) = 2*soln%V(:,i_low:i_high,j_high  ) &
+!                                       - soln%V(:,i_low:i_high,j_high-1)
+!    soln%V(:,i_low:i_high,jg_high)   = 2*soln%V(:,i_low:i_high,j_high-1) &
+!                                       - soln%V(:,i_low:i_high,j_high-2)
+!    soln%V(:,ig_high-1,j_low:j_high) = 2*soln%V(:,i_high  ,j_low:j_high) &
+!                                       - soln%V(:,i_high-1,j_low:j_high)
+!    soln%V(:,ig_high,j_low:j_high)   = 2*soln%V(:,i_high-1,j_low:j_high) &
+!                                       - soln%V(:,i_high-2,j_low:j_high)
+!    soln%V(:,i_low:i_high,jg_high-1) = soln%V(:,i_low:i_high,j_high  )
+!    soln%V(:,i_low:i_high,jg_high)   = soln%V(:,i_low:i_high,j_high-1)
+!    soln%V(:,ig_high-1,j_low:j_high) = soln%V(:,i_high  ,j_low:j_high)
+!    soln%V(:,ig_high,j_low:j_high)   = soln%V(:,i_high-1,j_low:j_high)
+!    soln%V(:,i_low:i_high,jg_low+1) = soln%V(:,i_low:i_high,j_low  )
+!    soln%V(:,i_low:i_high,jg_low)   = soln%V(:,i_low:i_high,j_low+1)
+!    soln%V(:,ig_low+1,j_low:j_high) = soln%V(:,i_low  ,j_low:j_high)
+!    soln%V(:,ig_low,j_low:j_high)   = soln%V(:,i_low+1,j_low:j_high)
      
     call limit_primitives(soln%V)
     call prim2cons(soln%U,soln%V)
     call update_states(soln)
+    call limit_primitives(soln%V)
     !if (limiter_freeze .eqv. .false.) then
     !  call calculate_limiters(soln)
     !end if
@@ -81,27 +121,41 @@ program main_program
 !    nx = grid%n_xi(i1+1,j1,1)
 !    ny = grid%n_xi(i1+1,j1,2)
 !    left = soln%V(:,i1,j1)
-!    right(1) = rho_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
-!    right(2) = uvel_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
-!    right(3) = vvel_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
-!    right(4) = press_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
-!    !right = soln%Vmms(:,i1+1,j1)
-!    call exact_flux(left,nx,ny,soln%Fxi(:,i1,j1))
-!    !call flux_fun(left,right,nx,ny,soln%Fxi(:,i1,j1))
+!    !right(1) = rho_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
+!    !right(2) = uvel_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
+!    !right(3) = vvel_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
+!    !right(4) = press_mms(Lmms,grid%x(i1+1,j1),grid%y(i1+1,j1))
+!    right = soln%Vmms(:,i1+1,j1)
+!    !call exact_flux(left,nx,ny,soln%Fxi(:,i1,j1))
+!    call flux_fun(left,right,nx,ny,soln%Fxi(:,i1,j1))
 !  end do
 !  j1 = j_high
 !  do i1 = i_low,i_high
 !    nx = grid%n_eta(i1,j1+1,1)
 !    ny = grid%n_eta(i1,j1+1,2)
 !    left = soln%V(:,i1,j1)
-!    right(1) = rho_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
-!    right(2) = uvel_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
-!    right(3) = vvel_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
-!    right(4) = press_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
-!    !right = soln%Vmms(:,i1,j1+1)
-!    call exact_flux(left,nx,ny,soln%Feta(:,i1,j1))
-!    !call flux_fun(left,right,nx,ny,soln%Feta(:,i1,j1))
+!    !right(1) = rho_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
+!    !right(2) = uvel_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
+!    !right(3) = vvel_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
+!    !right(4) = press_mms(Lmms,grid%x(i1,j1+1),grid%y(i1,j1+1))
+!    right = soln%Vmms(:,i1,j1+1)
+!    !call exact_flux(left,nx,ny,soln%Feta(:,i1,j1))
+!    call flux_fun(left,right,nx,ny,soln%Feta(:,i1,j1))
 !  end do
+    
+
+  j1 = j_high
+  do i1 = i_low,i_high
+    nx = grid%n_eta(i1,j1+1,1)
+    ny = grid%n_eta(i1,j1+1,2)
+    soln%Feta(:,i1,j1) = (/ zero, nx*soln%V(4,i1,j1), ny*soln%V(4,i1,j1),zero/)
+  end do
+  j1 = j_low
+  do i1 = i_low,i_high
+    nx = grid%n_eta(i1,j1-1,1)
+    ny = grid%n_eta(i1,j1-1,2)
+    soln%Feta(:,i1,j1) = -(/ zero, nx*soln%V(4,i1,j1), ny*soln%V(4,i1,j1),zero/)
+  end do
 
     call calc_time_step(grid,soln)
     call explicit_RK(grid,soln)
