@@ -8,14 +8,14 @@ module set_inputs
 
   private
 
-  public :: isMMS, isAxi, cart_grid, limiter_freeze, cons
+  public :: isMMS, isAxi, cart_grid, limiter_freeze, cons, locTime
   public :: flux_scheme, limiter_scheme
   public :: imax, jmax, neq, xmin, xmax, ymin, ymax, n_ghost
   public :: i_high, i_low, ig_high, ig_low
   public :: j_high, j_low, jg_high, jg_low
   public :: max_iter, soln_save, res_save, res_out , counter
   public :: CFL, eps, tol, eps_roe, beta_lim, epsM, kappaM
-  public :: rho_inf, u_inf, p_inf, a_inf, T_inf, alpha, u0, v0, Lmms
+  public :: rho_inf, u_inf, p_inf, a_inf, T_inf, M_inf, alpha, u0, v0, pb, Lmms
   public :: grid_name, geometry_file
   public :: set_derived_inputs
    
@@ -24,6 +24,7 @@ module set_inputs
   logical :: isMMS          = .true.
   logical :: cart_grid      = .false.
   logical :: isAxi          = .false.
+  logical :: locTime        = .true.
   
   integer :: imax           = 129
   integer :: jmax           = 129
@@ -47,8 +48,10 @@ module set_inputs
 
   real(prec) :: tol        = 1.0e-9_prec
   real(prec) :: eps        = 1.0e-3_prec
+  real(prec) :: pb         = 1.0e5_prec
   real(prec) :: p_inf      = 1.0e5_prec
   real(prec) :: T_inf      = 600.0_prec
+  real(prec) :: M_inf      = 0.0_prec
   real(prec) :: u_inf      = 200.0_prec
   real(prec) :: u0         = zero
   real(prec) :: v0         = zero
@@ -80,6 +83,7 @@ module set_inputs
   subroutine set_derived_inputs
     
     a_inf   = sqrt(gamma*R_gas*T_inf)
+    u_inf   = M_inf*a_inf
     rho_inf = p_inf/(R_gas*T_inf)
     i_low = 1
     j_low = 1
