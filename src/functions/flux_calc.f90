@@ -56,16 +56,20 @@ subroutine calc_flux_2D(grid,soln)
   
   do j = j_low,j_high
   do i = i_low-1,i_high
-    nx = grid%n_xi(i+1,j,1)
-    ny = grid%n_xi(i+1,j,2)
+    nx = grid%n_xi(i,j,1)
+    ny = grid%n_xi(i,j,2)
+    !nx = grid%n_xi(i+1,j,1)
+    !ny = grid%n_xi(i+1,j,2)
     !call flux_fun(Lxi(:,i,j),Rxi(:,i,j),nx,ny,soln%Fxi(:,i,j))
     call flux_fun(soln%V(:,i,j),soln%V(:,i+1,j),nx,ny,soln%Fxi(:,i,j))
   end do
   end do
   do j = j_low-1,j_high
   do i = i_low,i_high
-    nx = grid%n_eta(i,j+1,1)
-    ny = grid%n_eta(i,j+1,2)
+    nx = grid%n_eta(i,j,1)
+    ny = grid%n_eta(i,j,2)
+    !nx = grid%n_eta(i,j+1,1)
+    !ny = grid%n_eta(i,j+1,2)
     !call flux_fun(Leta(:,i,j),Reta(:,i,j),nx,ny,soln%Feta(:,i,j))
     call flux_fun(soln%V(:,i,j),soln%V(:,i,j+1),nx,ny,soln%Feta(:,i,j))
   end do
@@ -143,6 +147,7 @@ end subroutine calc_flux_2D
     uL   = left(2)
     vL   = left(3)
     pL   = left(4)
+    !write(*,*) pL, rhoL
     call speed_of_sound(pL,rhoL,aL) 
     rhoR = right(1)
     uR   = right(2)
