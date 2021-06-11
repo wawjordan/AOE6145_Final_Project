@@ -44,11 +44,18 @@ module init_problem
     use soln_type, only : calc_MMS
     type( grid_t ), intent(inout) :: grid
     type( soln_t ), intent(inout) :: soln
+    integer :: i,j
     call calc_mms(grid,soln)
     call prim2cons(soln%Umms,soln%Vmms)
     soln%V = soln%Vmms
     soln%U = soln%Umms
     soln%S = soln%Smms
+    !do j = grid%j_low,grid%jg_high
+    !do i = grid%i_low,grid%ig_high
+    !soln%V(:,i,j) = soln%V(:,i-1,j-1)
+    !soln%U(:,i,j) = soln%U(:,i-1,j-1)
+    !end do
+    !end do
     
   end subroutine initialize_MMS
   
