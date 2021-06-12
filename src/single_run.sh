@@ -17,7 +17,7 @@ test_str=""
 #grid_name="../grids/curvilinear-grids/"
 #grid_name+="curv2d33.grd"
 grid_name="../grids/inlet-grids/"
-grid_name+="Inlet.33x17.grd"
+grid_name+="Inlet.417x129.grd"
 cart_grid="F"
 imax=33
 jmax=33
@@ -32,11 +32,11 @@ Lmms=1.0
 
 gamma=1.4
 
-isMMS="T"
+isMMS="F"
 u0=0.0
 v0=0.0
-u_inf=1000.0
-alpha=90.0
+u_inf=1.0
+alpha=0.0
 p_inf=12270.0
 T_inf=217.0
 M_inf=4.0
@@ -52,14 +52,14 @@ beta_lim=2.0
 eps_roe=0.1
 
 geometry_file="example.dat"
-soln_save=1000
-res_save=10
-res_out=100
+soln_save=50000
+res_save=1
+res_out=10
 cons="T"
 
-epsM=0.0
+epsM=1.0
 kappaM=-1.0
-limiter_freeze="T"
+limiter_freeze="F"
 if [ "$isMMS" = "T" ]; then
   MMS_str="MMS"
 else
