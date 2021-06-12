@@ -60,19 +60,16 @@ module init_problem
   end subroutine initialize_MMS
   
   subroutine initialize_const( grid, soln, V )
-    
+    use other_subroutines, only : calc_sources
     type( grid_t ), intent(inout) :: grid
     type( soln_t ), intent(inout) :: soln
     real(prec), dimension(4), intent(in) :: V
-    soln%Vmms(1,:,:) = V(1)
-    soln%Vmms(2,:,:) = V(2)
-    soln%Vmms(3,:,:) = V(3)
-    soln%Vmms(4,:,:) = V(4)
-    soln%Smms(:,:,:) = zero
-    call prim2cons(soln%Umms,soln%Vmms)
-    soln%V = soln%Vmms
-    soln%U = soln%Umms
-    soln%S = soln%Smms
+    soln%V(1,:,:) = V(1)
+    soln%V(2,:,:) = V(2)
+    soln%V(3,:,:) = V(3)
+    soln%V(4,:,:) = V(4)
+    call calc_sources( soln, grid )
+    call prim2cons(soln%U,soln%V)
     
   end subroutine initialize_const
 
