@@ -294,7 +294,7 @@ contains
     real(prec), dimension(:,:,:), intent(in) :: r
     real(prec), dimension(:,:,:), intent(out) :: psi
 
-    psi = maxval((/ zero, min(beta_lim*r,one), min(r,beta_lim) /))
+    psi = max(zero, min(beta_lim*r,one), min(r,beta_lim))
     psi = half*(one+sign(one,r))*psi
 
   end subroutine beta_limiter
