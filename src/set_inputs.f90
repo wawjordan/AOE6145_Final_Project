@@ -46,7 +46,7 @@ module set_inputs
   integer :: flux_scheme    = 1
   integer :: limiter_scheme = 3
 
-  real(prec) :: tol        = 1.0e-9_prec
+  real(prec) :: tol        = 1.0e-10_prec
   real(prec) :: eps        = 1.0e-3_prec
   real(prec) :: pb         = 1.0e5_prec
   real(prec) :: p_inf      = 1.0e5_prec
@@ -84,6 +84,8 @@ module set_inputs
     
     a_inf   = sqrt(gamma*R_gas*T_inf)
     u_inf   = M_inf*a_inf
+    u0 = u_inf*cos((pi/180.0_prec)*alpha)
+    v0 = u_inf*sin((pi/180.0_prec)*alpha)
     rho_inf = p_inf/(R_gas*T_inf)
     i_low = 1
     j_low = 1
