@@ -52,26 +52,26 @@ subroutine calc_flux_2D(grid,soln)
   real(prec) :: nx, ny
   integer :: i,j,k
   
-  !call MUSCL_extrap(soln,Lxi,Rxi,Leta,Reta)
+  call MUSCL_extrap(soln,Lxi,Rxi,Leta,Reta)
   
   do j = j_low,j_high
   do i = i_low-1,i_high
-    nx = grid%n_xi(i,j,1)
-    ny = grid%n_xi(i,j,2)
-    !nx = grid%n_xi(i+1,j,1)
-    !ny = grid%n_xi(i+1,j,2)
-    !call flux_fun(Lxi(:,i,j),Rxi(:,i,j),nx,ny,soln%Fxi(:,i,j))
-    call flux_fun(soln%V(:,i,j),soln%V(:,i+1,j),nx,ny,soln%Fxi(:,i,j))
+    !nx = grid%n_xi(i,j,1)
+    !ny = grid%n_xi(i,j,2)
+    nx = grid%n_xi(i+1,j,1)
+    ny = grid%n_xi(i+1,j,2)
+    call flux_fun(Lxi(:,i,j),Rxi(:,i,j),nx,ny,soln%Fxi(:,i,j))
+    !call flux_fun(soln%V(:,i,j),soln%V(:,i+1,j),nx,ny,soln%Fxi(:,i,j))
   end do
   end do
   do j = j_low-1,j_high
   do i = i_low,i_high
-    nx = grid%n_eta(i,j,1)
-    ny = grid%n_eta(i,j,2)
-    !nx = grid%n_eta(i,j+1,1)
-    !ny = grid%n_eta(i,j+1,2)
-    !call flux_fun(Leta(:,i,j),Reta(:,i,j),nx,ny,soln%Feta(:,i,j))
-    call flux_fun(soln%V(:,i,j),soln%V(:,i,j+1),nx,ny,soln%Feta(:,i,j))
+    !nx = grid%n_eta(i,j,1)
+    !ny = grid%n_eta(i,j,2)
+    nx = grid%n_eta(i,j+1,1)
+    ny = grid%n_eta(i,j+1,2)
+    call flux_fun(Leta(:,i,j),Reta(:,i,j),nx,ny,soln%Feta(:,i,j))
+    !call flux_fun(soln%V(:,i,j),soln%V(:,i,j+1),nx,ny,soln%Feta(:,i,j))
   end do
   end do
   
