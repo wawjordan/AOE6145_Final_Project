@@ -1,9 +1,9 @@
 program main_program
   
   use set_precision, only : prec  
-  use set_constants, only : pi, zero, one, set_derived_constants
+  use set_constants, only : pi, zero, one, two, set_derived_constants
   use fluid_constants, only : set_fluid_constants
-  use set_inputs, only : set_derived_inputs, geometry_file, limiter_freeze
+  use set_inputs, only : set_derived_inputs, geometry_file, limiter_freeze, epsM
   use set_inputs, only : imax, i_low,i_high,j_low,j_high, n_ghost, cons, neq
   use set_inputs, only : jmax, ig_low,ig_high,jg_low,jg_high, max_iter
   use set_inputs, only : res_save, res_out, soln_save, tol, Lmms, CFL, isMMS
@@ -13,7 +13,7 @@ program main_program
   use geometry, only : setup_geometry, teardown_geometry
   use variable_conversion, only : prim2cons, cons2prim, update_states, &
                                   limit_primitives
-  use other_subroutines, only : calc_de, MUSCL_extrap
+  use other_subroutines, only : calc_de, MUSCL_extrap, calc_sources
   use time_integration, only : calc_time_step, explicit_RK, residual_norms
   use limiter_calc, only : select_limiter, limiter_fun, calculate_limiters
   use mms_functions, only : rho_mms, uvel_mms, vvel_mms, press_mms
@@ -28,9 +28,9 @@ program main_program
   integer :: i, j, k
   type( grid_t )      :: grid
   type( soln_t )      :: soln
-  type(bc_t)   :: Lbnd, Rbnd, Bbnd, Tbnd
+  type(bc_t)   :: inlet, outlet, top_wall, bottom_wall
   real(prec), dimension(4) :: left, right
-  real(prec) :: nx, ny
+  real(prec) :: nx, ny, press
   real(prec), dimension(4) :: Rnorm2
   integer :: i1,j1,k1
   logical :: freeze_BC = .false.
@@ -49,11 +49,11 @@ program main_program
   !     (/one,u_inf*cos((pi/180.0_prec)*alpha),&
   !           u_inf*sin((pi/180.0_prec)*alpha),p_inf/) )
   call initialize_const(grid,soln,&
-       (/rho_inf,one,one,p_inf/) )
-  call output_exact_soln(grid,soln)
+       (/rho_inf,u0,v0,p_inf/) )
+  call update_states(soln)
+  !call output_exact_soln(grid,soln)
   call output_file_headers
   call output_soln(grid,soln,0)
-  !call calc_sources(soln,grid)
 ! For Cartesian Mesh
 !  call Lbnd%set_bc(grid,1,(/0,1/),ig_low,ig_low+1,j_low,j_high)
 !  call Rbnd%set_bc(grid,4,(/0,-1/),ig_high-1,ig_high,j_low,j_high)
@@ -65,20 +65,22 @@ program main_program
 !  call Tbnd%set_bc(grid,1,(/1,0/),i_low,i_high,jg_low,jg_low+1)
 !  call Bbnd%set_bc(grid,4,(/-1,0/),i_low,i_high,jg_high-1,jg_high)
 ! For Inlet Mesh
-  call Lbnd%set_bc(grid,2,(/0,1/),ig_low,ig_low+1,j_low,j_high)
-  call Rbnd%set_bc(grid,4,(/0,-1/),ig_high-1,ig_high,j_low,j_high)
-  call Bbnd%set_bc(grid,5,(/1,0/),i_low,i_high,jg_low,jg_low+1)
-  call Tbnd%set_bc(grid,5,(/-1,0/),i_low,i_high,jg_high-1,jg_high)
+!  call top_wall%set_bc(grid,5,(/-1,0/),21,i_high,jg_high-1,jg_high)
+!  call inlet%set_bc(grid,2,(/0,1/),i_low,20,jg_low,jg_low+1)
+  call top_wall%set_bc(grid,5,(/-1,0/),161,i_high,jg_high-1,jg_high)
+  call inlet%set_bc(grid,2,(/0,1/),i_low,160,jg_low,jg_low+1)
+  call outlet%set_bc(grid,4,(/0,-1/),ig_high-1,ig_high,j_low,j_high)
+  call bottom_wall%set_bc(grid,5,(/1,0/),i_low,i_high,jg_low,jg_low+1)
   
    open(42,file='temp.txt',status='unknown')
  
   do k = 1,max_iter
 !!==============================================================================
   
-  call Lbnd%set_val(soln)
-  call Rbnd%set_val(soln)
-  call Bbnd%set_val(soln)
-  call Tbnd%set_val(soln)
+  call inlet%set_val(soln)
+  call outlet%set_val(soln)
+!  call bottom_wall%set_val(soln)
+!  call top_wall%set_val(soln)
 !  do i = Tbnd%i1(1),Tbnd%i1(2)
 !  do j = Tbnd%j1(1),Tbnd%j1(1)
 !   write(*,*) i,j,Tbnd%uvel(i,j),Tbnd%vvel(i,j),soln%V(2,i,j-1),soln%V(3,i,j-1)
@@ -86,10 +88,10 @@ program main_program
 !  end do
 !stop
    
-  call Lbnd%enforce(soln)
-  call Rbnd%enforce(soln)
-  !call Bbnd%enforce(soln)
-  !call Tbnd%enforce(soln)
+  call inlet%enforce(soln)
+  call outlet%enforce(soln)
+!  call bottom_wall%enforce(soln)
+!  call top_wall%enforce(soln)
   
 !    soln%V(:,i_low:i_high,jg_high-1) = 2*soln%V(:,i_low:i_high,j_high  ) &
 !                                       - soln%V(:,i_low:i_high,j_high-1)
@@ -111,11 +113,27 @@ program main_program
     call limit_primitives(soln%V)
     call prim2cons(soln%U,soln%V)
     call update_states(soln)
-    call limit_primitives(soln%V)
-    !if (limiter_freeze .eqv. .false.) then
-    !  call calculate_limiters(soln)
-    !end if
+    if (limiter_freeze .eqv. .false.) then
+      call calculate_limiters(soln)
+    end if
     call calc_flux_2D(grid,soln)
+
+  j1 = j_high
+  do i1 = 161,i_high
+    press = soln%V(4,i1,j1) + epsM*(soln%V(4,i1,j1) - soln%V(4,i1,j1+1))
+    nx = grid%n_eta(i1,j1+1,1)
+    ny = grid%n_eta(i1,j1+1,2)
+    !soln%Feta(:,i1,j1) = (/ zero, nx*soln%V(4,i1,j1), ny*soln%V(4,i1,j1),zero/)
+    soln%Feta(:,i1,j1) = (/ zero, nx*press, ny*press,zero/)
+  end do
+  j1 = j_low
+  do i1 = i_low,i_high
+    press = soln%V(4,i1,j1) + epsM*(soln%V(4,i1,j1) - soln%V(4,i1,j1+1))
+    nx = grid%n_eta(i1,j1,1)
+    ny = grid%n_eta(i1,j1,2)
+    !soln%Feta(:,i1,j1-1) = (/ zero, nx*soln%V(4,i1,j1), ny*soln%V(4,i1,j1),zero/)
+    soln%Feta(:,i1,j1-1) = (/ zero, nx*press, ny*press,zero/)
+  end do
 !  i1 = i_high
 !  do j1 = j_low,j_high
 !    nx = grid%n_xi(i1+1,j1,1)
@@ -144,19 +162,6 @@ program main_program
 !  end do
     
 
-  j1 = j_high
-  do i1 = i_low,i_high
-    nx = grid%n_eta(i1,j1+1,1)
-    ny = grid%n_eta(i1,j1+1,2)
-    soln%Feta(:,i1,j1) = (/ zero, nx*soln%V(4,i1,j1), ny*soln%V(4,i1,j1),zero/)
-  end do
-  j1 = j_low
-  do i1 = i_low,i_high
-    nx = grid%n_eta(i1,j1-1,1)
-    ny = grid%n_eta(i1,j1-1,2)
-    soln%Feta(:,i1,j1) = -(/ zero, nx*soln%V(4,i1,j1), ny*soln%V(4,i1,j1),zero/)
-  end do
-
     call calc_time_step(grid,soln)
     call explicit_RK(grid,soln)
     call cons2prim(soln%U,soln%V)
@@ -170,7 +175,9 @@ program main_program
     end if
     
     if (mod(k,res_save)==0) then
-      call calc_DE(soln,soln%DE,soln%DEnorm,cons)
+      if (isMMS) then
+        call calc_DE(soln,soln%DE,soln%DEnorm,cons)
+      end if
       call output_res(soln,k)
     end if
     
@@ -179,19 +186,24 @@ program main_program
     end if
     
     if (mod(k,soln_save)==0) then
-      call calc_DE(soln,soln%DE,soln%DEnorm,cons)
+      if (isMMS) then
+        call calc_DE(soln,soln%DE,soln%DEnorm,cons)
+      end if
       call output_soln(grid,soln,k)
       call output_flux(grid,soln,k)
     end if
     
-    if (all(soln%Rnorm<1e-2)) then
+    !if (all(soln%Rnorm<1e-1)) then
+    !  epsM = one
+    !end if
+    if (all(soln%Rnorm<1.0e-3_prec).or.(k>20000)) then
       limiter_freeze = .true.
     end if
-   ! if (all(soln%Rnorm<1e-4).and.(all(soln%Rnorm<Rnorm2))) then
-   !   if (CFL<0.5_prec) then
-   !     CFL = CFL+1.0e-3_prec
-   !   end if
-   ! end if
+    !if (all(soln%Rnorm<1e-2).and.(all(soln%Rnorm<Rnorm2))) then
+    !  if (epsM<one) then
+    !    epsM = epsM+1.0e-2_prec
+    !  end if
+    !end if
     
     if (all(soln%Rnorm<tol)) then
       write(*,*) k, soln%Rnorm
@@ -210,16 +222,16 @@ program main_program
 !  write(*,*) 'F(2,3) = ', sum(soln%Feta(3,:,:))/real(i_high*jmax,prec)
 !  write(*,*) 'F(2,4) = ', sum(soln%Feta(4,:,:))/real(i_high*jmax,prec)
 !  write(*,*) '!================================================================'
-  call calc_DE(soln,soln%DE,soln%DEnorm,cons)
-  call output_res(soln,k)
-  call output_soln(grid,soln,k)
   write(42,*) i_high, 5, (soln%Rnorm(i),i=1,neq)
   if (isMMS) then 
+    call calc_DE(soln,soln%DE,soln%DEnorm,cons)
     write(42,*) i_high, 1,(soln%DEnorm(i,1),i=1,neq)
     write(42,*) i_high, 2,(soln%DEnorm(i,2),i=1,neq)
     write(42,*) i_high, 0,(soln%DEnorm(i,3),i=1,neq)
   end if
   close(42)
+  call output_res(soln,k)
+  call output_soln(grid,soln,k)
   
   call grid_out(geometry_file,grid)
   call teardown_geometry(grid,soln)
