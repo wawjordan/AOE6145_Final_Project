@@ -30,10 +30,10 @@ contains
   subroutine set_bc_sub(this,grid,ID,dir,i_low,i_high,j_low,j_high)
     implicit none
     class(bc_t) :: this
-    type(grid_t) :: grid
-    integer, dimension(2) :: dir
-    integer :: ID
-    integer :: i_low, i_high, j_low, j_high
+    type(grid_t), intent(in) :: grid
+    integer, dimension(2), intent(in) :: dir
+    integer, intent(in) :: ID
+    integer, intent(in) :: i_low, i_high, j_low, j_high
     integer :: i,j
     this%i1 = (/ i_low, i_high /)
     this%j1 = (/ j_low, j_high /)
@@ -41,29 +41,39 @@ contains
     this%dir = dir
     allocate( this%nx(i_low:i_high,j_low:j_high), &
               this%ny(i_low:i_high,j_low:j_high) )
-    if (dir(1)==0) then
-      if (dir(1)==1) then
+    if (dir(1)==0) then ! i-index constant
+    !write(*,*) 'i-index constant'
+      if (i_low<grid%i_low) then ! "left"-side
+      !write(*,*) 'left'
         do i = i_low, i_high
           this%nx(i,:) = grid%n_xi(i_high,j_low:j_high,1)
           this%ny(i,:) = grid%n_xi(i_high,j_low:j_high,2)
         end do
-      else
+      else                       ! "right"-side
+      !write(*,*) 'right'
         do i = i_low, i_high
           this%nx(i,:) = grid%n_xi(i_low,j_low:j_high,1)
           this%ny(i,:) = grid%n_xi(i_low,j_low:j_high,2)
         end do
       end if
-    else
-      if (dir(2)==1) then
+    else               ! j-index constant
+    !write(*,*) 'j-index constant'
+      if (j_low<grid%j_low) then ! "bottom"
+      !write(*,*) 'bottom'
         do j = j_low, j_high
-          this%nx(:,j) = grid%n_xi(i_low:i_high,j_high,1)
-          this%ny(:,j) = grid%n_xi(i_high:i_high,j_high,2)
+          this%nx(:,j) = grid%n_eta(i_low:i_high,j_high,1)
+          this%ny(:,j) = grid%n_eta(i_low:i_high,j_high,2)
         end do
-      else
+      else                       ! "top"
+      !write(*,*) 'top'
         do j = j_low, j_high
           this%nx(:,j) = grid%n_eta(i_low:i_high,j_low,1)
           this%ny(:,j) = grid%n_eta(i_low:i_high,j_low,2)
         end do
+        !write(*,*) 'i, nx,ny'
+        !do i = i_low, i_high
+        !  write(*,*) i, this%nx(i,j_low), this%ny(i,j_low)
+        !end do
       end if
     end if
     
@@ -87,8 +97,8 @@ contains
   subroutine set_val_sub(this,soln)
     use set_inputs, only : epsM
     implicit none
-    class(bc_t) :: this
-    type(soln_t) :: soln
+    class(bc_t), intent(inout) :: this
+    type(soln_t), intent(in) :: soln
     integer :: i, j, d1, d2
     select case(this%bc_id)
     case(1)  ! MMS dirichlet
@@ -167,18 +177,30 @@ contains
     case(5)  ! slip wall w/ ghost cells
       d1 = this%dir(1)
       d2 = this%dir(2)
+      
       do j = this%j1(1), this%j1(2)
         do i = this%i1(1), this%i1(2)
           call reflect_vec( soln%V(2,i+d1,j+d2), soln%V(3,i+d1,j+d2), &
                               this%nx(i,j), this%ny(i,j), &
                               this%uvel(i,j), this%vvel(i,j) )
-          
+          !write(*,*) soln%V(2,i+d1,j+d2), soln%V(3,i+d1,j+d2) ,this%uvel(i,j),this%vvel(i,j)
           this%press(i,j) = soln%V(4,i+d1,j+d2) + epsM*( &
                             soln%V(4,i+d1,j+d2) - soln%V(4,i+2*d1,j+2*d2) )
-          this%rho(i,j)   = this%press(i,j)/( R_gas*soln%temp(i-d1,j-d2) )
+          this%rho(i,j)   = this%press(i,j)/( R_gas*soln%temp(i+d1,j+d2) )
         end do
       end do
-      
+!    case(6)  ! wake cut
+!      d1 = this%dir(1)
+!      d2 = this%dir(2)
+!      do j = this%j1(1), this%j1(2)
+!        do i = this%i1(1), this%i1(2)
+!          this%rho(i,j)   = soln%V(1,i+d1*imax,j+d2*jmax)
+!          this%uvel(i,j)  = soln%V(2,i+d1*imax,j+d2*jmax)
+!          this%vvel(i,j)  = soln%V(3,i+d1*imax,j+d2*jmax)
+!          this%press(i,j) = soln%V(4,i+d1*imax,j+d2*jmax)
+!        end do
+!      end do
+          
 
     case default
     end select
@@ -193,8 +215,8 @@ contains
 !  end subroutine set
 !  
   subroutine enforce_sub(this,soln)
-    class(bc_t)  :: this
-    type(soln_t) :: soln
+    class(bc_t), intent(in)   :: this
+    type(soln_t), intent(inout):: soln
     
     soln%V(1,this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = this%rho
     soln%V(2,this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = this%uvel
