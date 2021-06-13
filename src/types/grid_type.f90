@@ -10,7 +10,7 @@ module grid_type
   private
   
   public :: grid_t, allocate_grid, deallocate_grid
-  public :: ghost_shape, cell_geometry
+  public :: ghost_shape, ghost_shape_C, cell_geometry
   
   type grid_t
     
@@ -59,8 +59,171 @@ module grid_type
               grid%n_xi_avg(  ig_low:ig_high,jg_low:jg_high,2), &
               grid%n_eta_avg( ig_low:ig_high,jg_low:jg_high,2), &
               grid%V(       ig_low:ig_high,jg_low:jg_high)   )
+   grid%x = zero
+   grid%y = zero
     
   end subroutine allocate_grid
+  
+  subroutine ghost_shape_C(grid,low,high)
+    use set_inputs, only : n_ghost, imax
+    type(grid_t), intent(inout) :: grid
+    integer, intent(inout) :: low, high
+    real(prec) :: x1, x2, x3, x4, y1, y2, y3, y4, m1, m2
+    integer :: i, j, d1
+    integer, allocatable, dimension(:,:) :: i1, i2, j1, j2
+    
+
+    ! extrapolate coordinates to form ghost cells
+    ! "bottom"
+    do j = j_low-1, jg_low, -1
+    do i = i_low, i_high+1
+      grid%x(i,j) = two*grid%x(i,j+1) - grid%x(i,j+2)
+      grid%y(i,j) = two*grid%y(i,j+1) - grid%y(i,j+2)
+    end do
+    end do
+    !do j = j_low-1, jg_low, -1
+    !do i = i_low, i_high+1
+    !  grid%x(i,j) = half*(3.0_prec*grid%x(i,j+1) - grid%x(i,j+2))
+    !  grid%y(i,j) = half*(3.0_prec*grid%y(i,j+1) - grid%y(i,j+2))
+    !end do
+    !end do
+
+
+    ! "top"
+    do j = j_high+2, jg_high+1
+    do i = i_low, i_high+1
+      grid%x(i,j) = two*grid%x(i,j-1) - grid%x(i,j-2)
+      grid%y(i,j) = two*grid%y(i,j-1) - grid%y(i,j-2)
+    end do
+    end do
+    
+    ! "left"
+    do j = j_low, j_high+1
+    do i = i_low-1, ig_low, -1
+      grid%x(i,j) = two*grid%x(i+1,j) - grid%x(i+2,j)
+      grid%y(i,j) = two*grid%y(i+1,j) - grid%y(i+2,j)
+    end do
+    end do
+    
+    ! "right"
+    do j = j_low, j_high+1
+    do i = i_high+2, ig_high+1
+      grid%x(i,j) = two*grid%x(i-1,j) - grid%x(i-2,j)
+      grid%y(i,j) = two*grid%y(i-1,j) - grid%y(i-2,j)
+    end do
+    end do
+   !!!!
+    
+    
+    ! "top left"
+    do j = j_high+2, jg_high+1
+    do i = i_low-1, ig_low,-1
+      x1 = grid%x(i+2,j)
+      x2 = grid%x(i+1,j)
+      x3 = grid%x(i,j-2)
+      x4 = grid%x(i,j-1)
+      
+      y1 = grid%y(i+2,j)
+      y2 = grid%y(i+1,j)
+      y3 = grid%y(i,j-2)
+      y4 = grid%y(i,j-1)
+      
+      call extrap_corner( (/x1,y1/), (/x2,y2/), (/x3,y3/), (/x4,y4/), &
+                          grid%x(i,j), grid%y(i,j) )
+    end do
+    end do
+     
+    
+    ! "top right"
+    do j = j_high+2, jg_high+1
+    do i = i_high+2, ig_high+1
+      x1 = grid%x(i-2,j)
+      x2 = grid%x(i-1,j)
+      x3 = grid%x(i,j-2)
+      x4 = grid%x(i,j-1)
+      
+      y1 = grid%y(i-2,j)
+      y2 = grid%y(i-1,j)
+      y3 = grid%y(i,j-2)
+      y4 = grid%y(i,j-1)
+      
+      call extrap_corner( (/x1,y1/), (/x2,y2/), (/x3,y3/), (/x4,y4/), &
+                          grid%x(i,j), grid%y(i,j) )
+      
+    end do
+    end do
+    
+    
+    high = high
+    low = low-n_ghost
+    d1 = high-low +1
+    allocate( i1(d1,n_ghost), j1(d1,n_ghost), &
+              i2(d1,n_ghost), j2(d1,n_ghost)  )
+    do j = 1, n_ghost
+      do i = 1, d1
+        i1(i,j) = low - 1 + i
+        i2(i,j) = imax - low + 2 - i
+        j1(i,j) = 1 - j
+        j2(i,j) = j + 1
+      end do
+    end do
+    
+    do j = 1, n_ghost
+    do i = 1, d1
+      grid%x(i1(i,j),j1(i,j)) = grid%x(i2(i,j),j2(i,j))
+      grid%y(i1(i,j),j1(i,j)) = grid%y(i2(i,j),j2(i,j))
+
+      grid%x(i2(i,j),j1(i,j)) = grid%x(i1(i,j),j2(i,j))
+      grid%y(i2(i,j),j1(i,j)) = grid%y(i1(i,j),j2(i,j))
+    end do
+    end do
+    
+    deallocate(i1,i2,j1,j2)
+    
+    ! "bottom left"
+    do j = j_low-1, jg_low,-1
+    do i = i_low-1, ig_low,-1
+      x1 = grid%x(i+2,j)
+      x2 = grid%x(i+1,j)
+      x3 = grid%x(i,j+2)
+      x4 = grid%x(i,j+1)
+      
+      y1 = grid%y(i+2,j)
+      y2 = grid%y(i+1,j)
+      y3 = grid%y(i,j+2)
+      y4 = grid%y(i,j+1)
+    !  call extrap_corner( (/x1,y1/), (/x2,y2/), (/x3,y3/), (/x4,y4/), &
+    !                      grid%x(i,j), grid%y(i,j) )
+      grid%x(i,j) = two*x4 - x3
+      grid%y(i,j) = two*y4 - y3
+    end do
+    end do
+
+    
+    ! "bottom right"
+    do j = j_low-1, jg_low,-1
+    do i = i_high+2, ig_high+1
+      x1 = grid%x(i-2,j)
+      x2 = grid%x(i-1,j)
+      x3 = grid%x(i,j+2)
+      x4 = grid%x(i,j+1)
+      
+      y1 = grid%y(i-2,j)
+      y2 = grid%y(i-1,j)
+      y3 = grid%y(i,j+2)
+      y4 = grid%y(i,j+1)
+      
+     ! call extrap_corner( (/x1,y1/), (/x2,y2/), (/x3,y3/), (/x4,y4/), &
+     !                     grid%x(i,j), grid%y(i,j) )
+      grid%x(i,j) = two*x4 - x3
+      grid%y(i,j) = two*y4 - y3
+    end do
+    end do
+    
+    
+    
+    
+  end subroutine ghost_shape_C
    
   subroutine ghost_shape(grid)
     
@@ -195,7 +358,7 @@ module grid_type
     y4 = P4(2)
     
     D = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)
-    
+      
     x = ((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4))/D
     y = ((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4))/D
     
@@ -209,32 +372,19 @@ module grid_type
     ! calculate cell face areas, normals, and volumes
     do j = jg_low, jg_high
     do i = ig_low, ig_high
-!      grid%A_xi(i,j) =  sqrt( (grid%x(i,j+1)-grid%x(i,j))**2 &
-!                            + (grid%y(i,j+1)-grid%y(i,j))**2 )
-!      grid%A_eta(i,j) = sqrt( (grid%x(i+1,j)-grid%x(i,j))**2 &
-!                            + (grid%y(i+1,j)-grid%y(i,j))**2 )
-      grid%A_xi(i,j) =  sqrt( (grid%x(i+1,j+1)-grid%x(i+1,j))**2 &
-                            + (grid%y(i+1,j+1)-grid%y(i+1,j))**2 )
-      grid%A_eta(i,j) = sqrt( (grid%x(i+1,j+1)-grid%x(i,j+1))**2 &
-                            + (grid%y(i+1,j+1)-grid%y(i,j+1))**2 )
-!      grid%n_xi(i,j,1)   = ( (grid%y(i,j+1)-grid%y(i,j)) )/grid%A_xi(i,j) 
-!      grid%n_xi(i,j,2)   = -( (grid%x(i,j+1)-grid%x(i,j)) )/grid%A_xi(i,j)
-!      grid%n_eta(i,j,1)  = -( (grid%y(i+1,j)-grid%y(i,j)) )/grid%A_eta(i,j)
-!      grid%n_eta(i,j,2)  = ( (grid%x(i+1,j)-grid%x(i,j)) )/grid%A_eta(i,j)
-      grid%n_xi(i,j,1)   = ( (grid%y(i+1,j+1)-grid%y(i+1,j)) )/grid%A_xi(i,j) 
-      grid%n_xi(i,j,2)   = -( (grid%x(i+1,j+1)-grid%x(i+1,j)) )/grid%A_xi(i,j)
-      grid%n_eta(i,j,1)  = -( (grid%y(i+1,j+1)-grid%y(i,j+1)) )/grid%A_eta(i,j)
-      grid%n_eta(i,j,2)  = ( (grid%x(i+1,j+1)-grid%x(i,j+1)) )/grid%A_eta(i,j)
+      grid%A_xi(i,j) =  sqrt( (grid%x(i,j+1)-grid%x(i,j))**2 &
+                            + (grid%y(i,j+1)-grid%y(i,j))**2 )
+      grid%A_eta(i,j) = sqrt( (grid%x(i+1,j)-grid%x(i,j))**2 &
+                            + (grid%y(i+1,j)-grid%y(i,j))**2 )
+      grid%n_xi(i,j,1)   = ( (grid%y(i,j+1)-grid%y(i,j)) )/grid%A_xi(i,j) 
+      grid%n_xi(i,j,2)   = -( (grid%x(i,j+1)-grid%x(i,j)) )/grid%A_xi(i,j)
+      grid%n_eta(i,j,1)  = -( (grid%y(i+1,j)-grid%y(i,j)) )/grid%A_eta(i,j)
+      grid%n_eta(i,j,2)  = ( (grid%x(i+1,j)-grid%x(i,j)) )/grid%A_eta(i,j)
      call volume_calc( (/ grid%x(i,j), grid%x(i+1,j), grid%x(i+1,j+1), &
                                          grid%x(i,j+1),grid%x(i,j) /), &
                        (/ grid%y(i,j), grid%y(i+1,j), grid%y(i+1,j+1), &
                                          grid%y(i,j+1),grid%y(i,j) /), &
                        grid%xc(i,j), grid%yc(i,j), grid%V(i,j) )
-!      call cell_volume( (/ grid%x(i,j), grid%y(i,j) /), &
-!                    (/ grid%x(i+1,j), grid%y(i+1,j) /), &
-!                (/ grid%x(i+1,j+1), grid%y(i+1,j+1) /), &
-!                    (/ grid%x(i,j+1), grid%y(i,j+1) /), &
-!                                      grid%V(i,j)       )
     end do
     end do
     
@@ -265,17 +415,17 @@ module grid_type
   
   end subroutine cell_geometry
   
-  subroutine cell_volume(A,B,C,D,V)
-    
-    real(prec), dimension(2), intent(in)  :: A, B, C, D
-    real(prec), intent(out) :: V
-    real(prec), dimension(2) :: AC, BD
-    
-    AC = C - A
-    BD = D - B
-    V = half*abs( AC(1)*BD(2) - AC(2)*BD(1) )
-    
-  end subroutine cell_volume
+!  subroutine cell_volume(A,B,C,D,V)
+!    
+!    real(prec), dimension(2), intent(in)  :: A, B, C, D
+!    real(prec), intent(out) :: V
+!    real(prec), dimension(2) :: AC, BD
+!    
+!    AC = C - A
+!    BD = D - B
+!    V = half*abs( AC(1)*BD(2) - AC(2)*BD(1) )
+!    
+!  end subroutine cell_volume
   
   subroutine volume_calc(x,y,cx,cy,V)
     
@@ -317,7 +467,7 @@ module grid_type
     type( grid_t ), intent( inout ) :: grid
     
     deallocate( grid%x, grid%y, grid%xc, grid%yc, grid%A_xi, grid%A_eta, &
-                grid%n_xi, grid%n_eta, grid%V )
+                grid%n_xi, grid%n_eta, grid%n_xi_avg, grid%n_eta_avg, grid%V )
     
   end subroutine deallocate_grid
   
