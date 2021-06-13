@@ -156,7 +156,7 @@ contains
                             soln%V(2,i+d1,j+d2) - soln%V(2,i+2*d1,j+2*d2) )
           this%vvel(i,j)  = soln%V(3,i+d1,j+d2) + epsM*( &
                             soln%V(3,i+d1,j+d2) - soln%V(3,i+2*d1,j+2*d2) )
-          this%press(i,j) = pb
+          this%press(i,j) = p_inf
         end do
       end do
     case(4) ! supersonic outflow
