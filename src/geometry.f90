@@ -3,7 +3,7 @@ module geometry
   use set_inputs,      only : geometry_file, grid_name
   use soln_type,       only : soln_t, allocate_soln, deallocate_soln 
   use grid_type,       only : grid_t, allocate_grid, deallocate_grid, &
-                              ghost_shape, cell_geometry
+                              ghost_shape, ghost_shape_C, cell_geometry
 
   implicit none
   
@@ -26,7 +26,7 @@ module geometry
   !===========================================================================80
   subroutine setup_geometry( grid, soln )
     
-    use set_inputs, only : cart_grid
+    use set_inputs, only : cart_grid, C_grid, index1, index2
     use file_handling, only : grid_in, grid_out
     
     type( soln_t ), intent(inout) :: soln
@@ -37,7 +37,11 @@ module geometry
     else
       call grid_in(grid_name,grid)
     end if
-    call ghost_shape(grid)
+    if (C_grid) then
+      call ghost_shape_C(grid,index1,index2)
+    else
+      call ghost_shape(grid)
+    end if
     call cell_geometry(grid)
     call grid_out(geometry_file,grid)
     call allocate_soln( soln )
