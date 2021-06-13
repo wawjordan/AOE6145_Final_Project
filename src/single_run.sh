@@ -16,9 +16,16 @@ test_str=""
 #grid_name+="curv2d17.grd"
 #grid_name="../grids/curvilinear-grids/"
 #grid_name+="curv2d33.grd"
-grid_name="../grids/inlet-grids/"
-grid_name+="Inlet.417x129.grd"
+#grid_name="../grids/inlet-grids/"
+#grid_name+="Inlet.33x17.grd"
+grid_name="../grids/NACA64A006-grids/"
+#grid_name+="NACA64A006.extra-coarse.27x14.grd"
+grid_name+="NACA64A006.coarse.53x27.grd"
+#grid_name+="NACA64A006.fine.385x105.grd"
 cart_grid="F"
+C_grid="T"
+index1=1
+index2=16
 imax=33
 jmax=33
 n_ghost=2
@@ -37,9 +44,9 @@ u0=0.0
 v0=0.0
 u_inf=1.0
 alpha=0.0
-p_inf=12270.0
-T_inf=217.0
-M_inf=4.0
+p_inf=65855.8
+T_inf=300.0
+M_inf=0.84
 
 
 CFL=0.1 #0.1 0.5 0.9
@@ -52,12 +59,12 @@ beta_lim=2.0
 eps_roe=0.1
 
 geometry_file="example.dat"
-soln_save=50000
+soln_save=1000
 res_save=1
-res_out=10
+res_out=100
 cons="T"
 
-epsM=1.0
+epsM=0.0
 kappaM=-1.0
 limiter_freeze="F"
 if [ "$isMMS" = "T" ]; then
@@ -90,6 +97,9 @@ echo "!=========================================================================
 echo "&grid" > $input
 echo "  grid_name = \"$grid_name\"" >> $input
 echo "  cart_grid = $cart_grid" >> $input
+echo "  C_grid = $C_grid" >> $input
+echo "  index1 = $index1" >> $input
+echo "  index2 = $index2" >> $input
 echo "  imax = $imax" >> $input
 echo "  jmax = $jmax" >> $input
 echo "  n_ghost = $n_ghost" >> $input
