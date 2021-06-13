@@ -1,7 +1,8 @@
 module namelist
   
   use fluid_constants, only : R_gas, gamma
-  use set_inputs, only : grid_name, cart_grid, imax, jmax, n_ghost
+  use set_inputs, only : grid_name, cart_grid, C_grid 
+  use set_inputs, only : index1, index2, imax, jmax, n_ghost
   use set_inputs, only : xmin, xmax, ymin, ymax, isAxi, Lmms
   use set_inputs, only : isMMS, u_inf, alpha, p_inf, T_inf, M_inf, u0, v0
   use set_inputs, only : CFL, max_iter, eps, tol, locTime
@@ -26,7 +27,8 @@ contains
     logical :: fexist
     logical :: fopen = .false.
     !character(len=20) :: file_path = 'q1d.nml'
-    namelist /grid/ grid_name, cart_grid, imax, jmax, n_ghost
+    namelist /grid/ grid_name, cart_grid, C_grid, &
+                    index1, index2, imax, jmax, n_ghost
     namelist /geometry/ xmin, xmax, ymin, ymax, isAxi, Lmms
     namelist /constants/ R_gas, gamma
     namelist /initial/ isMMS, p_inf, u0, v0, u_inf, alpha, T_inf, M_inf
