@@ -56,8 +56,6 @@ subroutine calc_flux_2D(grid,soln)
   
   do j = j_low,j_high
   do i = i_low-1,i_high
-    !nx = grid%n_xi(i,j,1)
-    !ny = grid%n_xi(i,j,2)
     nx = grid%n_xi(i+1,j,1)
     ny = grid%n_xi(i+1,j,2)
     call flux_fun(Lxi(:,i,j),Rxi(:,i,j),nx,ny,soln%Fxi(:,i,j))
@@ -66,8 +64,6 @@ subroutine calc_flux_2D(grid,soln)
   end do
   do j = j_low-1,j_high
   do i = i_low,i_high
-    !nx = grid%n_eta(i,j,1)
-    !ny = grid%n_eta(i,j,2)
     nx = grid%n_eta(i,j+1,1)
     ny = grid%n_eta(i,j+1,2)
     call flux_fun(Leta(:,i,j),Reta(:,i,j),nx,ny,soln%Feta(:,i,j))
