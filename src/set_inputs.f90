@@ -8,8 +8,8 @@ module set_inputs
 
   private
 
-  public :: isMMS, isAxi, cart_grid, limiter_freeze, cons, locTime
-  public :: flux_scheme, limiter_scheme
+  public :: isMMS, isAxi, cart_grid, C_grid, index1, index2
+  public :: flux_scheme, limiter_scheme, limiter_freeze, cons, locTime
   public :: imax, jmax, neq, xmin, xmax, ymin, ymax, n_ghost
   public :: i_high, i_low, ig_high, ig_low
   public :: j_high, j_low, jg_high, jg_low
@@ -23,9 +23,12 @@ module set_inputs
   logical :: cons           = .false.
   logical :: isMMS          = .true.
   logical :: cart_grid      = .false.
+  logical :: C_grid         = .false.
   logical :: isAxi          = .false.
   logical :: locTime        = .true.
   
+  integer :: index1         = 0
+  integer :: index2         = 0
   integer :: imax           = 129
   integer :: jmax           = 129
   integer :: i_low          = 0
