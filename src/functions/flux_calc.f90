@@ -233,15 +233,17 @@ end subroutine calc_flux_2D
     un2 = u2*nx + v2*ny
     
     rvec1 = (/ one, u2, v2, half*(u2**2 +v2**2) /)
-    rvec2 = (/ zero, ny*rho2, nx*rho2, rho2*(ny*u2-nx*v2) /)
+!    rvec2 = (/ zero, ny*rho2, nx*rho2, rho2*(ny*u2-nx*v2) /)
+    rvec2 = (/ zero, ny*rho2, -nx*rho2, rho2*(ny*u2-nx*v2) /)
     rvec3 = half*(rho2/a2)*(/ one, u2+nx*a2, v2+ny*a2, ht2+un2*a2 /)
-    rvec4 = half*(rho2/a2)*(/ one, u2-nx*a2, v2-ny*a2, ht2-un2*a2 /)
+!    rvec4 = half*(rho2/a2)*(/ one, u2-nx*a2, v2-ny*a2, ht2-un2*a2 /)
+    rvec4 = -half*(rho2/a2)*(/ one, u2-nx*a2, v2-ny*a2, ht2-un2*a2 /)
     lambda = (/ un2, un2, un2 + a2, un2 - a2 /)
      
     lambda = abs(lambda)
-    lambda = half*(one+sign(one,lambda-two*eps_roe*a2))*lambda &
-           & + half*(one-sign(one,lambda-two*eps_roe*a2))*&
-           & (lambda**2/(four*eps_roe*a2) + eps_roe*a2)
+!    lambda = half*(one+sign(one,lambda-two*eps_roe*a2))*lambda &
+!           & + half*(one-sign(one,lambda-two*eps_roe*a2))*&
+!           & (lambda**2/(four*eps_roe*a2) + eps_roe*a2)
     
     !dw1 = (rhoR - rhoL) - (pR - pL)/a2**2
     !dw2 = ny*(uR - uL) - nx*(vR - vL)
@@ -255,8 +257,8 @@ end subroutine calc_flux_2D
     FL = (/ rhoL*unL, rhoL*uL*unL + pL*nx, rhoL*vL*unL + pL*ny, rhoL*htL*unL /)
     FR = (/ rhoR*unR, rhoR*uR*unR + pR*nx, rhoR*vR*unR + pR*ny, rhoR*htR*unR /)
     
-    F = half*( (FL+FR) - lambda(1)*dw1*rvec1 - lambda(2)*dw2*rvec2 &
-                       - lambda(3)*dw3*rvec3 - lambda(4)*dw4*rvec4 )
+    F = half*(FL+FR) - half*( lambda(1)*dw1*rvec1 + lambda(2)*dw2*rvec2 &
+                            + lambda(3)*dw3*rvec3 + lambda(4)*dw4*rvec4 )
     
 !    write(*,*) 'rho = ', rhoL, rhoR, rho2
 !    write(*,*) 'u   = ', uL, uR, u2
