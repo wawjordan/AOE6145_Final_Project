@@ -15,7 +15,8 @@ module other_subroutines
   
   private
   
-  public :: MUSCL_extrap, calc_de, calc_sources
+  public :: MUSCL_extrap, surface_MUSCL_extrap, calc_de, calc_sources, &
+            airfoil_forces
   
   contains
   
@@ -96,6 +97,86 @@ module other_subroutines
                               - soln%V(:,i_low:i_high,j_low-1:j_high  ) ))
     
   end subroutine MUSCL_extrap
+  
+  subroutine surface_MUSCL_extrap(soln,Left,Right,indices)
+    type(soln_t), intent(in) :: soln
+    real(prec), dimension(:,:) :: Left, right
+    integer, dimension(4), intent(in) :: indices
+    integer :: low, high, ind, dir
+    low  = indices(1)
+    high = indices(2)
+    ind  = indices(3)
+    dir  = indices(4)
+    if (dir==2) then ! eta-face (j-constant)
+      Left  = soln%V(:,low:high,ind-1) + fourth*epsM*(    &
+           (one-kappaM)*soln%psi_p_eta(:,low:high,ind-2)* &
+                              ( soln%V(:,low:high,ind-1)  &
+                              - soln%V(:,low:high,ind-2) )&
+         + (one+kappaM)*soln%psi_m_eta(:,low:high,ind-1)* &
+                              ( soln%V(:,low:high,ind  )  &
+                              - soln%V(:,low:high,ind-1) ))
+      Right = soln%V(:,low:high,ind  ) + fourth*epsM*(    &
+           (one-kappaM)*soln%psi_p_eta(:,low:high,ind  )* &
+                              ( soln%V(:,low:high,ind+1)  &
+                              - soln%V(:,low:high,ind  ) )&
+         + (one+kappaM)*soln%psi_m_eta(:,low:high,ind-1)* &
+                              ( soln%V(:,low:high,ind  )  &
+                              - soln%V(:,low:high,ind-1) ))
+    elseif (dir==1) then ! xi-face (i-constant)
+      Left  = soln%V(:,ind-1,low:high) + fourth*epsM*(    &
+           (one-kappaM)*soln%psi_p_xi(:,ind-2,low:high)*  &
+                             ( soln%V(:,ind-1,low:high)   &
+                             - soln%V(:,ind-2,low:high))  &
+         + (one+kappaM)*soln%psi_m_xi(:,ind-1,low:high)*  &
+                             ( soln%V(:,ind,  low:high)   &
+                             - soln%V(:,ind-1,low:high) ) )
+      Right = soln%V(:,ind  ,low:high) + fourth*epsM*(    &
+           (one-kappaM)*soln%psi_p_xi(:,ind  ,low:high)*  &
+                             ( soln%V(:,ind+1,low:high)   &
+                             - soln%V(:,ind  ,low:high))  &
+         + (one+kappaM)*soln%psi_m_xi(:,ind-1,low:high)*  &
+                             ( soln%V(:,ind  ,low:high)   &
+                             - soln%V(:,ind-1,low:high) ) )
+    end if
+    
+  end subroutine surface_MUSCL_extrap
+  
+  subroutine airfoil_forces(soln,grid,indices,Cp,Cl,Cd)
+    use set_constants, only : pi 
+    use set_inputs, only : p_inf, rho_inf, u_inf, alpha
+    type(soln_t), intent(in) :: soln
+    type(grid_t), intent(in) :: grid
+    integer, dimension(4), intent(in) :: indices
+    real(prec), dimension(:,:), allocatable, intent(out) :: Cp
+    real(prec), dimension(:,:), allocatable :: Left, Right
+    real(prec), intent(out) :: Cl, Cd
+    real(prec) :: chord, Fx, Fy, Lprime, Dprime, h
+    integer :: i, low, high, ind, dir
+    
+    
+    low  = indices(1)
+    high = indices(2)
+    ind  = indices(3)
+    dir  = indices(4)
+    chord = maxval(abs(grid%x(low:high,ind) - grid%x(low,ind) ) )
+    allocate( Left(neq,low:high), Right(neq,low:high), Cp(3,low:high) )
+    call surface_MUSCL_extrap(soln,Left,Right,indices)
+    Fx = zero
+    Fy = zero
+    do i = low,high
+      h = (grid%x(i+1,ind) - grid%x(i,ind))
+      Cp(1,i) = half*(grid%x(i+1,ind) + grid%x(i,ind))
+      Cp(2,i) = Right(4,i)
+      Cp(3,i) = two*(Right(4,i) - p_inf)/(rho_inf*u_inf**2)
+      Fx = Fx + h*(grid%n_eta(i,ind,1)*grid%A_eta(i,ind)*Right(4,i))
+      Fy = Fy + h*(grid%n_eta(i,ind,2)*grid%A_eta(i,ind)*Right(4,i))
+    end do
+    Lprime = Fy*cos((pi/180.0_prec)*alpha) - Fx*sin((pi/180.0_prec)*alpha)
+    Dprime = Fy*sin((pi/180.0_prec)*alpha) + Fx*cos((pi/180.0_prec)*alpha)
+    Cl = two*Lprime/(chord*rho_inf*u_inf**2)
+    Cd = two*Dprime/(chord*rho_inf*u_inf**2)
+    deallocate(left, right)
+  end subroutine airfoil_forces
   
   !================================== calc_sources ==========================80
   !>
