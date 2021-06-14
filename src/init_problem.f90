@@ -45,7 +45,7 @@ module init_problem
     type( grid_t ), intent(inout) :: grid
     type( soln_t ), intent(inout) :: soln
     integer :: i,j
-    call calc_mms(grid,soln)
+    call calc_MMS(grid,soln)
     call prim2cons(soln%Umms,soln%Vmms)
     soln%V = soln%Vmms
     soln%U = soln%Umms
