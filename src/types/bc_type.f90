@@ -189,31 +189,10 @@ contains
           this%rho(i,j)   = this%press(i,j)/( R_gas*soln%temp(i+d1,j+d2) )
         end do
       end do
-!    case(6)  ! wake cut
-!      d1 = this%dir(1)
-!      d2 = this%dir(2)
-!      do j = this%j1(1), this%j1(2)
-!        do i = this%i1(1), this%i1(2)
-!          this%rho(i,j)   = soln%V(1,i+d1*imax,j+d2*jmax)
-!          this%uvel(i,j)  = soln%V(2,i+d1*imax,j+d2*jmax)
-!          this%vvel(i,j)  = soln%V(3,i+d1*imax,j+d2*jmax)
-!          this%press(i,j) = soln%V(4,i+d1*imax,j+d2*jmax)
-!        end do
-!      end do
-          
-
     case default
     end select
   end subroutine set_val_sub 
 
-    
-!  subroutine set(this,soln,val)
-!    class(bc_t)  :: this
-!    type(soln_t) :: soln
-!    real(prec) :: val
-!    this%val = val
-!  end subroutine set
-!  
   subroutine enforce_sub(this,soln)
     class(bc_t), intent(in)   :: this
     type(soln_t), intent(inout):: soln
