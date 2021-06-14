@@ -47,6 +47,8 @@ contains
     
     select case(limiter_scheme)
     
+    case(0)
+      limiter_fun => null_limiter
     case(1)
       limiter_fun => van_leer_limiter
     case(2)
@@ -223,6 +225,23 @@ contains
 !!    r_minus(high+1,:) = r_minus(high,:)
 !    
 !  end subroutine calc_consecutive_variations
+  !============================= null_limiter ================================80
+  !>
+  !! Description:
+  !!
+  !! Inputs:      r   :
+  !!
+  !! Outputs:     psi :
+  !<
+  !===========================================================================80
+  subroutine null_limiter(r,psi)
+
+    real(prec), dimension(:,:,:),  intent(in) :: r
+    real(prec), dimension(:,:,:), intent(out) :: psi
+
+    psi = one
+
+  end subroutine null_limiter
 
   !=========================== van_leer_limiter ==============================80
   !>
