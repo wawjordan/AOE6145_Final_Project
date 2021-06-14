@@ -38,7 +38,7 @@ module time_integration
     soln%dt = CFL*grid%V/( &
                Lam_xi*grid%A_xi(ig_low:ig_high,jg_low:jg_high) + &
                Lam_eta*grid%A_eta(ig_low:ig_high,jg_low:jg_high) )
- !   soln%dt = CFL*minval(soln%dt)
+    !soln%dt = CFL*minval(soln%dt)
     
   end subroutine calc_time_step
 !  subroutine calc_time_step( A_xi, A_eta, n_xi_avg, n_eta_avg, vol, V, dt )
