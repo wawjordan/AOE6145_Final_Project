@@ -22,12 +22,13 @@ grid_name="../grids/NACA64A006-grids/"
 #grid_name+="NACA64A006.extra-coarse.27x14.grd"
 grid_name+="NACA64A006.coarse.53x27.grd"
 #grid_name+="NACA64A006.fine.385x105.grd"
-cart_grid="F"
-C_grid="T"
+cart_grid="T"
+C_grid="F"
 index1=1
 index2=16
-imax=33
-jmax=33
+#index2=64
+imax=129
+jmax=129
 n_ghost=2
 
 xmin=0.0
@@ -39,32 +40,35 @@ Lmms=1.0
 
 gamma=1.4
 
-isMMS="F"
+isMMS="T"
 u0=0.0
 v0=0.0
 u_inf=1.0
 alpha=0.0
+#alpha=8.0
 p_inf=65855.8
+#p_inf=67243.5
 T_inf=300.0
 M_inf=0.84
+#M_inf=0.75
 
 
 CFL=0.1 #0.1 0.5 0.9
-max_iter=100000
+max_iter=200000
 locTime="F"
 
-flux_scheme=1
-limiter_scheme=2
+flux_scheme=2
+limiter_scheme=1
 beta_lim=2.0
 eps_roe=0.1
 
 geometry_file="example.dat"
-soln_save=1000
-res_save=1
+soln_save=10000
+res_save=100
 res_out=100
 cons="T"
 
-epsM=0.0
+epsM=1.0
 kappaM=-1.0
 limiter_freeze="F"
 if [ "$isMMS" = "T" ]; then
