@@ -12,7 +12,7 @@ module file_handling
   
   private
   
-  public :: grid_in, grid_out, output_file_headers, &
+  public :: grid_in, grid_out, output_file_headers, output_airfoil_forces, &
            output_soln, output_exact_soln, output_flux, output_res
   
 contains
@@ -151,7 +151,7 @@ subroutine grid_out(filename,grid)
   subroutine output_file_headers
 
     use set_inputs, only : flux_scheme, limiter_scheme, beta_lim, cfl
-    use set_inputs, only : grid_name
+    use set_inputs, only : grid_name, alpha, m_inf, T_inf, rho_inf, p_inf
 
     character(len=1024) :: dirname_hist
     character(len=1024) :: dirname_field
@@ -163,11 +163,12 @@ subroutine grid_out(filename,grid)
     character(len=64) ::   order_str
     character(len=64) ::   limiter_str
     character(len=64) ::   kappa_str
-    integer :: flxunit, resunit, fldunit
+    integer :: flxunit, resunit, fldunit, foilunit
     
     flxunit = 10
     resunit = 30
     fldunit = 40
+    foilunit = 37
     ! Set up output directories
 !    write (ncells_str  , "(A5,I0.3,A6,I0.3)") "imax=",imax,"_jmax=",jmax
 !    write (CFL_str  , "(A4,F0.4)") "CFL=",cfl
@@ -264,9 +265,45 @@ subroutine grid_out(filename,grid)
     else
       write(fldunit,*) 'variables="x""y""<greek>r</greek>""u""v""p""M"'
     endif
-
+    
+    open(foilunit,file= '../results/foil_forces.dat')
+    write(foilunit,*) 'TITLE = "Happy Airfoil"'
+    write(foilunit,*) 'variables="x""p""C<sub>p</sub>"'
+    write(foilunit,*) 'DATASETAUXDATA Alpha = "',alpha,'"'
+    write(foilunit,*) 'DATASETAUXDATA mInf = "',m_inf,'"'
+    write(foilunit,*) 'DATASETAUXDATA pInf = "',p_inf,'"'
+    write(foilunit,*) 'DATASETAUXDATA tInf = "',T_inf,'"'
+    write(foilunit,*) 'DATASETAUXDATA rhoInf = "',rho_inf,'"'
+    
   end subroutine output_file_headers
   
+  subroutine output_airfoil_forces(grid,soln,num_iter)
+    use set_inputs, only : neq, imax, index1, index2
+    use other_subroutines, only : airfoil_forces
+    type(grid_t), intent(in) :: grid
+    type(soln_t), intent(in) :: soln
+    integer,      intent(in) :: num_iter
+    real(prec), allocatable, dimension(:,:) :: Cp
+    real(prec) :: Cl, Cd
+    integer :: i, j, foilunit, low, high
+    low = index2+1
+    high = imax-index2-1
+    allocate( Cp(neq,low:high) )
+    call airfoil_forces(soln,grid,(/low,high,j_low,2/),Cp,Cl,Cd)
+    foilunit = 37
+    
+    write(foilunit,*) 'ZONE'
+    write(foilunit,*) 'T= "',num_iter,'"'
+    write(foilunit,*) 'I=',high-low+1
+    write(foilunit,*) 'AUXDATA Cl= "',Cl,'"'
+    write(foilunit,*) 'AUXDATA Cd= "',Cd,'"'
+    write(foilunit,*) 'DT = ( DOUBLE, DOUBLE, DOUBLE )'
+    write(foilunit,*) 'DATAPACKING = BLOCK'
+    write(foilunit,*) (Cp(1,i),i=low,high)
+    write(foilunit,*) (Cp(2,i),i=low,high)
+    write(foilunit,*) (Cp(3,i),i=low,high)
+    deallocate(Cp)
+  end subroutine output_airfoil_forces
   !======================= output_exact_soln ================================80
   !>
   !! Description:
