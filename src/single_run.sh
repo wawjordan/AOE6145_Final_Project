@@ -20,13 +20,13 @@ test_str=""
 #grid_name+="Inlet.33x17.grd"
 grid_name="../grids/NACA64A006-grids/"
 #grid_name+="NACA64A006.extra-coarse.27x14.grd"
-grid_name+="NACA64A006.coarse.53x27.grd"
-#grid_name+="NACA64A006.fine.385x105.grd"
+#grid_name+="NACA64A006.coarse.53x27.grd"
+grid_name+="NACA64A006.fine.385x105.grd"
 cart_grid="T"
 C_grid="F"
 index1=1
-index2=16
-#index2=64
+#index2=16
+index2=64
 imax=129
 jmax=129
 n_ghost=2
@@ -53,18 +53,18 @@ M_inf=0.84
 #M_inf=0.75
 
 
-CFL=0.1 #0.1 0.5 0.9
-max_iter=200000
+CFL=0.05 #0.1 0.5 0.9
+max_iter=20000
 locTime="F"
 
-flux_scheme=2
-limiter_scheme=1
+flux_scheme=1
+limiter_scheme=0
 beta_lim=2.0
 eps_roe=0.1
 
 geometry_file="example.dat"
 soln_save=10000
-res_save=100
+res_save=1
 res_out=100
 cons="T"
 
