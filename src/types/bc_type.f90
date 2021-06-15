@@ -10,6 +10,7 @@ module bc_type
   implicit none
   
   private
+  public :: reflect_vec
   
   type, public :: bc_t
     integer, dimension(2) :: i1, j1, dir
@@ -179,12 +180,12 @@ contains
       d2 = this%dir(2)
       
       do j = this%j1(1), this%j1(2)
-        do i = this%i1(1), this%i1(2)
+        do i = this%i1(2), this%i1(1),-1
           call reflect_vec( soln%V(2,i+d1,j+d2), soln%V(3,i+d1,j+d2), &
                               this%nx(i,j), this%ny(i,j), &
                               this%uvel(i,j), this%vvel(i,j) )
           !write(*,*) soln%V(2,i+d1,j+d2), soln%V(3,i+d1,j+d2) ,this%uvel(i,j),this%vvel(i,j)
-          this%press(i,j) = soln%V(4,i+d1,j+d2) + epsM*( &
+          this%press(i,j) = soln%V(4,i+d1,j+d2) + zero*epsM*( &
                             soln%V(4,i+d1,j+d2) - soln%V(4,i+2*d1,j+2*d2) )
           this%rho(i,j)   = this%press(i,j)/( R_gas*soln%temp(i+d1,j+d2) )
         end do
