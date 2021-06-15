@@ -256,10 +256,11 @@ contains
 
     real(prec), dimension(:,:,:),  intent(in) :: r
     real(prec), dimension(:,:,:), intent(out) :: psi
-
-    psi = (r + abs(r))/(one + r)
+    
+    psi = sign(one,one+r)*max(abs(one+r),1.0e-12_prec)
+    psi = (r + abs(r))/psi
     psi = half*(one+sign(one,r))*psi
-
+    
   end subroutine van_leer_limiter
 
   !======================== van_albada_limiter ===============================80
