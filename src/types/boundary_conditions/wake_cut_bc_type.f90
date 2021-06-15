@@ -41,12 +41,18 @@ contains
     this%N = n_ghost
     d1 = high-low + 1
     this%M = d1
+!    write(*,*) 'imax= ',imax
+!    write(*,*) 'low= ',low
+!    write(*,*) 'high= ',high
+!    write(*,*) 'd1= ',d1
+!    stop
     allocate( this%i1(d1,n_ghost), this%j1(d1,n_ghost), &
               this%i2(d1,n_ghost), this%j2(d1,n_ghost)  )
     do j = 1, n_ghost
       do i = 1, d1
         this%i1(i,j) = low - 1 + i
         this%i2(i,j) = imax - low + 1 - i
+!        this%i2(i,j) = imax - low + 2 - i
         this%j1(i,j) = 1 - j
         this%j2(i,j) = j
       end do
