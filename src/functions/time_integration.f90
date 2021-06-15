@@ -12,6 +12,32 @@ module time_integration
   
   contains
   
+  subroutine SER(CFL,CFLmax,Rnorm,Rnorm2)
+    real(prec), intent(inout) :: CFL
+    real(prec), intent(in) :: CFLmax
+    real(prec), dimension(4), intent(in) :: Rnorm, Rnorm2
+    if (all(Rnorm.LE.Rnorm2)) then
+      CFL = min(minval(CFL*(Rnorm2/Rnorm)),CFLmax)
+    end if
+    
+  end subroutine SER
+  
+  subroutine RDM(CFL,CFLmax,beta,Rnorm,Rnorm2)
+    real(prec), intent(inout) :: CFL
+    real(prec), intent(in) :: CFLmax, beta
+    real(prec), dimension(4), intent(in) :: Rnorm, Rnorm2
+    real(prec) :: g
+    if (all(Rnorm.LE.Rnorm2)) then
+      g = minval((Rnorm2-Rnorm)/Rnorm2)
+    else
+      g = zero
+    end if
+    CFL = min(CFL*beta**g,CFLmax)
+    
+  end subroutine RDM
+  
+  
+  
   !=========================== calc_time_step ===============================80
   !>
   !! Description: 
