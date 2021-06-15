@@ -168,8 +168,8 @@ module other_subroutines
       Cp(1,i) = half*(grid%x(i+1,ind) + grid%x(i,ind))
       Cp(2,i) = Right(4,i)
       Cp(3,i) = two*(Right(4,i) - p_inf)/(rho_inf*u_inf**2)
-      Fx = Fx + h*(grid%n_eta(i,ind,1)*grid%A_eta(i,ind)*Right(4,i))
-      Fy = Fy + h*(grid%n_eta(i,ind,2)*grid%A_eta(i,ind)*Right(4,i))
+      Fx = Fx + (-grid%n_eta(i,ind,1)*grid%A_eta(i,ind)*Right(4,i))
+      Fy = Fy + (-grid%n_eta(i,ind,2)*grid%A_eta(i,ind)*Right(4,i))
     end do
     Lprime = Fy*cos((pi/180.0_prec)*alpha) - Fx*sin((pi/180.0_prec)*alpha)
     Dprime = Fy*sin((pi/180.0_prec)*alpha) + Fx*cos((pi/180.0_prec)*alpha)
