@@ -1,7 +1,7 @@
 module slip_wall_bc_type
 
   use set_precision, only : prec
-  use set_constants, only : pi, zero
+  use set_constants, only : pi, zero, half
   use soln_type,     only : soln_t
   use grid_type,     only : grid_t
   use set_inputs,    only : neq, epsM
@@ -90,7 +90,7 @@ contains
     real(prec) :: press
     do j = this%j1(1), this%j1(2)
       do i = this%i1(1), this%i1(2)
-        press = soln%V(4,i,j) + epsM*(soln%V(4,i,j) - soln%V(4,i+this%dir,j))
+        press = soln%V(4,i,j) + half*epsM*(soln%V(4,i,j) - soln%V(4,i+this%dir,j))
         this%F(:,i,j) = &
               (/ zero, this%nx(i,j)*press, this%ny(i,j)*press, zero/)
       end do
@@ -104,7 +104,7 @@ contains
     real(prec) :: press
     do j = this%j1(1), this%j1(2)
       do i = this%i1(1), this%i1(2)
-        press = soln%V(4,i,j) + epsM*(soln%V(4,i,j) - soln%V(4,i,j+this%dir))
+        press = soln%V(4,i,j) + half*epsM*(soln%V(4,i,j) - soln%V(4,i,j+this%dir))
         this%F(:,i,j) = &
               (/ zero, this%nx(i,j)*press, this%ny(i,j)*press, zero/)
       end do
