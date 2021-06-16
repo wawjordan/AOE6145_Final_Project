@@ -7,16 +7,17 @@ MMS_str=""
 flux_str=""
 limiter_str=""
 test_str=""
-#touch $summary
-#if [ -f $summary ]; then
-#  rm -f "$summary"
-#fi
-#grid_name+="curv2d17.grd"
+touch $summary
+if [ -f $summary ]; then
+  rm -f "$summary"
+fi
+for imax in 9 17 33 65 129 257
+do
 grid_name="../grids/curvilinear-grids/"
-grid_name+="curv2d33.grd"
-cart_grid="F"
-imax=129
-jmax=129
+grid_name+="curv2d$imax"
+grid_name+=".grd"
+cart_grid="T"
+jmax=$imax
 n_ghost=2
 
 xmin=0.0
@@ -27,23 +28,23 @@ Lmms=1.0
 
 gamma=1.4
 
-CFL=0.05
-max_iter=20000
+CFL=0.1
+max_iter=10000
 
 flux_scheme=1
-limiter_scheme=1
+limiter_scheme=0
 beta_lim=2.0
 eps_roe=0.1
 
 geometry_file="example.dat"
-soln_save=10000
+soln_save=$max_iter
 res_save=1
-res_out=1
+res_out=100
 cons="T"
 
 epsM=1.0
 kappaM=-1.0
-limiter_freeze="F"
+limiter_freeze="T"
 if [ "$isMMS" = "T" ]; then
   MMS_str="MMS"
 else
@@ -123,8 +124,9 @@ echo "  limiter_freeze = $limiter_freeze" >> $input
 echo "/" >> $input
 
 ./../build/bin/test_program
-#cat "$temp" >> $summary
-#rm -f temp.txt
+cat "$temp" >> $summary
+done
+rm -f temp.txt
 end=`date +%s`
 runtime=$((end-start))
 hours=$((runtime / 3600))
