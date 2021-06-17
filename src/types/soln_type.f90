@@ -15,7 +15,7 @@ module soln_type
 
   type soln_t
     
-    !sequence
+    sequence
     
     real(prec), allocatable, dimension(:,:,:) :: U ! conserved variables
     real(prec), allocatable, dimension(:,:,:) :: Fxi  ! normal fluxes
@@ -171,17 +171,22 @@ module soln_type
     real(prec) :: L
     integer :: N, i, j
     
-    N = 5
+    N = 2
     L = one
     
     allocate(xi(N),w(N))
     
     call gauss_pts(xi,w,N)
     
-    soln%Smms(1,:,:) = rmassconv(L,grid%xc,grid%yc)
-    soln%Smms(2,:,:) = xmtmconv(L,grid%xc,grid%yc)
-    soln%Smms(3,:,:) = ymtmconv(L,grid%xc,grid%yc)
-    soln%Smms(4,:,:) = energyconv(gamma,L,grid%xc,grid%yc)
+   ! soln%Smms(1,:,:) = rmassconv(L,grid%xc,grid%yc)
+   ! soln%Smms(2,:,:) = xmtmconv(L,grid%xc,grid%yc)
+   ! soln%Smms(3,:,:) = ymtmconv(L,grid%xc,grid%yc)
+   ! soln%Smms(4,:,:) = energyconv(gamma,L,grid%xc,grid%yc)
+    
+    soln%Vmms(1,:,:) = rho_mms(L,grid%xc,grid%yc)
+    soln%Vmms(2,:,:) = uvel_mms(L,grid%xc,grid%yc)
+    soln%Vmms(3,:,:) = vvel_mms(L,grid%xc,grid%yc)
+    soln%Vmms(4,:,:) = press_mms(L,grid%xc,grid%yc)
     do j = jg_low, jg_high
       do i = ig_low, ig_high
         P = transpose( reshape( (/ &
@@ -190,20 +195,16 @@ module soln_type
           grid%x(i+1,j+1), grid%y(i+1,j+1),  &
           grid%x(i,j+1),   grid%y(i,j+1) /), (/2,4/) ) )
         
-        !soln%Vmms(1,:,:) = rho_mms(L,grid%xc,grid%yc)
-        !soln%Vmms(2,:,:) = uvel_mms(L,grid%xc,grid%yc)
-        !soln%Vmms(3,:,:) = vvel_mms(L,grid%xc,grid%yc)
-        !soln%Vmms(4,:,:) = press_mms(L,grid%xc,grid%yc)
-        call gauss_quad(P,xi,xi,w,w,wrap_rho_mms,soln%Vmms(1,i,j))
-        call gauss_quad(P,xi,xi,w,w,wrap_uvel_mms,soln%Vmms(2,i,j))
-        call gauss_quad(P,xi,xi,w,w,wrap_vvel_mms,soln%Vmms(3,i,j))
-        call gauss_quad(P,xi,xi,w,w,wrap_press_mms,soln%Vmms(4,i,j))
-        soln%Vmms(:,i,j) = soln%Vmms(:,i,j)/grid%V(i,j)
-        !call gauss_quad(P,xi,xi,w,w,wrap_rmassconv,soln%Smms(1,i,j))
-        !call gauss_quad(P,xi,xi,w,w,wrap_xmtmconv,soln%Smms(2,i,j))
-        !call gauss_quad(P,xi,xi,w,w,wrap_ymtmconv,soln%Smms(3,i,j))
-        !call gauss_quad(P,xi,xi,w,w,wrap_energyconv,soln%Smms(4,i,j))
-        !soln%Smms(:,i,j) = soln%Smms(:,i,j)/grid%V(i,j)
+        !call gauss_quad(P,xi,xi,w,w,wrap_rho_mms,soln%Vmms(1,i,j))
+        !call gauss_quad(P,xi,xi,w,w,wrap_uvel_mms,soln%Vmms(2,i,j))
+        !call gauss_quad(P,xi,xi,w,w,wrap_vvel_mms,soln%Vmms(3,i,j))
+        !call gauss_quad(P,xi,xi,w,w,wrap_press_mms,soln%Vmms(4,i,j))
+        !soln%Vmms(:,i,j) = soln%Vmms(:,i,j)/grid%V(i,j)
+        call gauss_quad(P,xi,xi,w,w,wrap_rmassconv,soln%Smms(1,i,j))
+        call gauss_quad(P,xi,xi,w,w,wrap_xmtmconv,soln%Smms(2,i,j))
+        call gauss_quad(P,xi,xi,w,w,wrap_ymtmconv,soln%Smms(3,i,j))
+        call gauss_quad(P,xi,xi,w,w,wrap_energyconv,soln%Smms(4,i,j))
+        soln%Smms(:,i,j) = soln%Smms(:,i,j)/grid%V(i,j)
       end do
     end do
     
