@@ -112,11 +112,11 @@ module time_integration
     
     type(grid_t), intent(inout) :: grid
     type(soln_t), intent(inout) :: soln
-    !integer, intent(in) :: N
     real(prec), dimension(4) :: k
     integer :: i, j
     
     k = (/ fourth, third, half, one /)
+    
     do j = 1,4
     call calc_residual(grid,soln)
     
