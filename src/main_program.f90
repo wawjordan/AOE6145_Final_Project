@@ -63,19 +63,24 @@ program main_program
 !  call initialize_const(grid,soln,&
 !       (/rho_inf,u0,v0,p_inf/) )
   call update_states(soln)
-  !call output_exact_soln(grid,soln)
+  if (isMMS) then
+    call output_exact_soln(grid,soln)
+  end if
   call output_file_headers
   call output_soln(grid,soln,0)
 ! For Cartesian Mesh
-  call Lbnd%set_bc(grid,1,(/1,0/),ig_low,ig_low+1,j_low,j_high)
-  call Rbnd%set_bc(grid,4,(/-1,0/),ig_high-1,ig_high,j_low,j_high)
-  call Bbnd%set_bc(grid,1,(/0,1/),i_low,i_high,jg_low,jg_low+1)
-  call Tbnd%set_bc(grid,4,(/0,-1/),i_low,i_high,jg_high-1,jg_high)
+!  call Lbnd%set_bc(grid,1,(/1,0/),ig_low,ig_low+1,j_low,j_high)
+!  call Rbnd%set_bc(grid,4,(/-1,0/),ig_high-1,ig_high,j_low,j_high)
+!  call Bbnd%set_bc(grid,1,(/0,1/),i_low,i_high,jg_low,jg_low+1)
+!  call Tbnd%set_bc(grid,4,(/0,-1/),i_low,i_high,jg_high-1,jg_high)
 
+  call Lbnd%set_bc(grid,1,(/1,0/),ig_low,ig_low+1,j_low,j_high)
+  call Rbnd%set_bc(grid,1,(/-1,0/),ig_high-1,ig_high,j_low,j_high)
+  call Bbnd%set_bc(grid,1,(/0,1/),i_low,i_high,jg_low,jg_low+1)
+  call Tbnd%set_bc(grid,1,(/0,-1/),i_low,i_high,jg_high-1,jg_high)
 
 ! For Curvilinear Mesh...
 !  call Lbnd%set_bc(grid,1,(/-1,0/),ig_high-1,ig_high,j_low,j_high)
-!
 !  call Rbnd%set_bc(grid,4,(/1,0/),ig_low,ig_low+1,j_low,j_high)
 !  call Bbnd%set_bc(grid,1,(/0,-1/),i_low,i_high,jg_high-1,jg_high)
 !  call Tbnd%set_bc(grid,4,(/0,1/),i_low,i_high,jg_low,jg_low+1)
@@ -158,10 +163,10 @@ program main_program
 !  call inlet%enforce(soln)
 !  call outlet%enforce(soln)
      
-  call limit_primitives(soln%V)
+!  call limit_primitives(soln%V)
   call prim2cons(soln%U,soln%V)
   call update_states(soln)
-  if (limiter_freeze .eqv. .false.) then
+  if ((limiter_freeze .eqv. .false.).and.(epsM>zero)) then
     call calculate_limiters(soln)
   end if
   call calc_flux_2D(grid,soln)
@@ -256,9 +261,9 @@ program main_program
     !  call output_flux(grid,soln,k)
     end if
     
-    if (all(soln%Rnorm<1.0e-3_prec).or.(k>20000)) then
-      limiter_freeze = .true.
-    end if
+  !  if (all(soln%Rnorm<1.0e-3_prec).or.(k>20000)) then
+  !    limiter_freeze = .true.
+  !  end if
     
     if (all(soln%Rnorm<tol)) then
       write(*,*) k, soln%Rnorm
@@ -268,24 +273,7 @@ program main_program
     Rnorm2 = soln%Rnorm
     
   end do
-!  allocate( Cp(3,index2+1:imax-index2-1) )
-!  call airfoil_forces(soln,grid,(/index2+1,imax-index2-1,j_low,2/),Cp,Cl,Cd)
-!  write(*,*) 'Cl = ',Cl
-!  write(*,*) 'Cd = ',Cd
-!  write(*,*) '   x    Extrap. Pressure   Cp  '
-!  do i = index2+1,imax-index2-1
-!    write(*,*) Cp(:,i)
-!  end do
-!  write(*,*) 'Pressure'
-!  do i = index2+1,imax-index2-1
-!    write(*,*) soln%V(4,i,j_low)
-!  end do
-!  write(*,*) 'A_eta, n_eta_x, n_eta_y'
-!  do i = index2+1,imax-index2-1
-!    write(*,*) grid%A_eta(i,j_low),grid%n_eta(i,j_low,1), &
-!               grid%n_eta(i,j_low,2) 
-!  end do
-!  deallocate(Cp)
+  
   write(42,*) i_high, 5, (soln%Rnorm(i),i=1,neq)
   if (C_grid) then
     call output_airfoil_forces(grid,soln,k)
