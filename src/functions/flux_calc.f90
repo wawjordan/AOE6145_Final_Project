@@ -58,7 +58,10 @@ subroutine calc_flux_2D(grid,soln)
   do i = i_low-1,i_high
     nx = grid%n_xi(i+1,j,1)
     ny = grid%n_xi(i+1,j,2)
+    !nx = grid%n_xi(i+1,j,1)
+    !ny = grid%n_xi(i+1,j,2)
     call flux_fun(Lxi(:,i,j),Rxi(:,i,j),nx,ny,soln%Fxi(:,i,j))
+    !call flux_fun(Lxi(:,i,j),Rxi(:,i,j),nx,ny,soln%Fxi(:,i,j))
     !call flux_fun(soln%V(:,i,j),soln%V(:,i+1,j),nx,ny,soln%Fxi(:,i,j))
   end do
   end do
@@ -66,7 +69,10 @@ subroutine calc_flux_2D(grid,soln)
   do i = i_low,i_high
     nx = grid%n_eta(i,j+1,1)
     ny = grid%n_eta(i,j+1,2)
+    !nx = grid%n_eta(i,j+1,1)
+    !ny = grid%n_eta(i,j+1,2)
     call flux_fun(Leta(:,i,j),Reta(:,i,j),nx,ny,soln%Feta(:,i,j))
+    !call flux_fun(Leta(:,i,j),Reta(:,i,j),nx,ny,soln%Feta(:,i,j))
     !call flux_fun(soln%V(:,i,j),soln%V(:,i,j+1),nx,ny,soln%Feta(:,i,j))
   end do
   end do
@@ -162,8 +168,8 @@ end subroutine calc_flux_2D
     M_plus  =  fourth*(ML+one)**2
     M_minus = -fourth*(MR-one)**2
     
-    beta_L = -max(zero,one-int(abs(ML)))
-    beta_R = -max(zero,one-int(abs(MR)))
+    beta_L = -real(max(0,1-int(abs(ML))),prec)
+    beta_R = -real(max(0,1-int(abs(MR))),prec)
     alpha_plus  = half*(one+sign(one,ML))
     alpha_minus = half*(one-sign(one,MR))
     c_plus  = alpha_plus*(one+beta_L)*ML - beta_L*M_plus
