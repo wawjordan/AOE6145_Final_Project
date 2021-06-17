@@ -62,8 +62,8 @@ module other_subroutines
   !==========================================================================80
   subroutine MUSCL_extrap(soln,Lxi,Rxi,Leta,Reta)
     type(soln_t), intent(inout) :: soln
-    real(prec), dimension(neq,i_low-1:i_high,j_low:j_high) :: Lxi, Rxi
-    real(prec), dimension(neq,i_low:i_high,j_low-1:j_high) :: Leta, Reta
+    real(prec), dimension(neq,i_low-1:i_high,j_low:j_high), intent(out) :: Lxi, Rxi
+    real(prec), dimension(neq,i_low:i_high,j_low-1:j_high), intent(out) :: Leta, Reta
     integer :: i
     
     Lxi  = soln%V(:,i_low-1:i_high  ,j_low:j_high) + fourth*epsM*(      &
