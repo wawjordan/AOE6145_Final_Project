@@ -28,8 +28,8 @@ Lmms=1.0
 
 gamma=1.4
 
-CFL=0.1
-max_iter=10000
+CFL=0.2
+max_iter=100000
 
 flux_scheme=1
 limiter_scheme=0
