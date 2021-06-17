@@ -369,6 +369,38 @@ module grid_type
     type(grid_t), intent(inout) :: grid 
     integer :: i, j
     
+!    do j = jg_low, jg_high
+!    do i = ig_low-1, ig_high
+!      grid%A_xi(i+1,j)   = sqrt( (grid%x(i+1,j+1)-grid%x(i+1,j))**2 &
+!                               + (grid%y(i+1,j+1)-grid%y(i+1,j))**2 )
+!      grid%n_xi(i+1,j,1) =     ( (grid%y(i+1,j+1)-grid%y(i+1,j)) ) /&
+!                               grid%A_xi(i+1,j)
+!      grid%n_xi(i+1,j,2) =    -( (grid%x(i+1,j+1)-grid%x(i+1,j)) ) /&
+!                               grid%A_xi(i+1,j)
+!    end do
+!    end do
+!    
+!    do j = jg_low-1, jg_high
+!    do i = ig_low, ig_high
+!      grid%A_eta(i,j+1)   = sqrt( (grid%x(i+1,j+1)-grid%x(i,j+1))**2 &
+!                                + (grid%y(i+1,j+1)-grid%y(i,j+1))**2 )
+!      grid%n_eta(i,j+1,1) =    -( (grid%y(i+1,j+1)-grid%y(i,j+1)) ) /&
+!                                 grid%A_eta(i,j+1)
+!      grid%n_eta(i,j+1,2) =     ( (grid%x(i+1,j+1)-grid%x(i,j+1)) ) /&
+!                                 grid%A_eta(i,j+1)
+!    end do
+!    end do
+!    do j = jg_low, jg_high
+!    do i = ig_low, ig_high
+!     call volume_calc( (/ grid%x(i,j), grid%x(i+1,j), grid%x(i+1,j+1), &
+!                                         grid%x(i,j+1),grid%x(i,j) /), &
+!                       (/ grid%y(i,j), grid%y(i+1,j), grid%y(i+1,j+1), &
+!                                         grid%y(i,j+1),grid%y(i,j) /), &
+!                       grid%xc(i,j), grid%yc(i,j), grid%V(i,j) )
+!      !grid%xc(i,j) = half*(grid%x(i,j)+grid%x(i+1,j))
+!      !grid%yc(i,j) = half*(grid%y(i,j)+grid%y(i,j+1))
+!    end do
+!    end do
     ! calculate cell face areas, normals, and volumes
     do j = jg_low, jg_high
     do i = ig_low, ig_high
@@ -387,7 +419,7 @@ module grid_type
                        grid%xc(i,j), grid%yc(i,j), grid%V(i,j) )
     end do
     end do
-    
+   
     j = jg_high+1
     do i = ig_low, ig_high
       grid%A_eta(i,j) = sqrt( (grid%x(i+1,j)-grid%x(i,j))**2 &
