@@ -54,6 +54,18 @@ subroutine calc_flux_2D(grid,soln)
   
   call MUSCL_extrap(soln,Lxi,Rxi,Leta,Reta)
   
+!  do j = j_low,j_high
+!  do i = i_low-1,i_high
+!    write(*,*) Lxi(:,i,j)
+!  end do
+!  end do
+!  write(*,*)
+!  do j = j_low,j_high
+!  do i = i_low-1,i_high
+!    write(*,*) Rxi(:,i,j)
+!  end do
+!  end do
+!  write(*,*)
   do j = j_low,j_high
   do i = i_low-1,i_high
     nx = grid%n_xi(i+1,j,1)
