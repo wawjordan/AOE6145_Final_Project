@@ -13,10 +13,10 @@ if [ -f $summary ]; then
 fi
 for imax in 9 17 33 65 129 257
 do
-grid_name="../grids/curvilinear-grids/"
-grid_name+="curv2d$imax"
+grid_dir="../grids/curvilinear-grids/"
+grid_name="curv2d$imax"
 grid_name+=".grd"
-cart_grid="T"
+cart_grid="F"
 jmax=$imax
 n_ghost=2
 
@@ -34,9 +34,10 @@ max_iter=100000
 flux_scheme=1
 limiter_scheme=0
 beta_lim=2.0
-eps_roe=0.1
+eps_roe=0.01
 
 geometry_file="example.dat"
+flux_out="F"
 soln_save=$max_iter
 res_save=1
 res_out=100
@@ -73,6 +74,7 @@ echo "| $flux_str | $limiter_str | CFL=$CFL "
 echo "!==============================================================================!"
 
 echo "&grid" > $input
+echo "  grid_dir = \"$grid_dir\"" >> $input
 echo "  grid_name = \"$grid_name\"" >> $input
 echo "  cart_grid = $cart_grid" >> $input
 echo "  C_grid = F" >> $input
@@ -115,6 +117,7 @@ echo "  soln_save = $soln_save" >> $input
 echo "  res_save = $res_save" >> $input
 echo "  res_out = $res_out" >> $input
 echo "  cons = $cons" >> $input
+echo "  flux_out = $flux_out" >> $input
 echo "/" >> $input
 echo "" >> $input
 echo "&reconstruction" >> $input
