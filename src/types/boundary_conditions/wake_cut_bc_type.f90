@@ -26,8 +26,8 @@ module wake_cut_bc_type
     procedure, public :: enforce => enforce_eta
   end type eta_cut_t
 
-  private :: set_bc_xi,  enforce_xi, &
-             set_bc_eta, enforce_eta
+!  private :: set_bc_xi,  enforce_xi, &
+!             set_bc_eta, enforce_eta
 contains
 
   subroutine set_bc_xi(this,grid,ID,low,high,n_ghost)
@@ -55,6 +55,7 @@ contains
 !        this%i2(i,j) = imax - low + 2 - i
         this%j1(i,j) = 1 - j
         this%j2(i,j) = j
+        write(*,*) this%i1(i,j), this%i2(i,j), this%j1(i,j), this%j2(i,j)
       end do
     end do
   end subroutine set_bc_xi
@@ -72,6 +73,7 @@ contains
     this%M = d1
     allocate( this%i1(n_ghost,d1), this%j1(n_ghost,d1), &
               this%i2(n_ghost,d1), this%j2(n_ghost,d1)  )
+    !write(*,*) d1, n_ghost
     do j = 1, d1
       do i = 1, n_ghost
         this%i1(i,j) = 1 - i
