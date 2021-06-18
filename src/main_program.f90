@@ -39,11 +39,11 @@ program main_program
   type(bc_t) :: Lbnd, Rbnd, Bbnd, Tbnd
  ! type(bc_t)   :: inlet, outlet
  ! type(eta_wall_t) :: top_wall, bottom_wall
-  type(bc_t) :: rear1, rear2, airfoil
-  type(dir_bc_t) :: farfield!, rear1, rear2
+  type(bc_t) :: rear1, rear2, airfoil, farfield, wake
+ ! type(dir_bc_t) :: farfield!, rear1, rear2
 !  type(eta_wall_t) :: airfoil
 !  type(bc_t) :: airfoil
-  type(xi_cut_t) :: wake
+  type(xi_cut_t) :: wake2
  ! real(prec), allocatable, dimension(:,:) :: Cp
   real(prec) :: nx, ny, press, Cl, Cd
   real(prec), dimension(4) :: Rnorm2, left, right, flux
@@ -93,12 +93,20 @@ program main_program
 !  call bottom_wall%set_bc(grid,5,i_low,i_high,j_low,j_low)
 ! For Airfoil Mesh
 
-  call farfield%set_bc(grid,2,i_low,i_high,jg_high-1,jg_high)
+!  call farfield%set_bc(grid,2,i_low,i_high,jg_high-1,jg_high)
 !  call rear1%set_bc(grid,3,(/2,1/),ig_high-1,ig_high,j_low,j_high)
 !  call rear2%set_bc(grid,3,(/2,-1/),ig_low,ig_low+1,j_low,j_high)
+  call farfield%set_bc(grid,2,i_low,i_high,jg_high-1,jg_high,4)
   call rear1%set_bc(grid,3,ig_high-1,ig_high,j_low,j_high,2)
   call rear2%set_bc(grid,3,ig_low,ig_low+1,j_low,j_high,1)
-
+  call airfoil%set_bc(grid,5,index2+1,imax-index2-1,jg_low,j_low-1,3)
+  !write(*,*) index2-ig_low+1, j_low-1-jg_low
+ ! write(*,*)
+  call wake%set_bc(grid,6,ig_low,index2,jg_low,j_low-1,3)
+!  write(*,*)
+!  call wake2%set_bc(grid,10,ig_low,index2,n_ghost)
+!  stop
+!  call wake%set_bc(grid,10,ig_low,index2,n_ghost)
 !  call rear1%set_bc(grid,2,ig_high-1,ig_high,j_low,j_high)
 !  call rear2%set_bc(grid,2,ig_low,ig_low+1,j_low,j_high)
 
@@ -112,10 +120,8 @@ program main_program
 !          soln%V(1,i,j)   = soln%V(4,i,j)/( R_gas*soln%temp(i,j+1) )
 !        end do
 !      end do
-  call airfoil%set_bc(grid,5,index2+1,imax-index2-1,jg_low,j_low-1,3)
 !  call airfoil%set_bc(grid,5,index2+1,imax-index2-1,j_low,j_low)
 !  call airfoil%set_bc(grid,5,(/1,0/),index2+1,imax-index2-1,jg_low,jg_low+1)
-  call wake%set_bc(grid,10,ig_low,index2,n_ghost)
 !  do j = 1,wake%N
 !    do i = 1,wake%M
 !      write(*,*) wake%i1(i,j), wake%j1(i,j), wake%i2(i,j), wake%j2(i,j)
@@ -143,11 +149,13 @@ program main_program
   call rear1%set_val(soln)
   call rear2%set_val(soln)
   call airfoil%set_val(soln)
-  call farfield%enforce(soln)
-  call rear1%enforce(soln)
-  call rear2%enforce(soln)
-  call wake%enforce(soln)
-  call airfoil%enforce(soln)
+  call wake%set_val(soln)
+  call farfield%set_val(soln)
+  !call farfield%enforce(soln)
+  !call rear1%enforce(soln)
+  !call rear2%enforce(soln)
+!  call wake%enforce(soln)
+!  call airfoil%enforce(soln)
   
   
 !      do j = j_low-1,jg_low,-1
@@ -189,8 +197,8 @@ program main_program
 !  call output_flux(grid,soln,k)
 !  stop  
   
-  call airfoil%enforce(soln)
-  call wake%enforce(soln)
+  call airfoil%set_val(soln)
+  call wake%set_val(soln)
 !   call wall%enforce(soln)
    
 !  call top_wall%set_val(soln)
