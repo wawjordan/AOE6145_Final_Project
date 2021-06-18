@@ -15,8 +15,10 @@ module bc_type
   
   type, public :: bc_t
     integer :: bc_id, i_offset, j_offset
-    integer, dimension(2) :: i1, j1
+    !integer, dimension(2) :: i1, j1
     integer, dimension(3) :: loop1, loop2
+    integer, dimension(2) :: i0, j0
+    integer, allocatable, dimension(:,:) :: i1, j1, i2, j2
     real(prec), allocatable, dimension(:,:,:) :: Fxi, Feta
     real(prec), allocatable, dimension(:,:) :: nx, ny, &
                               rho, uvel, vvel, press, mach
@@ -31,6 +33,7 @@ module bc_type
 contains
   
   subroutine set_bc_sub(this,grid,ID,i_low,i_high,j_low,j_high,ij)
+    use set_inputs, only : imax, jmax
     implicit none
     class(bc_t) :: this
     type(grid_t), intent(in) :: grid
@@ -38,13 +41,17 @@ contains
     integer, intent(in) :: i_low, i_high, j_low, j_high
     integer, intent(in) :: ij
     integer :: i,j
-    this%i1 = (/ i_low, i_high /)
-    this%j1 = (/ j_low, j_high /)
+    !this%i1 = (/ i_low, i_high /)
+    !this%j1 = (/ j_low, j_high /)
     this%bc_id = ID
-    allocate( this%nx(i_low:i_high,j_low:j_high), &
-              this%ny(i_low:i_high,j_low:j_high) )
-    
-    select case(ij)
+    select case(ID)
+    case(1:5)
+      allocate( this%nx(i_low:i_high,j_low:j_high), &
+                this%ny(i_low:i_high,j_low:j_high)  )
+      this%i0 = (/ i_low, i_high /)
+      this%j0 = (/ j_low, j_high /)
+      
+      select case(ij)
       case(1) ! "left" (xi / i == constant)
         do i = i_low, i_high
           this%nx(i,:) = grid%n_xi(i_high,j_low:j_high,1)
@@ -82,8 +89,50 @@ contains
         this%loop1 = (/j_low,j_high,1/)
         this%loop2 = (/i_low,i_high,1/)
       case default
+      end select
+    case(6)
+      select case(ij)
+      case(3:4)
+        this%i_offset = i_high - i_low + 1
+        this%j_offset = j_high - j_low + 1
+        this%loop1 = (/1,this%j_offset,1/)
+        this%loop2 = (/1,this%i_offset,1/)
+        
+        allocate( this%i1(this%i_offset,this%j_offset), &
+                  this%j1(this%i_offset,this%j_offset), &
+                  this%i2(this%i_offset,this%j_offset), &
+                  this%j2(this%i_offset,this%j_offset)  )
+        do j = this%loop1(1),this%loop1(2),this%loop1(3)
+          do i = this%loop2(1),this%loop2(2),this%loop2(3)
+            this%i1(i,j) = j_low - 1 + i
+            this%i2(i,j) = imax - j_low + 1 - i
+            this%j1(i,j) = 1 - j
+            this%j2(i,j) = j
+            !write(*,*) this%i1(i,j),this%i2(i,j),this%j1(i,j),this%j2(i,j)
+          end do
+        end do
+      case(1:2)
+        this%i_offset = i_high - i_low + 1
+        this%j_offset = j_high - j_low + 1
+        this%loop1 = (/1,this%j_offset,1/)
+        this%loop2 = (/1,this%i_offset,1/)
+       
+        allocate( this%i1(this%i_offset,this%j_offset), &
+                  this%j1(this%i_offset,this%j_offset), &
+                  this%i2(this%i_offset,this%j_offset), &
+                  this%j2(this%i_offset,this%j_offset)  )
+        do j = this%loop1(1),this%loop1(2),this%loop1(3)
+          do i = this%loop2(1),this%loop2(2),this%loop2(3)
+            this%i1(i,j) = 1 - i
+            this%i2(i,j) = i
+            this%j1(i,j) = i_low - 1 + j
+            this%j2(i,j) = jmax - i_low + 1 - j
+            !write(*,*) this%i1(i,j),this%i2(i,j),this%j1(i,j),this%j2(i,j)
+          end do
+        end do
+      case default
+      end select
     end select
-
 !    select case(ID)
 !    case(1:5)
       allocate( this%rho(  i_low:i_high,j_low:j_high),&
@@ -105,38 +154,51 @@ contains
     use set_inputs, only : epsM
     implicit none
     class(bc_t), intent(inout) :: this
-    type(soln_t), intent(in) :: soln
+    type(soln_t), intent(inout) :: soln
     real(prec) :: asnd,mach,vmag,vx,vy
     integer :: i, j, d1, d2
     select case(this%bc_id)
     case(1)  ! MMS dirichlet
-      this%rho(this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = &
-           soln%Vmms(1,this%i1(1):this%i1(2),this%j1(1):this%j1(2))
-      this%uvel(this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = &
-           soln%Vmms(2,this%i1(1):this%i1(2),this%j1(1):this%j1(2))
-      this%vvel(this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = &
-           soln%Vmms(3,this%i1(1):this%i1(2),this%j1(1):this%j1(2))
-      this%press(this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = &
-           soln%Vmms(4,this%i1(1):this%i1(2),this%j1(1):this%j1(2))
+      this%rho(this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
+           soln%Vmms(1,this%i0(1):this%i0(2),this%j0(1):this%j0(2))
+      this%uvel(this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
+           soln%Vmms(2,this%i0(1):this%i0(2),this%j0(1):this%j0(2))
+      this%vvel(this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
+           soln%Vmms(3,this%i0(1):this%i0(2),this%j0(1):this%j0(2))
+      this%press(this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
+           soln%Vmms(4,this%i0(1):this%i0(2),this%j0(1):this%j0(2))
     case(2)  ! Far field dirichlet
-      this%rho(this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = rho_inf
-      this%uvel(this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = &
+      soln%V(1,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = rho_inf
+      soln%V(2,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
                                         u_inf*cos((pi/180.0_prec)*alpha)
-      this%vvel(this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = &
+      soln%V(3,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
                                         u_inf*sin((pi/180.0_prec)*alpha)
-      this%press(this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = p_inf
+      soln%V(4,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = p_inf
+      !this%rho(this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = rho_inf
+      !this%uvel(this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = &
+      !                                  u_inf*cos((pi/180.0_prec)*alpha)
+      !this%vvel(this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = &
+      !                                  u_inf*sin((pi/180.0_prec)*alpha)
+      !this%press(this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = p_inf
     case(3)  ! subsonic outflow
       d1 = this%i_offset
       d2 = this%j_offset
       do j = this%loop1(1),this%loop1(2),this%loop1(3)
         do i = this%loop2(1),this%loop2(2),this%loop2(3)
-          this%rho(i,j)   = soln%V(1,i-d1,j-d2) + epsM*( &
+          soln%V(1,i,j)   = soln%V(1,i-d1,j-d2) + epsM*( &
                             soln%V(1,i-d1,j-d2) - soln%V(1,i-2*d1,j-2*d2) )
-          this%uvel(i,j)  = soln%V(2,i-d1,j-d2) + epsM*( &
+          soln%V(2,i,j)  = soln%V(2,i-d1,j-d2) + epsM*( &
                             soln%V(2,i-d1,j-d2) - soln%V(2,i-2*d1,j-2*d2) )
-          this%vvel(i,j)  = soln%V(3,i-d1,j-d2) + epsM*( &
+          soln%V(3,i,j)  = soln%V(3,i-d1,j-d2) + epsM*( &
                             soln%V(3,i-d1,j-d2) - soln%V(3,i-2*d1,j-2*d2) )
-          this%press(i,j) = p_inf
+          soln%V(4,i,j) = p_inf
+          !this%rho(i,j)   = soln%V(1,i-d1,j-d2) + epsM*( &
+          !                  soln%V(1,i-d1,j-d2) - soln%V(1,i-2*d1,j-2*d2) )
+          !this%uvel(i,j)  = soln%V(2,i-d1,j-d2) + epsM*( &
+          !                  soln%V(2,i-d1,j-d2) - soln%V(2,i-2*d1,j-2*d2) )
+          !this%vvel(i,j)  = soln%V(3,i-d1,j-d2) + epsM*( &
+          !                  soln%V(3,i-d1,j-d2) - soln%V(3,i-2*d1,j-2*d2) )
+          !this%press(i,j) = p_inf
         end do
       end do
     case(4) ! supersonic outflow
@@ -170,12 +232,31 @@ contains
         do i = this%loop2(1),this%loop2(2),this%loop2(3)
           call reflect_vec( soln%V(2,i-d1,j-d2), soln%V(3,i-d1,j-d2), &
                               this%nx(i,j), this%ny(i,j), &
-                              this%uvel(i,j), this%vvel(i,j) )
-          this%press(i,j) = soln%V(4,i-d1,j-d2) + zero*epsM*( &
+                              soln%V(2,i,j), soln%V(3,i,j) )
+          soln%V(4,i,j) = soln%V(4,i-d1,j-d2) + zero*epsM*( &
                             soln%V(4,i-d1,j-d2) - soln%V(4,i-2*d1,j-2*d2) )
-          this%rho(i,j)   = this%press(i,j)/( R_gas*soln%temp(i-d1,j-d2) )
+          soln%V(1,i,j) = soln%V(4,i,j)/( R_gas*soln%temp(i-d1,j-d2) )
+          !call reflect_vec( soln%V(2,i-d1,j-d2), soln%V(3,i-d1,j-d2), &
+          !                    this%nx(i,j), this%ny(i,j), &
+          !                    this%uvel(i,j), this%vvel(i,j) )
+          !this%press(i,j) = soln%V(4,i-d1,j-d2) + zero*epsM*( &
+          !                  soln%V(4,i-d1,j-d2) - soln%V(4,i-2*d1,j-2*d2) )
+          !this%rho(i,j)   = this%press(i,j)/( R_gas*soln%temp(i-d1,j-d2) )
         end do
       end do
+    case(6)  ! wake cut
+      !write(*,*)
+      !write(*,*) this%loop1(1),this%loop1(2) 
+      !write(*,*) this%loop2(1),this%loop2(2)
+      !stop
+      do j = this%loop1(1),this%loop1(2),this%loop1(3)
+        do i = this%loop2(1),this%loop2(2),this%loop2(3)
+          soln%V(:,this%i1(i,j),this%j1(i,j)) = &
+                soln%V(:,this%i2(i,j),this%j2(i,j))
+          soln%V(:,this%i2(i,j),this%j1(i,j)) = &
+                soln%V(:,this%i1(i,j),this%j2(i,j))
+        end do
+      end do  
     case default
     end select
   end subroutine set_val_sub 
@@ -184,10 +265,10 @@ contains
     class(bc_t), intent(in)   :: this
     type(soln_t), intent(inout):: soln
     
-    soln%V(1,this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = this%rho
-    soln%V(2,this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = this%uvel
-    soln%V(3,this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = this%vvel
-    soln%V(4,this%i1(1):this%i1(2),this%j1(1):this%j1(2)) = this%press
+    soln%V(1,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = this%rho
+    soln%V(2,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = this%uvel
+    soln%V(3,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = this%vvel
+    soln%V(4,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = this%press
   end subroutine enforce_sub
   
   elemental subroutine reflect_vec(u1,v1,nx,ny,u0,v0)
