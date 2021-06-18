@@ -161,39 +161,39 @@ contains
           !                  soln%V(4,i+d1,j+d2) - soln%V(4,i+2*d1,j+2*d2) )
         end do
       end do
-    case(3)  ! subsonic outflow
-      d1 = this%dir(1)
-      d2 = this%dir(2)
-      do j = this%j1(1), this%j1(2)
-        do i = this%i1(1), this%i1(2)
-          this%rho(i,j) = soln%Vmms(1,i,j)
-          !this%rho(i,j)   = soln%V(1,i+d1,j+d2) + epsM*( &
-          !                  soln%V(1,i+d1,j+d2) - soln%V(1,i+2*d1,j+2*d2) )
-          this%uvel(i,j) = soln%Vmms(2,i,j)
-          this%vvel(i,j) = soln%Vmms(3,i,j)
-          !this%uvel(i,j)  = soln%V(2,i+d1,j+d2) + epsM*( &
-          !                  soln%V(2,i+d1,j+d2) - soln%V(2,i+2*d1,j+2*d2) )
-          !this%vvel(i,j)  = soln%V(3,i+d1,j+d2) + epsM*( &
-          !                  soln%V(3,i+d1,j+d2) - soln%V(3,i+2*d1,j+2*d2) )
-          !this%press(i,j) = soln%Vmms(4,i,j)
-          this%press(i,j) = soln%V(4,i+d1,j+d2) + epsM*( &
-                            soln%V(4,i+d1,j+d2) - soln%V(4,i+2*d1,j+2*d2) )
-        end do
-      end do
 !    case(3)  ! subsonic outflow
 !      d1 = this%dir(1)
 !      d2 = this%dir(2)
 !      do j = this%j1(1), this%j1(2)
 !        do i = this%i1(1), this%i1(2)
-!          this%rho(i,j)   = soln%V(1,i+d1,j+d2) + epsM*( &
-!                            soln%V(1,i+d1,j+d2) - soln%V(1,i+2*d1,j+2*d2) )
-!          this%uvel(i,j)  = soln%V(2,i+d1,j+d2) + epsM*( &
-!                            soln%V(2,i+d1,j+d2) - soln%V(2,i+2*d1,j+2*d2) )
-!          this%vvel(i,j)  = soln%V(3,i+d1,j+d2) + epsM*( &
-!                            soln%V(3,i+d1,j+d2) - soln%V(3,i+2*d1,j+2*d2) )
-!          this%press(i,j) = p_inf
+!          this%rho(i,j) = soln%Vmms(1,i,j)
+!          !this%rho(i,j)   = soln%V(1,i+d1,j+d2) + epsM*( &
+!          !                  soln%V(1,i+d1,j+d2) - soln%V(1,i+2*d1,j+2*d2) )
+!          this%uvel(i,j) = soln%Vmms(2,i,j)
+!          this%vvel(i,j) = soln%Vmms(3,i,j)
+!          !this%uvel(i,j)  = soln%V(2,i+d1,j+d2) + epsM*( &
+!          !                  soln%V(2,i+d1,j+d2) - soln%V(2,i+2*d1,j+2*d2) )
+!          !this%vvel(i,j)  = soln%V(3,i+d1,j+d2) + epsM*( &
+!          !                  soln%V(3,i+d1,j+d2) - soln%V(3,i+2*d1,j+2*d2) )
+!          !this%press(i,j) = soln%Vmms(4,i,j)
+!          this%press(i,j) = soln%V(4,i+d1,j+d2) + epsM*( &
+!                            soln%V(4,i+d1,j+d2) - soln%V(4,i+2*d1,j+2*d2) )
 !        end do
 !      end do
+    case(3)  ! subsonic outflow
+      d1 = this%dir(1)
+      d2 = this%dir(2)
+      do j = this%j1(1), this%j1(2)
+        do i = this%i1(1), this%i1(2)
+          this%rho(i,j)   = soln%V(1,i+d1,j+d2) + epsM*( &
+                            soln%V(1,i+d1,j+d2) - soln%V(1,i+2*d1,j+2*d2) )
+          this%uvel(i,j)  = soln%V(2,i+d1,j+d2) + epsM*( &
+                            soln%V(2,i+d1,j+d2) - soln%V(2,i+2*d1,j+2*d2) )
+          this%vvel(i,j)  = soln%V(3,i+d1,j+d2) + epsM*( &
+                            soln%V(3,i+d1,j+d2) - soln%V(3,i+2*d1,j+2*d2) )
+          this%press(i,j) = p_inf
+        end do
+      end do
     case(4) ! supersonic outflow
       d1 = this%dir(1)
       d2 = this%dir(2)
