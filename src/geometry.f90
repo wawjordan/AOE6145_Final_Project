@@ -1,6 +1,6 @@
 module geometry
 
-  use set_inputs,      only : geometry_file, grid_name
+  use set_inputs,      only : geometry_file, grid_dir, grid_name
   use soln_type,       only : soln_t, allocate_soln, deallocate_soln 
   use grid_type,       only : grid_t, allocate_grid, deallocate_grid, &
                               ghost_shape, ghost_shape_C, cell_geometry
@@ -26,7 +26,7 @@ module geometry
   !===========================================================================80
   subroutine setup_geometry( grid, soln )
     
-    use set_inputs, only : cart_grid, C_grid, index1, index2
+    use set_inputs, only : cart_grid, C_grid, index1, index2, save_grid
     use file_handling, only : grid_in, grid_out
     
     type( soln_t ), intent(inout) :: soln
@@ -35,7 +35,7 @@ module geometry
     if (cart_grid) then
       call cartesian_grid(grid)
     else
-      call grid_in(grid_name,grid)
+      call grid_in(grid,grid_dir,grid_name)
     end if
     if (C_grid) then
       call ghost_shape_C(grid,index1,index2)
@@ -43,7 +43,10 @@ module geometry
       call ghost_shape(grid)
     end if
     call cell_geometry(grid)
-    call grid_out(geometry_file,grid)
+    !call grid_out(grid,geometry_file)
+    if (save_grid) then
+      call grid_out(grid)
+    end if
     call allocate_soln( soln )
     
   end subroutine setup_geometry
@@ -72,6 +75,7 @@ module geometry
   subroutine cartesian_grid( grid )
     
     use set_precision, only : prec
+    use set_constants, only : one
     use set_inputs, only : imax, jmax, xmin, xmax, ymin, ymax, n_ghost
     use set_inputs, only : i_low, i_high, j_low, j_high
     use set_inputs, only : ig_low, ig_high, jg_low, jg_high
