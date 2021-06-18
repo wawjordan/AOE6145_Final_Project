@@ -16,9 +16,9 @@ module time_integration
     real(prec), intent(inout) :: CFL
     real(prec), intent(in) :: CFLmax
     real(prec), dimension(4), intent(in) :: Rnorm, Rnorm2
-    if (all(Rnorm.LE.Rnorm2)) then
+    !if (all(Rnorm.LE.Rnorm2)) then
       CFL = min(minval(CFL*(Rnorm2/Rnorm)),CFLmax)
-    end if
+    !end if
     
   end subroutine SER
   
@@ -27,11 +27,11 @@ module time_integration
     real(prec), intent(in) :: CFLmax, beta
     real(prec), dimension(4), intent(in) :: Rnorm, Rnorm2
     real(prec) :: g
-    if (all(Rnorm.LE.Rnorm2)) then
+    !if (all(Rnorm.LE.Rnorm2)) then
       g = minval((Rnorm2-Rnorm)/Rnorm2)
-    else
-      g = zero
-    end if
+    !else
+    !  g = zero
+    !end if
     CFL = min(CFL*beta**g,CFLmax)
     
   end subroutine RDM
@@ -109,15 +109,17 @@ module time_integration
   !==========================================================================80
 
   subroutine explicit_RK( grid, soln )
-    
+    use flux_calc, only : calc_flux_2D
+    use variable_conversion, only : update_states
     type(grid_t), intent(inout) :: grid
     type(soln_t), intent(inout) :: soln
     real(prec), dimension(4) :: k
     integer :: i, j
     
     k = (/ fourth, third, half, one /)
-    
-    do j = 1,4
+    k = one
+    do j = 1,1!4
+    !call calc_flux_2D(grid,soln)
     call calc_residual(grid,soln)
     
     do i = 1,4
@@ -127,6 +129,7 @@ module time_integration
         soln%dt(i_low:i_high,j_low:j_high) )/  &
          grid%V(i_low:i_high,j_low:j_high)
     end do
+        call update_states(soln)
     end do
     
   end subroutine explicit_RK
