@@ -12,7 +12,7 @@ module init_problem
   
   private
   
-  public :: initialize, initialize_MMS, initialize_const
+  public :: initialize, initialize_MMS, initialize_const, initialize_lin_xi
   
   contains
   
@@ -72,6 +72,40 @@ module init_problem
     call prim2cons(soln%U,soln%V)
     
   end subroutine initialize_const
-
+  
+  subroutine initialize_lin_xi( grid, soln, V1, V2 )
+    
+    use other_subroutines, only : calc_sources
+    use variable_conversion, only : speed_of_sound
+    use set_inputs, only : ig_low, ig_high, jg_low, jg_high, &
+                           imax
+    type( grid_t ), intent(inout) :: grid
+    type( soln_t ), intent(inout) :: soln
+    real(prec), dimension(4), intent(in) :: V1, V2
+    integer :: i, j
+    real(prec) :: Ni, Nj, asnd, mach, p0, temp
+    Ni = real(imax-2,prec)
+    call speed_of_sound( V1(4), V1(1), asnd )
+    mach = sqrt(V1(2)**2 + V1(3)**2)/asnd
+    p0 = V1(4)*(one+half*(gamma-one)*mach**2)**(gamma/(gamma-one))
+    temp = asnd**2/(gamma*R_gas)
+    do j = jg_low, jg_high
+      do i = ig_low, ig_high
+        !soln%V(2,i,j) = V1(2) + real(i-1,prec)/Ni*(V2(2)-V1(2))
+        !soln%V(3,i,j) = V1(3) + real(i-1,prec)/Ni*(V2(3)-V1(3))
+        !mach = sqrt(soln%V(2,i,j)**2 + soln%V(3,i,j)**2)/asnd
+        !soln%V(4,i,j) = p0/&
+        !     ((one+half*(gamma-one)*mach**2)**(gamma/(gamma-one)))
+        soln%V(1,i,j) = soln%V(4,i,j)/(R_gas*temp)
+        soln%V(1,i,j) = V1(1) + real(i-1,prec)/Ni*(V2(1)-V1(1))
+        soln%V(2,i,j) = V1(2) + real(i-1,prec)/Ni*(V2(2)-V1(2))
+        soln%V(3,i,j) = V1(3) + real(i-1,prec)/Ni*(V2(3)-V1(3))
+        soln%V(4,i,j) = V1(4) + real(i-1,prec)/Ni*(V2(4)-V1(4))
+      end do
+    end do
+    call calc_sources( soln, grid )
+    call prim2cons(soln%U,soln%V)
+    
+  end subroutine initialize_lin_xi
   
 end module init_problem
