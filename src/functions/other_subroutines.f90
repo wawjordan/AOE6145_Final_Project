@@ -60,6 +60,43 @@ module other_subroutines
   !!              right :
   !<
   !==========================================================================80
+!  subroutine MUSCL_extrap(soln,Lxi,Rxi,Leta,Reta)
+!    type(soln_t), intent(inout) :: soln
+!    real(prec), dimension(neq,i_low-1:i_high,j_low:j_high), intent(out) :: Lxi, Rxi
+!    real(prec), dimension(neq,i_low:i_high,j_low-1:j_high), intent(out) :: Leta, Reta
+!    integer :: i
+!    
+!    Lxi  = soln%V(:,i_low-1:i_high  ,j_low:j_high) + fourth*epsM*(      &
+!           (one-kappaM)*soln%psi_p_xi(:,i_low-2:i_high-1,j_low:j_high)* &
+!                             ( soln%V(:,i_low-1:i_high  ,j_low:j_high)  &
+!                             - soln%V(:,i_low-2:i_high-1,j_low:j_high) )&
+!         + (one+kappaM)*soln%psi_m_xi(:,i_low-1:i_high  ,j_low:j_high)* &
+!                             ( soln%V(:,i_low  :i_high+1,j_low:j_high)  &
+!                             - soln%V(:,i_low-1:i_high  ,j_low:j_high) ))
+!    Rxi  = soln%V(:,i_low  :i_high+1,j_low:j_high) + fourth*epsM*(      &
+!           (one-kappaM)*soln%psi_p_xi(:,i_low  :i_high+1,j_low:j_high)* &
+!                             ( soln%V(:,i_low+1:i_high+2,j_low:j_high)  &
+!                             - soln%V(:,i_low  :i_high+1,j_low:j_high) )&
+!         + (one+kappaM)*soln%psi_m_xi(:,i_low-1:i_high  ,j_low:j_high)* &
+!                             ( soln%V(:,i_low  :i_high+1,j_low:j_high)  &
+!                             - soln%V(:,i_low-1:i_high  ,j_low:j_high) ))
+!
+!    Leta = soln%V(:,i_low:i_high,j_low-1:j_high  ) + fourth*epsM*(       &
+!           (one-kappaM)*soln%psi_p_eta(:,i_low:i_high,j_low-2:j_high-1)* &
+!                              ( soln%V(:,i_low:i_high,j_low-1:j_high  )  &
+!                              - soln%V(:,i_low:i_high,j_low-2:j_high-1) )&
+!         + (one+kappaM)*soln%psi_m_eta(:,i_low:i_high,j_low-1:j_high  )* &
+!                              ( soln%V(:,i_low:i_high,j_low  :j_high+1)  &
+!                              - soln%V(:,i_low:i_high,j_low-1:j_high  ) ))
+!    Reta = soln%V(:,i_low:i_high,j_low  :j_high+1) + fourth*epsM*(      &
+!           (one-kappaM)*soln%psi_p_eta(:,i_low:i_high,j_low  :j_high+1)* &
+!                              ( soln%V(:,i_low:i_high,j_low+1:j_high+2)  &
+!                              - soln%V(:,i_low:i_high,j_low  :j_high+1) )&
+!         + (one+kappaM)*soln%psi_m_eta(:,i_low:i_high,j_low-1:j_high  )* &
+!                              ( soln%V(:,i_low:i_high,j_low  :j_high+1)  &
+!                              - soln%V(:,i_low:i_high,j_low-1:j_high  ) ))
+!    
+!  end subroutine MUSCL_extrap
   subroutine MUSCL_extrap(soln,Lxi,Rxi,Leta,Reta)
     type(soln_t), intent(inout) :: soln
     real(prec), dimension(neq,i_low-1:i_high,j_low:j_high), intent(out) :: Lxi, Rxi
@@ -73,7 +110,7 @@ module other_subroutines
          + (one+kappaM)*soln%psi_m_xi(:,i_low-1:i_high  ,j_low:j_high)* &
                              ( soln%V(:,i_low  :i_high+1,j_low:j_high)  &
                              - soln%V(:,i_low-1:i_high  ,j_low:j_high) ))
-    Rxi  = soln%V(:,i_low  :i_high+1,j_low:j_high) + fourth*epsM*(      &
+    Rxi  = soln%V(:,i_low  :i_high+1,j_low:j_high) - fourth*epsM*(      &
            (one-kappaM)*soln%psi_p_xi(:,i_low  :i_high+1,j_low:j_high)* &
                              ( soln%V(:,i_low+1:i_high+2,j_low:j_high)  &
                              - soln%V(:,i_low  :i_high+1,j_low:j_high) )&
@@ -88,7 +125,7 @@ module other_subroutines
          + (one+kappaM)*soln%psi_m_eta(:,i_low:i_high,j_low-1:j_high  )* &
                               ( soln%V(:,i_low:i_high,j_low  :j_high+1)  &
                               - soln%V(:,i_low:i_high,j_low-1:j_high  ) ))
-    Reta = soln%V(:,i_low:i_high,j_low  :j_high+1) + fourth*epsM*(      &
+    Reta = soln%V(:,i_low:i_high,j_low  :j_high+1) - fourth*epsM*(      &
            (one-kappaM)*soln%psi_p_eta(:,i_low:i_high,j_low  :j_high+1)* &
                               ( soln%V(:,i_low:i_high,j_low+1:j_high+2)  &
                               - soln%V(:,i_low:i_high,j_low  :j_high+1) )&
