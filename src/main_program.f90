@@ -21,7 +21,7 @@ program main_program
                                calc_residual, SER, RDM
   use limiter_calc, only : select_limiter, limiter_fun, calculate_limiters
   use mms_functions, only : rho_mms, uvel_mms, vvel_mms, press_mms
-  use init_problem, only : initialize_MMS, initialize_const
+  use init_problem, only : initialize_MMS, initialize_const, initialize_lin_xi
   use namelist, only : read_namelist
   use grid_type, only : grid_t
   use soln_type, only : soln_t, calc_mms
@@ -38,15 +38,15 @@ program main_program
   type(bc_t) :: Lbnd, Rbnd, Bbnd, Tbnd
  ! type(bc_t)   :: inlet, outlet
  ! type(eta_wall_t) :: top_wall, bottom_wall
-!  type(bc_t) :: rear1, rear2
-!  type(dir_bc_t) :: farfield!, rear1, rear2
-!  type(eta_wall_t) :: airfoil
+  type(bc_t) :: rear1, rear2
+  type(dir_bc_t) :: farfield!, rear1, rear2
+  type(eta_wall_t) :: airfoil
 !  type(bc_t) :: airfoil
-!  type(xi_cut_t) :: wake
+  type(xi_cut_t) :: wake
  ! real(prec), allocatable, dimension(:,:) :: Cp
   real(prec) :: nx, ny, press, Cl, Cd
-  real(prec), dimension(4) :: Rnorm2, left, right
-  integer :: i1,j1,k1
+  real(prec), dimension(4) :: Rnorm2, left, right, flux
+  integer :: i1,j1,k1, counter
   
   
   call set_derived_constants
@@ -56,12 +56,12 @@ program main_program
   call setup_geometry(grid,soln)
   call select_flux()
   call select_limiter()
-  call initialize_MMS(grid,soln)
-!  call initialize_const(grid,soln,&
-!       (/one,u_inf*cos((pi/180.0_prec)*alpha),&
-!             u_inf*sin((pi/180.0_prec)*alpha),p_inf/) )
-!  call initialize_const(grid,soln,&
-!       (/rho_inf,u0,v0,p_inf/) )
+!  call initialize_MMS(grid,soln)
+  call initialize_const(grid,soln,&
+       (/rho_inf,u0,v0,p_inf/) )
+!  call initialize_lin_xi(grid,soln,          &
+!       (/one,10.0_prec,zero,100000.0_prec/), &
+!       (/one,20.0_prec,zero,100000.0_prec/)  )
   call update_states(soln)
   if (isMMS) then
     call output_exact_soln(grid,soln)
@@ -74,10 +74,10 @@ program main_program
 !  call Bbnd%set_bc(grid,1,(/0,1/),i_low,i_high,jg_low,jg_low+1)
 !  call Tbnd%set_bc(grid,4,(/0,-1/),i_low,i_high,jg_high-1,jg_high)
 
-  call Lbnd%set_bc(grid,1,(/1,0/),ig_low,ig_low+1,j_low,j_high)
-  call Rbnd%set_bc(grid,1,(/-1,0/),ig_high-1,ig_high,j_low,j_high)
-  call Bbnd%set_bc(grid,1,(/0,1/),i_low,i_high,jg_low,jg_low+1)
-  call Tbnd%set_bc(grid,1,(/0,-1/),i_low,i_high,jg_high-1,jg_high)
+!  call Lbnd%set_bc(grid,1,(/1,0/),ig_low,ig_low+1,j_low,j_high)
+!  call Rbnd%set_bc(grid,1,(/-1,0/),ig_high-1,ig_high,j_low,j_high)
+!  call Bbnd%set_bc(grid,1,(/0,1/),i_low,i_high,jg_low,jg_low+1)
+!  call Tbnd%set_bc(grid,1,(/0,-1/),i_low,i_high,jg_high-1,jg_high)
 
 ! For Curvilinear Mesh...
 !  call Lbnd%set_bc(grid,1,(/-1,0/),ig_high-1,ig_high,j_low,j_high)
@@ -93,9 +93,9 @@ program main_program
 !  call bottom_wall%set_bc(grid,5,i_low,i_high,j_low,j_low)
 ! For Airfoil Mesh
 
-!  call farfield%set_bc(grid,2,i_low,i_high,jg_high-1,jg_high)
-!  call rear1%set_bc(grid,3,(/0,1/),ig_high-1,ig_high,j_low,j_high)
-!  call rear2%set_bc(grid,3,(/0,-1/),ig_low,ig_low+1,j_low,j_high)
+  call farfield%set_bc(grid,2,i_low,i_high,jg_high-1,jg_high)
+  call rear1%set_bc(grid,3,(/0,1/),ig_high-1,ig_high,j_low,j_high)
+  call rear2%set_bc(grid,3,(/0,-1/),ig_low,ig_low+1,j_low,j_high)
 
 !  call rear1%set_bc(grid,2,ig_high-1,ig_high,j_low,j_high)
 !  call rear2%set_bc(grid,2,ig_low,ig_low+1,j_low,j_high)
@@ -111,9 +111,9 @@ program main_program
 !        end do
 !      end do
 !  call airfoil%set_bc(grid,5,33,imax-index2,j_low,j_low)
-!  call airfoil%set_bc(grid,5,index2+1,imax-index2-1,j_low,j_low)
+  call airfoil%set_bc(grid,5,index2+1,imax-index2-1,j_low,j_low)
 !  call airfoil%set_bc(grid,5,(/1,0/),index2+1,imax-index2-1,jg_low,jg_low+1)
-!  call wake%set_bc(grid,10,ig_low,index2,n_ghost)
+  call wake%set_bc(grid,10,ig_low,index2,n_ghost)
 !  do j = 1,wake%N
 !    do i = 1,wake%M
 !      write(*,*) wake%i1(i,j), wake%j1(i,j), wake%i2(i,j), wake%j2(i,j)
@@ -123,39 +123,41 @@ program main_program
 !  call wall%set_bc(grid,5,i_low,i_high,j_low,j_low)
   
   open(42,file='temp.txt',status='unknown')
-!  call farfield%set_val(soln)
-!  call rear1%set_val(soln)
-!  call rear2%set_val(soln)
-  
+  call farfield%set_val(soln)
+  call rear1%set_val(soln)
+  call rear2%set_val(soln)
+  counter = 0
   do k = 1,max_iter
 !!==============================================================================
-  call Lbnd%set_val(soln)
-  call Rbnd%set_val(soln)
-  call Bbnd%set_val(soln)
-  call Tbnd%set_val(soln)
-
-  call Lbnd%enforce(soln)
-  call Rbnd%enforce(soln)
-  call Bbnd%enforce(soln)
-  call Tbnd%enforce(soln)
-!  call airfoil%set_val(soln)
-!  call farfield%enforce(soln)
-!  call rear1%enforce(soln)
-!  call rear2%enforce(soln)
-!  call wake%enforce(soln)
-!  call airfoil%enforce(soln)
+!  call Lbnd%set_val(soln)
+!  call Rbnd%set_val(soln)
+!  call Bbnd%set_val(soln)
+!  call Tbnd%set_val(soln)
+!
+!  call Lbnd%enforce(soln)
+!  call Rbnd%enforce(soln)
+!  call Bbnd%enforce(soln)
+!  call Tbnd%enforce(soln)
+  call rear1%set_val(soln)
+  call rear2%set_val(soln)
+  call airfoil%set_val(soln)
+  call farfield%enforce(soln)
+  call rear1%enforce(soln)
+  call rear2%enforce(soln)
+  call wake%enforce(soln)
+  call airfoil%enforce(soln)
   
   
-!      do j = j_low-1,jg_low,-1
-!        do i = index2+1, imax-index2-1
-!          call reflect_vec( soln%V(2,i,j+1), soln%V(3,i,j+1), &
-!                              grid%n_eta(i,j_low,1), grid%n_eta(i,j_low,2), &
-!                              soln%V(2,i,j), soln%V(3,i,j) )
-!          soln%V(4,i,j) = soln%V(4,i,j+1) + epsM*( &
-!                            soln%V(4,i,j+1) - soln%V(4,i,j+2) )
-!          soln%V(1,i,j)   = soln%V(4,i,j)/( R_gas*soln%temp(i,j+1) )
-!        end do
-!      end do
+      do j = j_low-1,jg_low,-1
+        do i = index2+1, imax-index2-1
+          call reflect_vec( soln%V(2,i,j+1), soln%V(3,i,j+1), &
+                              grid%n_eta(i,j_low,1), grid%n_eta(i,j_low,2), &
+                              soln%V(2,i,j), soln%V(3,i,j) )
+          soln%V(4,i,j) = soln%V(4,i,j+1) + epsM*( &
+                            soln%V(4,i,j+1) - soln%V(4,i,j+2) )
+          soln%V(1,i,j)   = soln%V(4,i,j)/( R_gas*soln%temp(i,j+1) )
+        end do
+      end do
   
 !  call wall%set_val(soln)
 !  call inlet%set_val(soln)
@@ -171,9 +173,22 @@ program main_program
   end if
   call calc_flux_2D(grid,soln)
   
+!  do j = j_low, j_high
+!  do i = i_low-1, i_high
+!    left = 0.5_prec*(soln%V(:,i,j) + soln%V(:,i+1,j))
+!    call exact_flux(left,grid%n_xi(i,j,1),grid%n_xi(i,j,2),flux)
+!    write(*,*) i, j
+!    write(*,*) 'V   = ',left
+!    write(*,*) 'F   = ',soln%Fxi(:,i,j)
+!    write(*,*) 'Fex = ',flux
+!    write(*,*) '!============================================================='
+!  end do
+!  end do
+!  call output_flux(grid,soln,k)
+!  stop  
   
-!  call airfoil%enforce(soln)
-!  call wake%enforce(soln)
+  call airfoil%enforce(soln)
+  call wake%enforce(soln)
 !   call wall%enforce(soln)
    
 !  call top_wall%set_val(soln)
@@ -234,10 +249,10 @@ program main_program
       call residual_norms(soln%R,soln%Rnorm,2,soln%rinit)
     end if
     
-    !if (all(soln%Rnorm<1.0e-2_prec)) then
-    !  call SER(CFL,1.0_prec,soln%Rnorm,Rnorm2)
-     ! call RDM(CFL,1.0_prec,1.1_prec,soln%Rnorm,Rnorm2)
-    !end if
+!    if (all(soln%Rnorm<1.0e-2_prec)) then
+!      !call SER(CFL,4.0_prec,soln%Rnorm,Rnorm2)
+!      call RDM(CFL,4.0_prec,2.0_prec,soln%Rnorm,Rnorm2)
+!    end if
     
     if (mod(k,res_save)==0) then
       if (isMMS) then
@@ -261,10 +276,19 @@ program main_program
     !  call output_flux(grid,soln,k)
     end if
     
-  !  if (all(soln%Rnorm<1.0e-3_prec).or.(k>20000)) then
-  !    limiter_freeze = .true.
-  !  end if
-    
+    if (all(soln%Rnorm<1.0e-3_prec).or.(k>20000)) then
+      limiter_freeze = .true.
+    end if
+    if (all(abs(soln%Rnorm-Rnorm2)<1.0e-16_prec)) then
+      counter = counter + 1
+    else
+      counter = 0
+    end if
+    if (counter>1000) then
+      write(*,*) k, soln%Rnorm
+      write(*,*) 'solution stalled'
+      exit
+    end if
     if (all(soln%Rnorm<tol)) then
       write(*,*) k, soln%Rnorm
       write(*,*) 'solution converged'
