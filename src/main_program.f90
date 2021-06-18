@@ -35,19 +35,19 @@ program main_program
   integer :: i, j, k
   type( grid_t )      :: grid
   type( soln_t )      :: soln
+  type(bc_t), dimension(4) :: bnds
   type(bc_t) :: Lbnd, Rbnd, Bbnd, Tbnd
  ! type(bc_t)   :: inlet, outlet
  ! type(eta_wall_t) :: top_wall, bottom_wall
-  type(bc_t) :: rear1, rear2
+  type(bc_t) :: rear1, rear2, airfoil
   type(dir_bc_t) :: farfield!, rear1, rear2
-  type(eta_wall_t) :: airfoil
+!  type(eta_wall_t) :: airfoil
 !  type(bc_t) :: airfoil
   type(xi_cut_t) :: wake
  ! real(prec), allocatable, dimension(:,:) :: Cp
   real(prec) :: nx, ny, press, Cl, Cd
   real(prec), dimension(4) :: Rnorm2, left, right, flux
   integer :: i1,j1,k1, counter
-  
   
   call set_derived_constants
   call set_fluid_constants
@@ -94,8 +94,10 @@ program main_program
 ! For Airfoil Mesh
 
   call farfield%set_bc(grid,2,i_low,i_high,jg_high-1,jg_high)
-  call rear1%set_bc(grid,3,(/0,1/),ig_high-1,ig_high,j_low,j_high)
-  call rear2%set_bc(grid,3,(/0,-1/),ig_low,ig_low+1,j_low,j_high)
+!  call rear1%set_bc(grid,3,(/2,1/),ig_high-1,ig_high,j_low,j_high)
+!  call rear2%set_bc(grid,3,(/2,-1/),ig_low,ig_low+1,j_low,j_high)
+  call rear1%set_bc(grid,3,ig_high-1,ig_high,j_low,j_high,2)
+  call rear2%set_bc(grid,3,ig_low,ig_low+1,j_low,j_high,1)
 
 !  call rear1%set_bc(grid,2,ig_high-1,ig_high,j_low,j_high)
 !  call rear2%set_bc(grid,2,ig_low,ig_low+1,j_low,j_high)
@@ -110,8 +112,8 @@ program main_program
 !          soln%V(1,i,j)   = soln%V(4,i,j)/( R_gas*soln%temp(i,j+1) )
 !        end do
 !      end do
-!  call airfoil%set_bc(grid,5,33,imax-index2,j_low,j_low)
-  call airfoil%set_bc(grid,5,index2+1,imax-index2-1,j_low,j_low)
+  call airfoil%set_bc(grid,5,index2+1,imax-index2-1,jg_low,j_low-1,3)
+!  call airfoil%set_bc(grid,5,index2+1,imax-index2-1,j_low,j_low)
 !  call airfoil%set_bc(grid,5,(/1,0/),index2+1,imax-index2-1,jg_low,jg_low+1)
   call wake%set_bc(grid,10,ig_low,index2,n_ghost)
 !  do j = 1,wake%N
@@ -148,16 +150,16 @@ program main_program
   call airfoil%enforce(soln)
   
   
-      do j = j_low-1,jg_low,-1
-        do i = index2+1, imax-index2-1
-          call reflect_vec( soln%V(2,i,j+1), soln%V(3,i,j+1), &
-                              grid%n_eta(i,j_low,1), grid%n_eta(i,j_low,2), &
-                              soln%V(2,i,j), soln%V(3,i,j) )
-          soln%V(4,i,j) = soln%V(4,i,j+1) + epsM*( &
-                            soln%V(4,i,j+1) - soln%V(4,i,j+2) )
-          soln%V(1,i,j)   = soln%V(4,i,j)/( R_gas*soln%temp(i,j+1) )
-        end do
-      end do
+!      do j = j_low-1,jg_low,-1
+!        do i = index2+1, imax-index2-1
+!          call reflect_vec( soln%V(2,i,j+1), soln%V(3,i,j+1), &
+!                              grid%n_eta(i,j_low,1), grid%n_eta(i,j_low,2), &
+!                              soln%V(2,i,j), soln%V(3,i,j) )
+!          soln%V(4,i,j) = soln%V(4,i,j+1) + epsM*( &
+!                            soln%V(4,i,j+1) - soln%V(4,i,j+2) )
+!          soln%V(1,i,j)   = soln%V(4,i,j)/( R_gas*soln%temp(i,j+1) )
+!        end do
+!      end do
   
 !  call wall%set_val(soln)
 !  call inlet%set_val(soln)
