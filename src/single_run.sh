@@ -20,13 +20,13 @@ imax=257
 #grid_name+="Inlet.33x17.grd"
 grid_dir="../grids/NACA64A006-grids/"
 #grid_name="NACA64A006.extra-coarse.27x14.grd"
-#grid_name="NACA64A006.coarse.53x27.grd"
-grid_name="NACA64A006.fine.385x105.grd"
+grid_name="NACA64A006.coarse.53x27.grd"
+#grid_name="NACA64A006.fine.385x105.grd"
 cart_grid="F"
 C_grid="T"
 index1=1
-#index2=16
-index2=64
+index2=16
+#index2=64
 jmax=$imax
 n_ghost=2
 
