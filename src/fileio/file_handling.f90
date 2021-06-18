@@ -25,17 +25,20 @@ contains
   !! Outputs:     grid :
   !<
   !==========================================================================80
-  subroutine grid_in(filename,grid)
+  subroutine grid_in(grid,directory,filename)
 
     type(grid_t), intent(out) :: grid
+    character(len=*), intent(in) :: directory
     character(len=*), intent(in) :: filename
     integer :: fstat
     integer :: i, j, k, kmax, nzones
     real(prec) :: zztemp
-
-    open(unit=12,file=filename,status='old',action='read',iostat=fstat)
+    
+    open(unit=12,file=adjustl(trim(directory))//&
+                      adjustl(trim(filename)), &
+         status='old',action='read',iostat=fstat)
     if (fstat > 0) then
-      write(*,*) 'ERROR: error reading', trim(filename)
+      write(*,*) 'ERROR: error reading', trim(directory//filename)
       stop
     elseif ( fstat == 0 ) then
       read(12,*) nzones
@@ -92,15 +95,31 @@ contains
 
   end subroutine grid_in
   
-subroutine grid_out(filename,grid)
-  
+subroutine grid_out(grid,filename)
+  use set_inputs, only : cart_grid, grid_name
   type(grid_t), intent(in) :: grid
-  character(len=*), intent(in) :: filename
-  integer :: i, j, funit
-   
+  character(len=*), optional, intent(in) :: filename
+  character(len=200) :: default_filename
+  character(len=4) :: ext ='.dat'
+  integer :: i, j, funit, dotpos
+  
   funit = 50
-
-  open(unit=funit,file=filename,status='unknown')
+  if (.not.present(filename)) then
+    if (cart_grid) then
+      write(default_filename,"(A14,I0.3,A1,I0.3,A4)") &
+                 & 'cart_grid_out_',imax,'x',jmax,ext
+      grid_name = adjustl(trim(default_filename))
+    else
+      dotpos = scan(trim(grid_name),'.',BACK=.true.)
+      if (dotpos > 0 ) default_filename = grid_name(1:dotpos-1)//'_out'//ext
+    end if
+    open(unit=funit,file=adjustl(trim(default_filename)),status='unknown')
+  else
+    open(unit=funit,file=adjustl(trim(filename)),status='unknown')
+    grid_name = adjustl(trim(filename))
+  end if
+  
+  
   write(funit,*) 'TITLE = "2D Curvilinear Mesh Data"'
   write(funit,*)'variables="x(m)","y(m)","n<sub><greek>x</greek>,x</sub>",&
     & "n<sub><greek>x</greek>,y</sub>", "n<sub><greek>n</greek>,x</sub>",&
@@ -152,9 +171,11 @@ subroutine grid_out(filename,grid)
 
     use set_inputs, only : flux_scheme, limiter_scheme, beta_lim, cfl
     use set_inputs, only : grid_name, alpha, m_inf, T_inf, rho_inf, p_inf
+    use set_inputs, only : epsM, kappaM, C_grid, flux_out
 
     character(len=1024) :: dirname_hist
     character(len=1024) :: dirname_field
+    character(len=1024) :: dirname
     character(len=1024) :: filename
     character(len=64) ::   ncells_str
     character(len=64) ::   MMS_str
@@ -165,71 +186,74 @@ subroutine grid_out(filename,grid)
     character(len=64) ::   kappa_str
     integer :: flxunit, resunit, fldunit, foilunit
     
-    flxunit = 10
-    resunit = 30
-    fldunit = 40
+    flxunit  = 10
+    resunit  = 30
+    fldunit  = 40
     foilunit = 37
     ! Set up output directories
-!    write (ncells_str  , "(A5,I0.3,A6,I0.3)") "imax=",imax,"_jmax=",jmax
-!    write (CFL_str  , "(A4,F0.4)") "CFL=",cfl
-!
-!    select case(flux_scheme)
-!    case(1)
-!      write (flux_str,"(A3)") "V-L"
-!    case(2)
-!      write (flux_str,"(A3)") "ROE"
-!    case default
-!    end select
-!    if (nint(epsM).eq.0) then
-!      write (order_str,"(A9)") "1st-order"
-!    else
-!      write (order_str,"(A9)") "2nd-order"
-!    end if
-!
-!    select case(limiter_scheme)
-!    case(1)
-!      write (limiter_str,"(A3)") "_VL"
-!    case(2)
-!      write (limiter_str,"(A3)") "_VA"
-!    case(3)
-!      write (limiter_str,"(A3)") "_MM"
-!    case(4)
-!      write (limiter_str,"(A2,I0.2,A1)") "_B",int(10*beta_lim),"_"
-!    case default
-!    end select
-!
-!    write (kappa_str, "(A2,I3.2,A1)") "_K"  , int(10*kappaM),"_"
-!    write (dirname_hist, *) adjustl(trim(MMS_str)),"/hist/"
-!    write (dirname_field, *) adjustl(trim(MMS_str)),"/field/"
+    write (ncells_str  , "(A5,I0.3,A6,I0.3,A1)") "imax=",imax,"_jmax=",jmax,"_"
+    select case(flux_scheme)
+    case(1)
+      write (flux_str,"(A4)") "V-L_"
+    case(2)
+      write (flux_str,"(A4)") "ROE_"
+    case default
+    end select
+    if (nint(epsM).eq.0) then
+      write (order_str,"(A9)") "1st-order"
+    else
+      write (order_str,"(A9)") "2nd-order"
+    end if
+    if (isMMS) then
+      write(MMS_str,"(A3)") 'MMS'
+    else
+      write(MMS_str,"(A6)") 'nonMMS'
+    end if
+    select case(limiter_scheme)
+    case(0)
+      write (limiter_str,"(A3)") "_00"
+    case(1)
+      write (limiter_str,"(A3)") "_VL"
+    case(2)
+      write (limiter_str,"(A3)") "_VA"
+    case(3)
+      write (limiter_str,"(A3)") "_MM"
+    case(4)
+      write (limiter_str,"(A2,I0.2,A1)") "_B",int(10*beta_lim),"_"
+    case default
+    end select
+
+    !write (kappa_str, "(A2,I3.2,A1)") "_K"  , int(10*kappaM),"_"
+    !write (dirname_hist, *) adjustl(trim(MMS_str)),"/hist/"
+    !write (dirname_field, *) adjustl(trim(MMS_str)),"/field/"
     !write (filename,*)  trim(ncells_str)//  &
     !&                   trim(flux_str)//    &
     !&                   trim(order_str)//   &
     !&                   trim(limiter_str)// &
-    !&                   trim(kappa_str)//   &
-    !&                   trim(CFL_str)
-
-    !call execute_command_line ('mkdir -p ../results/' // &
-    !& adjustl(trim(dirname_hist)))
-
-    !call execute_command_line ('mkdir -p ../results/' // &
+    !&                   trim(kappa_str)
+    !call execute_command_line ('mkdir -p ../results/'//adjustl(trim(dirname_hist)))
+    !call execute_command_line ('mkdir -p ../results/'// &
     !& adjustl(trim(dirname_field)))
     ! Set up output files (history and solution)
     !open(30,file='history.dat',status='unknown')
+    if (flux_out) then
+      !open(flxunit,file= '../results/'//trim(adjustl(dirname_field))//  &
+      !&               trim(adjustl(filename))//'flux.dat',status='unknown')
+      open(flxunit,file= '../results/example_flux.dat')
+      write(flxunit,*) 'TITLE = "bloody flux"'
+      write(flxunit,*) 'variables="x""y" &
+        & "F<sub><greek>x</greek>1</sub>"&
+        & "F<sub><greek>x</greek>2</sub>"&
+        & "F<sub><greek>x</greek>3</sub>"&
+        & "F<sub><greek>x</greek>4</sub>"&
+        & "F<sub><greek>e</greek>1</sub>"&
+        & "F<sub><greek>e</greek>2</sub>"&
+        & "F<sub><greek>e</greek>3</sub>"&
+        & "F<sub><greek>e</greek>4</sub>"&
+        & "<greek>r</greek>""u""v""p"'
+    end if
     !open(resunit,file= '../results/'//trim(adjustl(dirname_hist))//  &
-    !&               trim(adjustl(filename))//'_history.dat',status='unknown')
-    open(flxunit,file= '../results/example_flux.dat')
-    write(flxunit,*) 'TITLE = "bloody flux"'
-    write(flxunit,*) 'variables="x""y" &
-      & "F<sub><greek>x</greek>1</sub>"&
-      & "F<sub><greek>x</greek>2</sub>"&
-      & "F<sub><greek>x</greek>3</sub>"&
-      & "F<sub><greek>x</greek>4</sub>"&
-      & "F<sub><greek>e</greek>1</sub>"&
-      & "F<sub><greek>e</greek>2</sub>"&
-      & "F<sub><greek>e</greek>3</sub>"&
-      & "F<sub><greek>e</greek>4</sub>"&
-      & "<greek>r</greek>""u""v""p"'
-      
+    !&               trim(adjustl(filename))//'res.dat',status='unknown')
     open(resunit,file= '../results/example_res.dat')
     if(isMMS) then
       write(resunit,*) 'TITLE = "MMS ('// &
@@ -248,15 +272,17 @@ subroutine grid_out(filename,grid)
       &   "DE<sub>1</sub><sup>3<sup>"      &
       &   "DE<sub>2</sub><sup>3<sup>"      &
       &   "DE<sub>3</sub><sup>3<sup>"      &
-      &   "DE<sub>4</sub><sup>3<sup>"'
+      &   "DE<sub>4</sub><sup>3<sup>""CFL"'
     else
       write(resunit,*) 'TITLE = "'// &
       & trim(adjustl(grid_name))//'"'
       write(resunit,*) 'variables="Iteration"   &
       &   "R<sub>1</sub>""R<sub>2</sub>"   &
-      &   "R<sub>3</sub>""R<sub>4</sub>"'
+      &   "R<sub>3</sub>""R<sub>4</sub>""CFL"'
     end if
 
+    !open(fldunit,file= '../results/'//trim(adjustl(dirname_field))//  &
+    !&               trim(adjustl(filename))//'field.dat',status='unknown')
     open(fldunit,file= '../results/example_out.dat')
     write(fldunit,*) 'TITLE = "blahblahblah"'
     if(isMMS) then
@@ -264,16 +290,20 @@ subroutine grid_out(filename,grid)
       & "DE<sub>1</sub>""DE<sub>2</sub>""DE<sub>3</sub>""DE<sub>4</sub>"'
     else
       write(fldunit,*) 'variables="x""y""<greek>r</greek>""u""v""p""M"'
-    endif
+    end if
     
-    open(foilunit,file= '../results/foil_forces.dat')
-    write(foilunit,*) 'TITLE = "Happy Airfoil"'
-    write(foilunit,*) 'variables="x""p""C<sub>p</sub>"'
-    write(foilunit,*) 'DATASETAUXDATA Alpha = "',alpha,'"'
-    write(foilunit,*) 'DATASETAUXDATA mInf = "',m_inf,'"'
-    write(foilunit,*) 'DATASETAUXDATA pInf = "',p_inf,'"'
-    write(foilunit,*) 'DATASETAUXDATA tInf = "',T_inf,'"'
-    write(foilunit,*) 'DATASETAUXDATA rhoInf = "',rho_inf,'"'
+    if (C_grid) then
+      !open(foilunit,file= '../results/'//trim(adjustl(dirname_field))//  &
+      !&               trim(adjustl(filename))//'foil.dat',status='unknown')
+      open(foilunit,file= '../results/foil_forces.dat')
+      write(foilunit,*) 'TITLE = "Happy Airfoil"'
+      write(foilunit,*) 'variables="x""p""C<sub>p</sub>"'
+      write(foilunit,*) 'DATASETAUXDATA Alpha = "',alpha,'"'
+      write(foilunit,*) 'DATASETAUXDATA mInf = "',m_inf,'"'
+      write(foilunit,*) 'DATASETAUXDATA pInf = "',p_inf,'"'
+      write(foilunit,*) 'DATASETAUXDATA tInf = "',T_inf,'"'
+      write(foilunit,*) 'DATASETAUXDATA rhoInf = "',rho_inf,'"'
+    end if
     
   end subroutine output_file_headers
   
@@ -581,7 +611,8 @@ subroutine grid_out(filename,grid)
   !<
   !===========================================================================80
   subroutine output_res(soln,num_iter)
-
+    
+    use set_inputs, only : CFL
     type( soln_t), intent(in) :: soln
     integer, intent(in) :: num_iter
     integer :: i, j, resunit
@@ -590,9 +621,9 @@ subroutine grid_out(filename,grid)
     open(resunit,status='unknown')
     if(isMMS) then
       write(resunit,*) num_iter,(soln%rnorm(j),j=1,neq),&
-                      ((soln%DEnorm(j,i),j=1,neq),i=1,3)
+                      ((soln%DEnorm(j,i),j=1,neq),i=1,3),CFL
     else
-      write(resunit,*) num_iter,(soln%rnorm(j),j=1,neq)
+      write(resunit,*) num_iter,(soln%rnorm(j),j=1,neq), CFL
     end if
 
   end subroutine output_res
