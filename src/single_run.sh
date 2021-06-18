@@ -12,21 +12,22 @@ test_str=""
 #  rm -f "$summary"
 #fi
 #grid_name="/home/grad3/wajordan/AOE_6145/AOE_6145_Final_project/grids"
-grid_name="../grids/curvilinear-grids/"
-grid_name+="curv2d33.grd"
+imax=257
+#grid_dir="../grids/curvilinear-grids/"
+#grid_name="curv2d$imax"
+#grid_name+=".grd"
 #grid_name="../grids/inlet-grids/"
 #grid_name+="Inlet.33x17.grd"
-#grid_name="../grids/NACA64A006-grids/"
-#grid_name+="NACA64A006.extra-coarse.27x14.grd"
-#grid_name+="NACA64A006.coarse.53x27.grd"
-#grid_name+="NACA64A006.fine.385x105.grd"
-cart_grid="T"
-C_grid="F"
+grid_dir="../grids/NACA64A006-grids/"
+#grid_name="NACA64A006.extra-coarse.27x14.grd"
+#grid_name="NACA64A006.coarse.53x27.grd"
+grid_name="NACA64A006.fine.385x105.grd"
+cart_grid="F"
+C_grid="T"
 index1=1
 #index2=16
 index2=64
-imax=65
-jmax=65
+jmax=$imax
 n_ghost=2
 
 xmin=0.0
@@ -38,30 +39,31 @@ Lmms=1.0
 
 gamma=1.4
 
-isMMS="T"
-u0=0.0
+isMMS="F"
+u0=20.0
 v0=0.0
-u_inf=0.0 #1.0
+u_inf=20.0 #1.0
 alpha=0.0
 #alpha=8.0
-p_inf=0.0 #65855.8
+p_inf=65855.8
 #p_inf=67243.5
 T_inf=300.0
-M_inf=0.0 #0.84
+M_inf=0.84
 #M_inf=0.75
 
 
-CFL=0.1 #0.1 0.5 0.9
-max_iter=500000
+CFL=0.2 #0.1 0.5 0.9
+max_iter=200000
 locTime="F"
 
-flux_scheme=2
+flux_scheme=1
 limiter_scheme=0
 beta_lim=2.0
-eps_roe=0.1
+eps_roe=0.01
 
 geometry_file="example.dat"
-soln_save=5000
+flux_out="F"
+soln_save=50000
 res_save=1
 res_out=100
 cons="T"
@@ -97,6 +99,7 @@ echo "| $flux_str | $limiter_str | CFL=$CFL "
 echo "!==============================================================================!"
 
 echo "&grid" > $input
+echo "  grid_dir = \"$grid_dir\"" >> $input
 echo "  grid_name = \"$grid_name\"" >> $input
 echo "  cart_grid = $cart_grid" >> $input
 echo "  C_grid = $C_grid" >> $input
@@ -149,6 +152,7 @@ echo "  soln_save = $soln_save" >> $input
 echo "  res_save = $res_save" >> $input
 echo "  res_out = $res_out" >> $input
 echo "  cons = $cons" >> $input
+echo "  flux_out = $flux_out" >> $input
 echo "/" >> $input
 echo "" >> $input
 echo "&reconstruction" >> $input
