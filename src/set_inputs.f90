@@ -9,14 +9,14 @@ module set_inputs
   private
 
   public :: isMMS, isAxi, cart_grid, C_grid, index1, index2
-  public :: flux_scheme, limiter_scheme, limiter_freeze, cons, locTime
+  public :: flux_scheme, limiter_scheme, limiter_freeze, cons, locTime, flux_out
   public :: imax, jmax, neq, xmin, xmax, ymin, ymax, n_ghost
   public :: i_high, i_low, ig_high, ig_low
   public :: j_high, j_low, jg_high, jg_low
   public :: max_iter, soln_save, res_save, res_out , counter
   public :: CFL, eps, tol, eps_roe, beta_lim, epsM, kappaM
   public :: rho_inf, u_inf, p_inf, a_inf, T_inf, M_inf, alpha, u0, v0, pb, Lmms
-  public :: grid_name, geometry_file
+  public :: grid_dir, grid_name, geometry_file, save_grid
   public :: set_derived_inputs
    
   logical :: limiter_freeze = .false.
@@ -26,6 +26,8 @@ module set_inputs
   logical :: C_grid         = .false.
   logical :: isAxi          = .false.
   logical :: locTime        = .true.
+  logical :: flux_out       = .false.
+  logical :: save_grid      = .false.
   
   integer :: index1         = 0
   integer :: index2         = 0
@@ -71,10 +73,9 @@ module set_inputs
   real(prec) :: eps_roe    = 0.1_prec
   real(prec) :: epsM       = one
   real(prec) :: kappaM     = zero
-
-  character(200) :: grid_name = "../grids/curvilinear-grids/curv2d65.grd"
-  !character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.extra-coarse.27x14.grd"
-  !character(64) :: grid_name = "../grids/NACA64A006-grids/NACA64A006.fine.385x105.grd"
+  
+  character(200) :: grid_dir = "../grids/curvilinear-grids/"
+  character(200) :: grid_name = "curv2d65.grd"
   character(200) :: geometry_file = "example.dat"
   contains
 
