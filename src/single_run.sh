@@ -12,7 +12,8 @@ test_str=""
 #  rm -f "$summary"
 #fi
 #grid_name="/home/grad3/wajordan/AOE_6145/AOE_6145_Final_project/grids"
-imax=257
+imax=97
+jmax=27
 #grid_dir="../grids/curvilinear-grids/"
 #grid_name="curv2d$imax"
 #grid_name+=".grd"
@@ -27,8 +28,16 @@ C_grid="T"
 index1=1
 index2=16
 #index2=64
-jmax=$imax
 n_ghost=2
+
+i_low=1
+j_low=1
+i_high=$(( imax - 1 ))
+j_high=$(( jmax - 1 ))
+ig_low=$(( i_low - n_ghost ))
+jg_low=$(( j_low - n_ghost ))
+ig_high=$(( i_high + n_ghost ))
+jg_high=$(( j_high + n_ghost ))
 
 xmin=0.0
 xmax=1.0
@@ -52,12 +61,12 @@ M_inf=0.84
 #M_inf=0.75
 
 
-CFL=0.2 #0.1 0.5 0.9
+CFL=0.1 #0.1 0.5 0.9
 max_iter=200000
 locTime="F"
 
 flux_scheme=1
-limiter_scheme=0
+limiter_scheme=1
 beta_lim=2.0
 eps_roe=0.01
 
@@ -68,9 +77,17 @@ res_save=1
 res_out=100
 cons="T"
 
+num_BCs=5
+bounds=()
+bounds+=(2,$i_low,$i_high,$((jg_high-n_ghost+1)),$jg_high,4)
+bounds+=(3,$((ig_high-n_ghost+1)),$ig_high,$j_low,$j_high,2)
+bounds+=(3,$ig_low,$((ig_low+n_ghost-1)),$j_low,$j_high,1)
+bounds+=(5,$((index2+1)),$((imax-index2-1)),$jg_low,$((j_low-1)),3)
+bounds+=(6,$ig_low,$index2,$jg_low,$((j_low-1)),3)
+
 epsM=1.0
 kappaM=-1.0
-limiter_freeze="T"
+limiter_freeze="F"
 if [ "$isMMS" = "T" ]; then
   MMS_str="MMS"
 else
@@ -121,6 +138,7 @@ echo "/" >> $input
 echo "" >> $input
 echo "&constants" >> $input
 echo "  gamma = $gamma" >> $input
+echo "  num_BCs = $num_BCs" >> $input
 echo "/" >> $input
 echo "" >> $input
 echo "&initial" >> $input
@@ -138,6 +156,12 @@ echo "&numerical" >> $input
 echo "  CFL = $CFL" >> $input
 echo "  max_iter = $max_iter" >> $input
 echo "  locTime = $locTime" >> $input
+echo "/" >> $input
+echo "" >> $input
+echo "&boundary" >> $input
+for ((i = 0; i < $num_BCs; i++)); do
+echo "  bounds(:,$((i+1))) = ${bounds[$i]}" >> $input
+done
 echo "/" >> $input
 echo "" >> $input
 echo "&flux" >> $input
