@@ -8,7 +8,7 @@ program main_program
   use set_inputs, only : jmax, ig_low,ig_high,jg_low,jg_high, max_iter
   use set_inputs, only : C_grid, index1, index2
   use set_inputs, only : res_save, res_out, soln_save, tol, Lmms, CFL, isMMS
-  use set_inputs, only : alpha, rho_inf, u_inf, p_inf, u0, v0
+  use set_inputs, only : alpha, rho_inf, u_inf, p_inf, u0, v0, num_BCs, bounds
   use file_handling, only : grid_out, output_file_headers, output_flux, &
                             output_exact_soln, output_soln, output_res, &
                             output_airfoil_forces
@@ -35,15 +35,14 @@ program main_program
   integer :: i, j, k
   type( grid_t )      :: grid
   type( soln_t )      :: soln
-  type(bc_t), dimension(4) :: bnds
-  type(bc_t) :: Lbnd, Rbnd, Bbnd, Tbnd
+  type(bc_t), dimension(:), allocatable :: bnds
+!  type(bc_t) :: Lbnd, Rbnd, Bbnd, Tbnd
  ! type(bc_t)   :: inlet, outlet
  ! type(eta_wall_t) :: top_wall, bottom_wall
-  type(bc_t) :: rear1, rear2, airfoil, farfield, wake
+!  type(bc_t) :: rear1, rear2, airfoil, farfield, wake
  ! type(dir_bc_t) :: farfield!, rear1, rear2
 !  type(eta_wall_t) :: airfoil
 !  type(bc_t) :: airfoil
-  type(xi_cut_t) :: wake2
  ! real(prec), allocatable, dimension(:,:) :: Cp
   real(prec) :: nx, ny, press, Cl, Cd
   real(prec), dimension(4) :: Rnorm2, left, right, flux
@@ -96,14 +95,30 @@ program main_program
 !  call farfield%set_bc(grid,2,i_low,i_high,jg_high-1,jg_high)
 !  call rear1%set_bc(grid,3,(/2,1/),ig_high-1,ig_high,j_low,j_high)
 !  call rear2%set_bc(grid,3,(/2,-1/),ig_low,ig_low+1,j_low,j_high)
-  call farfield%set_bc(grid,2,i_low,i_high,jg_high-1,jg_high,4)
-  call rear1%set_bc(grid,3,ig_high-1,ig_high,j_low,j_high,2)
-  call rear2%set_bc(grid,3,ig_low,ig_low+1,j_low,j_high,1)
-  call airfoil%set_bc(grid,5,index2+1,imax-index2-1,jg_low,j_low-1,3)
-  !write(*,*) index2-ig_low+1, j_low-1-jg_low
- ! write(*,*)
-  call wake%set_bc(grid,6,ig_low,index2,jg_low,j_low-1,3)
-!  write(*,*)
+!  call farfield%set_bc(grid,2,i_low,i_high,jg_high-1,jg_high,4)
+
+!  call rear1%set_bc(grid,3,ig_high-1,ig_high,j_low,j_high,2)
+!  call rear2%set_bc(grid,3,ig_low,ig_low+1,j_low,j_high,1)
+!  call airfoil%set_bc(grid,5,index2+1,imax-index2-1,jg_low,j_low-1,3)
+!  call wake%set_bc(grid,6,ig_low,index2,jg_low,j_low-1,3)
+  allocate(bnds(num_BCs))
+  do i = 1,num_BCs
+    call bnds(i)%set_bc(grid,bounds(1,i), bounds(2,i), bounds(3,i), &
+                             bounds(4,i), bounds(5,i), bounds(6,i) )
+  end do
+!  call bnds(1)%set_bc(grid,2,i_low,i_high,jg_high-1,jg_high,4)
+!  call bnds(2)%set_bc(grid,3,ig_high-1,ig_high,j_low,j_high,2)
+!  call bnds(3)%set_bc(grid,3,ig_low,ig_low+1,j_low,j_high,1)
+!  call bnds(4)%set_bc(grid,5,index2+1,imax-index2-1,jg_low,j_low-1,3)
+!  call bnds(5)%set_bc(grid,6,ig_low,index2,jg_low,j_low-1,3)
+  
+!  write(*,*) 2, i_low, i_high, jg_high-1, jg_high,4
+!  write(*,*) 3, ig_high-1, ig_high, j_low, j_high,2
+!  write(*,*) 3, ig_low, ig_low+1, j_low, j_high,1
+!  write(*,*) 5, index2+1, imax-index2-1, jg_low, j_low-1,3
+!  write(*,*) 6, ig_low, index2, jg_low, j_low-1,3
+!  write(*,*) imax, jmax
+!  stop
 !  call wake2%set_bc(grid,10,ig_low,index2,n_ghost)
 !  stop
 !  call wake%set_bc(grid,10,ig_low,index2,n_ghost)
@@ -131,9 +146,9 @@ program main_program
 !  call wall%set_bc(grid,5,i_low,i_high,j_low,j_low)
   
   open(42,file='temp.txt',status='unknown')
-  call farfield%set_val(soln)
-  call rear1%set_val(soln)
-  call rear2%set_val(soln)
+!  call farfield%set_val(soln)
+!  call rear1%set_val(soln)
+!  call rear2%set_val(soln)
   counter = 0
   do k = 1,max_iter
 !!==============================================================================
@@ -146,11 +161,16 @@ program main_program
 !  call Rbnd%enforce(soln)
 !  call Bbnd%enforce(soln)
 !  call Tbnd%enforce(soln)
-  call rear1%set_val(soln)
-  call rear2%set_val(soln)
-  call airfoil%set_val(soln)
-  call wake%set_val(soln)
-  call farfield%set_val(soln)
+!  call rear1%set_val(soln)
+!  call rear2%set_val(soln)
+!  call airfoil%set_val(soln)
+!  call wake%set_val(soln)
+!  call farfield%set_val(soln)
+  call bnds(1)%set_val(soln)
+  call bnds(2)%set_val(soln)
+  call bnds(3)%set_val(soln)
+  call bnds(4)%set_val(soln)
+  call bnds(5)%set_val(soln)
   !call farfield%enforce(soln)
   !call rear1%enforce(soln)
   !call rear2%enforce(soln)
@@ -197,8 +217,10 @@ program main_program
 !  call output_flux(grid,soln,k)
 !  stop  
   
-  call airfoil%set_val(soln)
-  call wake%set_val(soln)
+  call bnds(4)%set_val(soln)
+  call bnds(5)%set_val(soln)
+!  call airfoil%set_val(soln)
+!  call wake%set_val(soln)
 !   call wall%enforce(soln)
    
 !  call top_wall%set_val(soln)
