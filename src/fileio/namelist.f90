@@ -9,6 +9,8 @@ module namelist
   use set_inputs, only : flux_scheme, limiter_scheme, eps_roe, beta_lim
   use set_inputs, only : geometry_file, soln_save, res_save,res_out, cons
   use set_inputs, only : epsM, kappaM, limiter_freeze
+  use set_inputs, only : num_BCs, bounds
+  
   implicit none
   private
   
@@ -30,9 +32,10 @@ contains
     namelist /grid/ grid_dir, grid_name, cart_grid, C_grid, &
                     index1, index2, imax, jmax, n_ghost
     namelist /geometry/ xmin, xmax, ymin, ymax, isAxi, Lmms
-    namelist /constants/ R_gas, gamma
+    namelist /constants/ R_gas, gamma, num_BCs
     namelist /initial/ isMMS, p_inf, u0, v0, u_inf, alpha, T_inf, M_inf
     namelist /numerical/ CFL, max_iter, eps, tol, locTime
+    namelist /boundary/ bounds
     namelist /flux/ flux_scheme, limiter_scheme, eps_roe, beta_lim
     namelist /output/ geometry_file, soln_save, res_save, res_out, cons, &
                       flux_out
@@ -44,7 +47,8 @@ contains
       return
     end if
     
-    open(file=file_path,status='old',action='read',iostat=fstat,newunit=funit)
+    open(file=file_path,status='old',action='read',iostat=fstat,newunit=funit, &
+         access='sequential')
     fopen = .true.
     ! grid
     rewind(funit)
@@ -69,6 +73,7 @@ contains
       write(*,*) 'ERROR: error in namelist "constants".'
       stop
     end if
+    allocate(bounds(6,num_BCs))
     
     ! initial
     rewind(funit)
@@ -84,6 +89,14 @@ contains
     read(funit,nml=numerical,iostat=fstat)
     if (fstat>0) then
       write(*,*) 'ERROR: error in namelist "numerical".'
+      stop
+    end if
+    
+    ! boundary
+    rewind(funit)
+    read(funit,nml=boundary,iostat=fstat)
+    if (fstat > 0) then
+      write(*,*) 'ERROR: error in namelist "boundary".'
       stop
     end if
     
