@@ -17,7 +17,7 @@ module set_inputs
   public :: CFL, eps, tol, eps_roe, beta_lim, epsM, kappaM
   public :: rho_inf, u_inf, p_inf, a_inf, T_inf, M_inf, alpha, u0, v0, pb, Lmms
   public :: grid_dir, grid_name, geometry_file, save_grid
-  public :: set_derived_inputs
+  public :: bounds, num_BCs, set_derived_inputs
    
   logical :: limiter_freeze = .false.
   logical :: cons           = .false.
@@ -50,6 +50,8 @@ module set_inputs
   integer :: res_out        = 100
   integer :: flux_scheme    = 1
   integer :: limiter_scheme = 3
+  integer :: num_BCs        = 4
+  integer, dimension(:,:), allocatable :: bounds
 
   real(prec) :: tol        = 1.0e-10_prec
   real(prec) :: eps        = 1.0e-3_prec
