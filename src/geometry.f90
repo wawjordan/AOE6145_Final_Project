@@ -26,6 +26,7 @@ module geometry
   !===========================================================================80
   subroutine setup_geometry( grid, soln )
     
+    use set_inputs, only : out_dir, out_file
     use set_inputs, only : cart_grid, C_grid, index1, index2, save_grid
     use file_handling, only : grid_in, grid_out
     
@@ -43,9 +44,8 @@ module geometry
       call ghost_shape(grid)
     end if
     call cell_geometry(grid)
-    !call grid_out(grid,geometry_file)
     if (save_grid) then
-      call grid_out(grid)
+      call grid_out(grid,out_dir,out_file)
     end if
     call allocate_soln( soln )
     
@@ -72,6 +72,17 @@ module geometry
     
   end subroutine teardown_geometry
   
+  !============================= cartesian_grid  =============================80
+  !>
+  !! Description: 
+  !!
+  !! Inputs:      grid : 
+  !!              soln : 
+  !!
+  !! Outputs:     grid :
+  !!              soln :
+  !<
+  !===========================================================================80
   subroutine cartesian_grid( grid )
     
     use set_precision, only : prec
