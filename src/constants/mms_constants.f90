@@ -10,7 +10,7 @@ module mms_constants
   real(prec), parameter :: rhox   = 0.15_prec
   real(prec), parameter :: rhoy   = -0.1_prec
   real(prec), parameter :: uvel0  = 70.0_prec !800.0_prec
-  real(prec), parameter :: uvelx  = 50.0_prec
+  real(prec), parameter :: uvelx  = 5.0_prec  ! 50.0_prec
   real(prec), parameter :: uvely  = -7.0_prec !-30.0_prec
   real(prec), parameter :: vvel0  = 90.0_prec !800.0_prec
   real(prec), parameter :: vvelx  = -15.0_prec!-75.0_prec
