@@ -5,7 +5,7 @@ module flux_calc
   use fluid_constants, only : gamma
   use set_inputs, only : neq, i_low, i_high, ig_low, ig_high, eps_roe
   use set_inputs, only : j_low, j_high, jg_low, jg_high, n_ghost
-  use variable_conversion, only : cons2prim, speed_of_sound
+  use variable_conversion, only : cons2prim, speed_of_sound, limit_primitives
   use other_subroutines, only : MUSCL_extrap
   use soln_type, only : soln_t
   use grid_type, only : grid_t
@@ -20,16 +20,18 @@ module flux_calc
   
   abstract interface
   
-  !================================ calc_flux ===============================80
+  !================================ calc_flux ================================80
   !>
   !! Description:
   !!
   !! Inputs:      left_state  :
   !!              right_state : 
+  !!              nx : 
+  !!              ny : 
   !!
   !! Outputs:     F     :
   !<
-  !==========================================================================80
+  !===========================================================================80
   subroutine calc_flux(left_state, right_state, nx, ny, F)
     
     import :: prec, i_low, i_high, j_low, j_high, neq
@@ -43,6 +45,16 @@ module flux_calc
   
 contains
 
+  !================================ calc_flux_2D =============================80
+  !>
+  !! Description:
+  !!
+  !! Inputs:      grid : 
+  !!              soln : 
+  !!
+  !! Outputs:     soln : 
+  !<
+  !===========================================================================80
 subroutine calc_flux_2D(grid,soln)
 
   type(grid_t), intent(in)    :: grid
@@ -53,7 +65,10 @@ subroutine calc_flux_2D(grid,soln)
   integer :: i,j,k
   
   call MUSCL_extrap(soln,Lxi,Rxi,Leta,Reta)
-  
+  call limit_primitives(Lxi)
+  call limit_primitives(Rxi)
+  call limit_primitives(Leta)
+  call limit_primitives(Reta)
 !  do j = j_low,j_high
 !  do i = i_low-1,i_high
 !    write(*,*) Lxi(:,i,j)
@@ -92,11 +107,11 @@ subroutine calc_flux_2D(grid,soln)
 end subroutine calc_flux_2D
 
 
-  !================================ select_flux =============================80
+  !================================ select_flux ==============================80
   !>
   !! Description:
   !<
-  !==========================================================================80
+  !===========================================================================80
   subroutine select_flux()
     
     use set_inputs, only : flux_scheme
@@ -115,6 +130,17 @@ end subroutine calc_flux_2D
   
   end subroutine select_flux
   
+  !================================ exact_flux ===============================80
+  !>
+  !! Description:
+  !!
+  !! Inputs:      V  :
+  !!              nx : 
+  !!              ny : 
+  !!
+  !! Outputs:     F  :
+  !<
+  !===========================================================================80
   subroutine exact_flux(V, nx, ny, F)
     
     real(prec), dimension(neq), intent(in) :: V
@@ -136,16 +162,18 @@ end subroutine calc_flux_2D
     
   end subroutine exact_flux
   
-  !============================== van_leer_flux =============================80
+  !============================== van_leer_flux ==============================80
   !>
   !! Description:
   !!
   !! Inputs:      left  :
   !!              right : 
+  !!              nx : 
+  !!              ny : 
   !!
   !! Outputs:     F     :
   !<
-  !==========================================================================80
+  !===========================================================================80
   subroutine van_leer_flux(left, right, nx, ny, F)
     
     real(prec), dimension(neq), intent(in)  :: left, right
@@ -161,7 +189,8 @@ end subroutine calc_flux_2D
     uL   = left(2)
     vL   = left(3)
     pL   = left(4)
-    !write(*,*) pL, rhoL
+    !write(*,*) left
+    
     call speed_of_sound(pL,rhoL,aL) 
     rhoR = right(1)
     uR   = right(2)
@@ -201,16 +230,18 @@ end subroutine calc_flux_2D
     
   end subroutine van_leer_flux
   
-  !================================ roe_flux ================================80
+  !================================ roe_flux =================================80
   !>
   !! Description:
   !!
   !! Inputs:      left  :
   !!              right : 
+  !!              nx : 
+  !!              ny : 
   !!
   !! Outputs:     F     :
   !<
-  !==========================================================================80
+  !===========================================================================80
   subroutine roe_flux( left, right, nx, ny, F )
     
     real(prec), dimension(neq), intent(in)  :: left, right
@@ -251,22 +282,16 @@ end subroutine calc_flux_2D
     un2 = u2*nx + v2*ny
     
     rvec1 = (/ one, u2, v2, half*(u2**2 +v2**2) /)
-!    rvec2 = (/ zero, ny*rho2, nx*rho2, rho2*(ny*u2-nx*v2) /)
     rvec2 = (/ zero, ny*rho2, -nx*rho2, rho2*(ny*u2-nx*v2) /)
     rvec3 = half*(rho2/a2)*(/ one, u2+nx*a2, v2+ny*a2, ht2+un2*a2 /)
-!    rvec4 = half*(rho2/a2)*(/ one, u2-nx*a2, v2-ny*a2, ht2-un2*a2 /)
     rvec4 = -half*(rho2/a2)*(/ one, u2-nx*a2, v2-ny*a2, ht2-un2*a2 /)
-    lambda = (/ un2, un2, un2 + a2, un2 - a2 /)
-     
-    lambda = abs(lambda)
-!    lambda = half*(one+sign(one,lambda-two*eps_roe*a2))*lambda &
-!           & + half*(one-sign(one,lambda-two*eps_roe*a2))*&
-!           & (lambda**2/(four*eps_roe*a2) + eps_roe*a2)
     
-    !dw1 = (rhoR - rhoL) - (pR - pL)/a2**2
-    !dw2 = ny*(uR - uL) - nx*(vR - vL)
-    !dw3 = nx*(uR - uL) + ny*(vR - vL) + (pR - pL)/(rho2*a2)
-    !dw4 = nx*(uR - uL) + ny*(vR - vL) - (pR - pL)/(rho2*a2)
+    lambda = (/ un2, un2, un2 + a2, un2 - a2 /)
+    lambda = abs(lambda)
+    lambda = half*(one+sign(one,lambda-two*eps_roe*a2))*lambda &
+         & + half*(one-sign(one,lambda-two*eps_roe*a2))*&
+          & (lambda**2/(four*eps_roe*a2) + eps_roe*a2)
+    
     dw1 = (rhoR - rhoL) - (pR - pL)/a2**2
     dw2 = ny*(uR - uL) - nx*(vR - vL)
     dw3 = nx*(uR - uL) + ny*(vR - vL) + (pR - pL)/(rho2*a2)
@@ -277,29 +302,6 @@ end subroutine calc_flux_2D
     
     F = half*(FL+FR) - half*( lambda(1)*dw1*rvec1 + lambda(2)*dw2*rvec2 &
                             + lambda(3)*dw3*rvec3 + lambda(4)*dw4*rvec4 )
-    
-!    write(*,*) 'rho = ', rhoL, rhoR, rho2
-!    write(*,*) 'u   = ', uL, uR, u2
-!    write(*,*) 'v   = ', vL, vR, v2
-!    write(*,*) 'p   = ', pL, pR
-!    write(*,*) 'a   = ', aL, aR, a2
-!    write(*,*) 'ht  = ', htL, htR, ht2
-!    write(*,*) 'un  = ', unL, unR, un2
-!    write(*,*)
-!    write(*,*) 'r1  = ', rvec1
-!    write(*,*) 'r2  = ', rvec2
-!    write(*,*) 'r3  = ', rvec3
-!    write(*,*) 'r4  = ', rvec4
-!    write(*,*)
-!    write(*,*) 'dw1 = ', dw1
-!    write(*,*) 'dw2 = ', dw2
-!    write(*,*) 'dw3 = ', dw3
-!    write(*,*) 'dw4 = ', dw4
-!    write(*,*)
-!    write(*,*) 'F(1)= ', FL(1), FR(1), F(1)
-!    write(*,*) 'F(2)= ', FL(2), FR(2), F(2)
-!    write(*,*) 'F(3)= ', FL(3), FR(3), F(3)
-!    write(*,*) 'F(4)= ', FL(4), FR(4), F(4)
     
   end subroutine roe_flux
   
