@@ -8,7 +8,7 @@ module set_inputs
 
   private
 
-  public :: isMMS, isAxi, cart_grid, C_grid, index1, index2
+  public :: isMMS, isAxi, cart_grid, C_grid, inlet, index1, index2
   public :: flux_scheme, limiter_scheme, limiter_freeze, cons, locTime, flux_out
   public :: imax, jmax, neq, xmin, xmax, ymin, ymax, n_ghost
   public :: i_high, i_low, ig_high, ig_low
@@ -17,17 +17,18 @@ module set_inputs
   public :: CFL, eps, tol, eps_roe, beta_lim, epsM, kappaM
   public :: rho_inf, u_inf, p_inf, a_inf, T_inf, M_inf, alpha, u0, v0, pb, Lmms
   public :: grid_dir, grid_name, geometry_file, save_grid
-  public :: bounds, num_BCs, set_derived_inputs
+  public :: bounds, num_BCs, set_derived_inputs, out_file, out_dir
    
   logical :: limiter_freeze = .false.
   logical :: cons           = .false.
-  logical :: isMMS          = .true.
+  logical :: isMMS          = .false.
   logical :: cart_grid      = .false.
+  logical :: inlet          = .false.
   logical :: C_grid         = .false.
   logical :: isAxi          = .false.
-  logical :: locTime        = .true.
   logical :: flux_out       = .false.
   logical :: save_grid      = .false.
+  logical :: locTime        = .true.
   
   integer :: index1         = 0
   integer :: index2         = 0
@@ -79,6 +80,9 @@ module set_inputs
   character(200) :: grid_dir = "../grids/curvilinear-grids/"
   character(200) :: grid_name = "curv2d65.grd"
   character(200) :: geometry_file = "example.dat"
+  character(200) :: out_file = "default"
+  character(200) :: out_dir = "OUT/"
+  
   contains
 
   !=========================== set_derived_inputs ============================80
