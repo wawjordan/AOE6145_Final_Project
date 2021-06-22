@@ -50,7 +50,7 @@ module time_integration
   !<
   !==========================================================================80
   subroutine calc_time_step(grid,soln)
-    use set_inputs, only : CFL
+    use set_inputs, only : CFL, locTime
     type(grid_t), intent(in)    :: grid
     type(soln_t), intent(inout) :: soln
     real(prec), dimension(ig_low:ig_high,jg_low:jg_high) :: Lam_xi,Lam_eta
@@ -64,7 +64,9 @@ module time_integration
     soln%dt = CFL*grid%V/( &
                Lam_xi*grid%A_xi(ig_low:ig_high,jg_low:jg_high) + &
                Lam_eta*grid%A_eta(ig_low:ig_high,jg_low:jg_high) )
-    !soln%dt = CFL*minval(soln%dt)
+    if (.not.locTime) then
+      soln%dt = CFL*minval(soln%dt)
+    end if
     
   end subroutine calc_time_step
 !  subroutine calc_time_step( A_xi, A_eta, n_xi_avg, n_eta_avg, vol, V, dt )
@@ -108,18 +110,25 @@ module time_integration
   !<
   !==========================================================================80
 
-  subroutine explicit_RK( grid, soln )
+  subroutine explicit_RK( grid, soln, bnds )
     use flux_calc, only : calc_flux_2D
-    use variable_conversion, only : update_states
+    use variable_conversion, only : update_states, prim2cons
+    use bc_type, only : bc_t
+    use set_inputs, only : num_BCs
     type(grid_t), intent(inout) :: grid
     type(soln_t), intent(inout) :: soln
+    type(bc_t), dimension(:), intent(inout) :: bnds
     real(prec), dimension(4) :: k
-    integer :: i, j
+    integer :: i, j, n
     
     k = (/ fourth, third, half, one /)
-    k = one
-    do j = 1,1!4
-    !call calc_flux_2D(grid,soln)
+    !k = one
+    do j = 1,4
+    do n = 1,num_BCs
+      call bnds(n)%enforce(soln)
+    end do
+    call prim2cons(soln%U,soln%V)
+    call calc_flux_2D(grid,soln)
     call calc_residual(grid,soln)
     
     do i = 1,4
@@ -170,20 +179,17 @@ module time_integration
   !! Outputs:     Rnorm : 
   !<
   !===========================================================================80
-  subroutine residual_norms( R, Rnorm, pnorm, rinit )
+  subroutine residual_norms( R, Rnorm, rinit )
     
     real(prec), dimension(neq,i_low:i_high,j_low:j_high), intent(in) :: R
     real(prec), dimension(neq), intent(in)  :: rinit
     real(prec), dimension(neq), intent(out) :: Rnorm
-    integer, intent(in) :: pnorm
     real(prec) :: Linv
     integer :: i
     
     Linv = one/real(size(R(1,:,:)),prec)
     
     do i = 1,neq
-      !Rnorm(i,1) = maxval(abs(R(i,:,:)))
-      !Rnorm(i) = Linv*sum(abs(R(i,:,:)))
       Rnorm(i) = sqrt(Linv*sum(R(i,:,:)**2))
     end do
     Rnorm = Rnorm/rinit
