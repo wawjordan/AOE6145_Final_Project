@@ -10,17 +10,18 @@ module other_subroutines
   use limiter_calc, only : limiter_fun
   use soln_type, only : soln_t
   use grid_type, only : grid_t
+  use bc_type,   only : bc_t
   
   implicit none
   
   private
   
   public :: MUSCL_extrap, surface_MUSCL_extrap, calc_de, calc_sources, &
-            airfoil_forces
+            airfoil_forces, inlet_pressure_loss, set_boundary_conditions
   
   contains
   
-  !============================= calculate_sources ==========================80
+  !========================= set_boundary_conditions =========================80
   !>
   !! Description: 
   !!
@@ -29,13 +30,37 @@ module other_subroutines
   !!
   !! Outputs:     S  : 
   !<
-  !==========================================================================80
+  !===========================================================================80
+  subroutine set_boundary_conditions(grid,bnds)
+    use set_inputs, only : num_BCs, bounds
+    type(grid_t), intent(in) :: grid
+    type(bc_t), dimension(:), allocatable, intent(inout) :: bnds
+    integer :: i
+    allocate(bnds(num_BCs))
+    do i = 1,num_BCs
+      call bnds(i)%set_bc(grid,bounds(1,i),bounds(2,i),bounds(3,i),&
+                               bounds(4,i),bounds(5,i),bounds(6,i) )
+     ! write(*,*) bounds(:,i)
+    end do
+    !stop
+  end subroutine set_boundary_conditions
+  
+  !============================= calculate_sources ===========================80
+  !>
+  !! Description: 
+  !!
+  !! Inputs:      V  : 
+  !!              y  : 
+  !!              isAxi :
+  !!
+  !! Outputs:     S  : 
+  !<
+  !===========================================================================80
   subroutine source_terms(V,y,isAxi,S)
-    
     real(prec), dimension(:),   intent(in) :: V
     real(prec), dimension(:),   intent(out) :: S
+    logical, intent(in)    :: isAxi
     real(prec), intent(in) :: y
-    logical, intent(in) :: isAxi
     real(prec) :: rho, uvel, vvel, p, a, ht
     
     rho  = V(1)
@@ -50,7 +75,7 @@ module other_subroutines
     
   end subroutine source_terms
   
-  !================================ MUSCL_extrap ============================80
+  !================================ MUSCL_extrap =============================80
   !>
   !! Description: 
   !!
@@ -59,64 +84,29 @@ module other_subroutines
   !! Outputs:     left  : 
   !!              right :
   !<
-  !==========================================================================80
-!  subroutine MUSCL_extrap(soln,Lxi,Rxi,Leta,Reta)
-!    type(soln_t), intent(inout) :: soln
-!    real(prec), dimension(neq,i_low-1:i_high,j_low:j_high), intent(out) :: Lxi, Rxi
-!    real(prec), dimension(neq,i_low:i_high,j_low-1:j_high), intent(out) :: Leta, Reta
-!    integer :: i
-!    
-!    Lxi  = soln%V(:,i_low-1:i_high  ,j_low:j_high) + fourth*epsM*(      &
-!           (one-kappaM)*soln%psi_p_xi(:,i_low-2:i_high-1,j_low:j_high)* &
-!                             ( soln%V(:,i_low-1:i_high  ,j_low:j_high)  &
-!                             - soln%V(:,i_low-2:i_high-1,j_low:j_high) )&
-!         + (one+kappaM)*soln%psi_m_xi(:,i_low-1:i_high  ,j_low:j_high)* &
-!                             ( soln%V(:,i_low  :i_high+1,j_low:j_high)  &
-!                             - soln%V(:,i_low-1:i_high  ,j_low:j_high) ))
-!    Rxi  = soln%V(:,i_low  :i_high+1,j_low:j_high) + fourth*epsM*(      &
-!           (one-kappaM)*soln%psi_p_xi(:,i_low  :i_high+1,j_low:j_high)* &
-!                             ( soln%V(:,i_low+1:i_high+2,j_low:j_high)  &
-!                             - soln%V(:,i_low  :i_high+1,j_low:j_high) )&
-!         + (one+kappaM)*soln%psi_m_xi(:,i_low-1:i_high  ,j_low:j_high)* &
-!                             ( soln%V(:,i_low  :i_high+1,j_low:j_high)  &
-!                             - soln%V(:,i_low-1:i_high  ,j_low:j_high) ))
-!
-!    Leta = soln%V(:,i_low:i_high,j_low-1:j_high  ) + fourth*epsM*(       &
-!           (one-kappaM)*soln%psi_p_eta(:,i_low:i_high,j_low-2:j_high-1)* &
-!                              ( soln%V(:,i_low:i_high,j_low-1:j_high  )  &
-!                              - soln%V(:,i_low:i_high,j_low-2:j_high-1) )&
-!         + (one+kappaM)*soln%psi_m_eta(:,i_low:i_high,j_low-1:j_high  )* &
-!                              ( soln%V(:,i_low:i_high,j_low  :j_high+1)  &
-!                              - soln%V(:,i_low:i_high,j_low-1:j_high  ) ))
-!    Reta = soln%V(:,i_low:i_high,j_low  :j_high+1) + fourth*epsM*(      &
-!           (one-kappaM)*soln%psi_p_eta(:,i_low:i_high,j_low  :j_high+1)* &
-!                              ( soln%V(:,i_low:i_high,j_low+1:j_high+2)  &
-!                              - soln%V(:,i_low:i_high,j_low  :j_high+1) )&
-!         + (one+kappaM)*soln%psi_m_eta(:,i_low:i_high,j_low-1:j_high  )* &
-!                              ( soln%V(:,i_low:i_high,j_low  :j_high+1)  &
-!                              - soln%V(:,i_low:i_high,j_low-1:j_high  ) ))
-!    
-!  end subroutine MUSCL_extrap
+  !===========================================================================80
   subroutine MUSCL_extrap(soln,Lxi,Rxi,Leta,Reta)
     type(soln_t), intent(inout) :: soln
-    real(prec), dimension(neq,i_low-1:i_high,j_low:j_high), intent(out) :: Lxi, Rxi
-    real(prec), dimension(neq,i_low:i_high,j_low-1:j_high), intent(out) :: Leta, Reta
+    real(prec), dimension(neq,i_low-1:i_high,j_low:j_high), &
+                                               intent(out) :: Lxi, Rxi
+    real(prec), dimension(neq,i_low:i_high,j_low-1:j_high), &
+                                               intent(out) :: Leta, Reta
     integer :: i
     
-    Lxi  = soln%V(:,i_low-1:i_high  ,j_low:j_high) + fourth*epsM*(      &
-           (one-kappaM)*soln%psi_p_xi(:,i_low-2:i_high-1,j_low:j_high)* &
-                             ( soln%V(:,i_low-1:i_high  ,j_low:j_high)  &
-                             - soln%V(:,i_low-2:i_high-1,j_low:j_high) )&
-         + (one+kappaM)*soln%psi_m_xi(:,i_low-1:i_high  ,j_low:j_high)* &
-                             ( soln%V(:,i_low  :i_high+1,j_low:j_high)  &
-                             - soln%V(:,i_low-1:i_high  ,j_low:j_high) ))
-    Rxi  = soln%V(:,i_low  :i_high+1,j_low:j_high) - fourth*epsM*(      &
-           (one-kappaM)*soln%psi_p_xi(:,i_low  :i_high+1,j_low:j_high)* &
-                             ( soln%V(:,i_low+1:i_high+2,j_low:j_high)  &
-                             - soln%V(:,i_low  :i_high+1,j_low:j_high) )&
-         + (one+kappaM)*soln%psi_m_xi(:,i_low-1:i_high  ,j_low:j_high)* &
-                             ( soln%V(:,i_low  :i_high+1,j_low:j_high)  &
-                             - soln%V(:,i_low-1:i_high  ,j_low:j_high) ))
+    Lxi  = soln%V(:,i_low-1:i_high  ,j_low:j_high) + fourth*epsM*(       &
+            (one-kappaM)*soln%psi_p_xi(:,i_low-2:i_high-1,j_low:j_high)* &
+                              ( soln%V(:,i_low-1:i_high  ,j_low:j_high)  &
+                              - soln%V(:,i_low-2:i_high-1,j_low:j_high) )&
+          + (one+kappaM)*soln%psi_m_xi(:,i_low-1:i_high  ,j_low:j_high)* &
+                              ( soln%V(:,i_low  :i_high+1,j_low:j_high)  &
+                              - soln%V(:,i_low-1:i_high  ,j_low:j_high) ))
+    Rxi  = soln%V(:,i_low  :i_high+1,j_low:j_high) - fourth*epsM*(       &
+            (one-kappaM)*soln%psi_p_xi(:,i_low  :i_high+1,j_low:j_high)* &
+                              ( soln%V(:,i_low+1:i_high+2,j_low:j_high)  &
+                              - soln%V(:,i_low  :i_high+1,j_low:j_high) )&
+          + (one+kappaM)*soln%psi_m_xi(:,i_low-1:i_high  ,j_low:j_high)* &
+                              ( soln%V(:,i_low  :i_high+1,j_low:j_high)  &
+                              - soln%V(:,i_low-1:i_high  ,j_low:j_high) ))
 
     Leta = soln%V(:,i_low:i_high,j_low-1:j_high  ) + fourth*epsM*(       &
            (one-kappaM)*soln%psi_p_eta(:,i_low:i_high,j_low-2:j_high-1)* &
@@ -125,7 +115,7 @@ module other_subroutines
          + (one+kappaM)*soln%psi_m_eta(:,i_low:i_high,j_low-1:j_high  )* &
                               ( soln%V(:,i_low:i_high,j_low  :j_high+1)  &
                               - soln%V(:,i_low:i_high,j_low-1:j_high  ) ))
-    Reta = soln%V(:,i_low:i_high,j_low  :j_high+1) - fourth*epsM*(      &
+    Reta = soln%V(:,i_low:i_high,j_low  :j_high+1) - fourth*epsM*(       &
            (one-kappaM)*soln%psi_p_eta(:,i_low:i_high,j_low  :j_high+1)* &
                               ( soln%V(:,i_low:i_high,j_low+1:j_high+2)  &
                               - soln%V(:,i_low:i_high,j_low  :j_high+1) )&
@@ -135,6 +125,17 @@ module other_subroutines
     
   end subroutine MUSCL_extrap
   
+  !=========================== surface_MUSCL_extrap ==========================80
+  !>
+  !! Description: 
+  !!
+  !! Inputs:      soln    : 
+  !!              indices :
+  !!
+  !! Outputs:     Left  : 
+  !!              Right :
+  !<
+  !===========================================================================80
   subroutine surface_MUSCL_extrap(soln,Left,Right,indices)
     type(soln_t), intent(in) :: soln
     real(prec), dimension(:,:) :: Left, right
@@ -178,6 +179,49 @@ module other_subroutines
     
   end subroutine surface_MUSCL_extrap
   
+  subroutine inlet_pressure_loss(soln,grid,indices,loss,p0_inf,p0)
+    use set_inputs, only : p_inf, M_inf, rho_inf, u_inf, T_inf, alpha
+    type(soln_t), intent(in) :: soln
+    type(grid_t), intent(in) :: grid
+    integer, dimension(4), intent(in) :: indices
+    real(prec), dimension(:,:), intent(out) :: p0
+    real(prec), dimension(:,:), allocatable :: Left, Right
+    real(prec), intent(out) :: loss, p0_inf
+    real(prec) :: H, asnd, mach
+    integer :: j, low, high, ind, dir
+    low  = indices(1)
+    high = indices(2)
+    ind  = indices(3)
+    dir  = indices(4)
+    p0_inf = p_inf*(one + half*(gamma-one)*M_inf**2)**(gamma/(gamma-one))
+    H = maxval(abs(grid%y(ind,low:high) - grid%y(ind,low) ) )
+    allocate( Left(neq,low:high), Right(neq,low:high) )
+    call surface_MUSCL_extrap(soln,Left,Right,indices)
+    loss = zero
+    do j = low,high
+      p0(1,j) = half*(grid%y(ind,j+1) + grid%y(ind,j))
+      call speed_of_sound(Left(4,j),Left(1,j),asnd)
+      mach = sqrt(Left(2,j)**2+Left(3,j)**2)/asnd
+      p0(2,j) = Left(4,j)*(one + half*(gamma-one)*mach**2)**(gamma/(gamma-one))
+      loss = loss + (p0_inf-p0(2,j))*(grid%y(ind+1,j+1)-grid%y(ind+1,j))
+    end do
+    loss = loss/H
+    deallocate(Left, Right)
+  end subroutine inlet_pressure_loss
+  
+  !============================= airfoil_forces ==============================80
+  !>
+  !! Description: 
+  !!
+  !! Inputs:      soln  : 
+  !!              grid  : 
+  !!              indices :
+  !!
+  !! Outputs:     Cp : 
+  !!              Cl :
+  !!              Cd :
+  !<
+  !===========================================================================80
   subroutine airfoil_forces(soln,grid,indices,Cp,Cl,Cd)
     use set_constants, only : pi 
     use set_inputs, only : p_inf, rho_inf, u_inf, alpha
@@ -215,18 +259,16 @@ module other_subroutines
     deallocate(left, right)
   end subroutine airfoil_forces
   
-  !================================== calc_sources ==========================80
+  !================================== calc_sources ===========================80
   !>
   !! Description: 
   !!
   !! Inputs:      soln : 
-  !!              exact_soln : 
-  !!              pnorm :
+  !!              grid : 
   !!
-  !! Outputs:     DE     : 
-  !!              DEnorm : 
+  !! Outputs:     soln : 
   !<
-  !==========================================================================80
+  !===========================================================================80
   subroutine calc_sources( soln, grid )
     
     use set_inputs, only : isAxi
@@ -244,18 +286,17 @@ module other_subroutines
   end subroutine calc_sources
      
   
-  !================================== calc_de ===============================80
+  !================================== calc_de ================================80
   !>
   !! Description: 
   !!
   !! Inputs:      soln : 
-  !!              exact_soln : 
-  !!              pnorm :
+  !!              cons : 
   !!
   !! Outputs:     DE     : 
   !!              DEnorm : 
   !<
-  !==========================================================================80
+  !===========================================================================80
   subroutine calc_de( soln, DE, DEnorm, cons )
     
     type(soln_t), intent(in) :: soln
