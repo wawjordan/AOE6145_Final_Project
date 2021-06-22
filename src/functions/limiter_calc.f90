@@ -39,11 +39,10 @@ contains
   !>
   !! Description:
   !<
-  !===========================================================================80  
+  !===========================================================================80
   subroutine select_limiter()
     
     use set_inputs, only : limiter_scheme
-    !limiter_fun => null()
     
     select case(limiter_scheme)
     
@@ -63,6 +62,15 @@ contains
   
   end subroutine select_limiter
   
+  !========================== calculate_limiter ==============================80
+  !>
+  !! Description:
+  !!
+  !! Inputs:      soln :
+  !!
+  !! Outputs:     soln :
+  !<
+  !===========================================================================80
   subroutine calculate_limiters(soln)
     
     use soln_type, only : soln_t
@@ -143,88 +151,6 @@ contains
 
   end subroutine calculate_limiters
   
-!  subroutine calc_consecutive_variations(V,r_plus,r_minus,dir)
-!    
-!    real(prec), dimension(:,:,:), intent(in)  :: V
-!    real(prec), dimension(:,:,:), intent(out) :: r_plus, r_minus
-!    integer, intent(in) :: dir
-!    real(prec), dimension(neq) :: den
-!    integer :: i, j, low1, high1, low2, high2
-!    
-!!    real(prec), dimension(:,:), intent(in)  :: V
-!!    real(prec), dimension(:,:), intent(out) :: r_plus, r_minus
-!!    real(prec), dimension(neq) :: den
-!!    integer :: i, j, low, high
-!    
-!    low1 = lbound(V,2)+n_ghost
-!    high1 = ubound(V,2)-n_ghost
-!    low2 = lbound(V,3)+n_ghost
-!    high2 = ubound(V,3)-n_ghost
-!    
-!    !write(*,*) low1,high1
-!    !write(*,*) low2,high2
-!    !stop
-!    if (dir==1) then
-!    
-!    do j = low2,high2
-!      do i = low1,high1
-!        den = V(:,i+1,j) - V(:,i,j)
-!        den = sign(one,den)*max(abs(den),1e-6_prec)
-!        r_plus(:,i,j)   = ( V(:,i+2,j) - V(:,i+1,j) )/den
-!        r_minus(:,i,j)  = ( V(:,i,j) - V(:,i-1,j) )/den
-!      end do
-!      r_plus(:,low1-1,j) = r_plus(:,low1,j)
-!      r_minus(:,low1-1,j) = r_minus(:,low1,j)
-!      
-!      r_plus(:,low1-2,j) = r_plus(:,low1-1,j)
-!      r_minus(:,low1-2,j) = r_minus(:,low1-1,j)
-!      
-!      r_plus(:,high1+1,j) = r_plus(:,high1,j)
-!      r_minus(:,high1+1,j) = r_minus(:,high1,j)
-!    end do
-!    
-!    elseif (dir==2) then
-!
-!    do j = low2,high2
-!      do i = low1,high1
-!        den = V(:,i,j+1) - V(:,i,j)
-!        den = sign(one,den)*max(abs(den),1e-6_prec)
-!        r_plus(:,i,j)   = ( V(:,i,j+2) - V(:,i,j+1) )/den
-!        r_minus(:,i,j)  = ( V(:,i,j) - V(:,i,j-1) )/den
-!      end do
-!    end do
-!    
-!    do i = low1,high1
-!      r_plus(:,i,low2-1) = r_plus(:,i,low2)
-!      r_minus(:,i,low2-1) = r_minus(:,i,low2)
-!      
-!      r_plus(:,i,low2-2) = r_plus(:,i,low2-1)
-!      r_minus(:,i,low2-2) = r_minus(:,i,low2-1)
-!      
-!      r_plus(:,i,high2+1) = r_plus(:,i,high2)
-!      r_minus(:,i,high2+1) = r_minus(:,i,high2)
-!    end do
-!    end if
-!   ! write(*,*) lbound(V)
-!   ! write(*,*) ubound(V)
-!   ! write(*,*)
-!   ! write(*,*) lbound(r_plus)
-!   ! write(*,*) ubound(r_minus)
-!!    low = lbound(V,1)+n_ghost
-!!    high = ubound(V,1)-n_ghost
-!!    do i = low,high
-!!      den = V(i+1,:) - V(i,:)
-!!      den = sign(one,den)*max(abs(den),1e-6_prec)
-!!      r_plus(i,:)   = ( V(i+2,:) - V(i+1,:) )/den
-!!      r_minus(i,:)  = ( V(i,:) - V(i-1,:) )/den
-!!    end do
-!!    r_plus(low-2,:) = r_plus(low-1,:)
-!!    r_minus(low-2,:) = r_minus(low-1,:)
-!!    
-!!    r_plus(high+1,:) = r_plus(high,:)
-!!    r_minus(high+1,:) = r_minus(high,:)
-!    
-!  end subroutine calc_consecutive_variations
   !============================= null_limiter ================================80
   !>
   !! Description:
