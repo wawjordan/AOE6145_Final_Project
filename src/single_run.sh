@@ -7,13 +7,8 @@ MMS_str=""
 flux_str=""
 limiter_str=""
 test_str=""
-#touch $summary
-#if [ -f $summary ]; then
-#  rm -f "$summary"
-#fi
-#grid_name="/home/grad3/wajordan/AOE_6145/AOE_6145_Final_project/grids"
-imax=97
-jmax=27
+imax=33
+jmax=33
 #grid_dir="../grids/curvilinear-grids/"
 #grid_name="curv2d$imax"
 #grid_name+=".grd"
@@ -25,6 +20,7 @@ grid_name="NACA64A006.coarse.53x27.grd"
 #grid_name="NACA64A006.fine.385x105.grd"
 cart_grid="F"
 C_grid="T"
+inlet="F"
 index1=1
 index2=16
 #index2=64
@@ -61,33 +57,33 @@ M_inf=0.84
 #M_inf=0.75
 
 
-CFL=0.1 #0.1 0.5 0.9
-max_iter=200000
+CFL=0.5 #0.1 0.5 0.9
+max_iter=2000
 locTime="F"
 
 flux_scheme=1
-limiter_scheme=1
+limiter_scheme=0
 beta_lim=2.0
-eps_roe=0.01
+eps_roe=0.1
 
 geometry_file="example.dat"
-flux_out="F"
-soln_save=50000
+flux_out="T"
+soln_save=100
 res_save=1
 res_out=100
 cons="T"
 
-num_BCs=5
+# inlet
+num_BCs=4
 bounds=()
-bounds+=(2,$i_low,$i_high,$((jg_high-n_ghost+1)),$jg_high,4)
-bounds+=(3,$((ig_high-n_ghost+1)),$ig_high,$j_low,$j_high,2)
-bounds+=(3,$ig_low,$((ig_low+n_ghost-1)),$j_low,$j_high,1)
-bounds+=(5,$((index2+1)),$((imax-index2-1)),$jg_low,$((j_low-1)),3)
-bounds+=(6,$ig_low,$index2,$jg_low,$((j_low-1)),3)
+bounds+=(2,$i_low,$index2,$jg_low,$((jg_low+1)),1)
+bounds+=(4,$((ig_high-n_ghost+1)),$ig_high,$j_low,$j_high,2)
+bounds+=(5,$i_low,$i_high,$((jg_low+n_ghost-1)),$jg_low,3)
+bounds+=(5,$((index2+1)),$i_high,$((jg_high-n_ghost+1)),$jg_high,4)
 
-epsM=1.0
+epsM=0.0
 kappaM=-1.0
-limiter_freeze="F"
+limiter_freeze="T"
 if [ "$isMMS" = "T" ]; then
   MMS_str="MMS"
 else
@@ -119,6 +115,7 @@ echo "&grid" > $input
 echo "  grid_dir = \"$grid_dir\"" >> $input
 echo "  grid_name = \"$grid_name\"" >> $input
 echo "  cart_grid = $cart_grid" >> $input
+echo "  inlet = $inlet" >> $input
 echo "  C_grid = $C_grid" >> $input
 echo "  index1 = $index1" >> $input
 echo "  index2 = $index2" >> $input
