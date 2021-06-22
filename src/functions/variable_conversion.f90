@@ -60,10 +60,9 @@ module variable_conversion
   !>
   !! Description: 
   !!
-  !! Inputs:      U :
+  !! Inputs:      V :
   !!
   !! Outputs:     U : 
-  !!              V :
   !<
   !===========================================================================80
   subroutine prim2cons( U, V )
@@ -84,10 +83,8 @@ module variable_conversion
   !! Description: 
   !!
   !! Inputs:      U : 
-  !!              V : 
   !!
-  !! Outputs:     U : 
-  !!              V : 
+  !! Outputs:     V : 
   !<
   !===========================================================================80
   subroutine cons2prim( U, V )
@@ -107,11 +104,9 @@ module variable_conversion
   !>
   !! Description: 
   !!
-  !! Inputs:      U : 
-  !!              V : 
+  !! Inputs:      V : 
   !!
-  !! Outputs:     U : 
-  !!              V : 
+  !! Outputs:     V : 
   !<
   !===========================================================================80
   subroutine limit_primitives(V)
@@ -121,8 +116,8 @@ module variable_conversion
     
     do j = lbound(V,3),ubound(V,3)
       do i = lbound(V,2),ubound(V,2)
-        V(1,i,j) = max(0.001_prec,V(1,i,j))
-        V(4,i,j) = max(50.0_prec,V(4,i,j))
+        V(1,i,j) = max(0.0001_prec,V(1,i,j))
+        V(4,i,j) = max(1.0_prec,V(4,i,j))
       end do
     end do
     
