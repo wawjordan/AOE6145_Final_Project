@@ -39,6 +39,17 @@ module init_problem
 
   end subroutine initialize
   
+  !============================ initialize_MMS  ==============================80
+  !>
+  !! Description: 
+  !!
+  !! Inputs:      grid : 
+  !!              soln : 
+  !!
+  !! Outputs:     grid :
+  !!              soln :
+  !<
+  !===========================================================================80
   subroutine initialize_MMS( grid, soln )
     
     use soln_type, only : calc_MMS
@@ -59,6 +70,17 @@ module init_problem
     
   end subroutine initialize_MMS
   
+  !============================ initialize_const  ============================80
+  !>
+  !! Description: 
+  !!
+  !! Inputs:      grid : 
+  !!              soln : 
+  !!
+  !! Outputs:     grid :
+  !!              soln :
+  !<
+  !===========================================================================80
   subroutine initialize_const( grid, soln, V )
     use other_subroutines, only : calc_sources
     type( grid_t ), intent(inout) :: grid
@@ -73,6 +95,17 @@ module init_problem
     
   end subroutine initialize_const
   
+  !============================ initialize_lin_xi  ===========================80
+  !>
+  !! Description: 
+  !!
+  !! Inputs:      grid : 
+  !!              soln : 
+  !!
+  !! Outputs:     grid :
+  !!              soln :
+  !<
+  !===========================================================================80
   subroutine initialize_lin_xi( grid, soln, V1, V2 )
     
     use other_subroutines, only : calc_sources
