@@ -153,7 +153,7 @@ module other_subroutines
          + (one+kappaM)*soln%psi_m_eta(:,low:high,ind-1)* &
                               ( soln%V(:,low:high,ind  )  &
                               - soln%V(:,low:high,ind-1) ))
-      Right = soln%V(:,low:high,ind  ) + fourth*epsM*(    &
+      Right = soln%V(:,low:high,ind  ) - fourth*epsM*(    &
            (one-kappaM)*soln%psi_p_eta(:,low:high,ind  )* &
                               ( soln%V(:,low:high,ind+1)  &
                               - soln%V(:,low:high,ind  ) )&
@@ -168,7 +168,7 @@ module other_subroutines
          + (one+kappaM)*soln%psi_m_xi(:,ind-1,low:high)*  &
                              ( soln%V(:,ind,  low:high)   &
                              - soln%V(:,ind-1,low:high) ) )
-      Right = soln%V(:,ind  ,low:high) + fourth*epsM*(    &
+      Right = soln%V(:,ind  ,low:high) - fourth*epsM*(    &
            (one-kappaM)*soln%psi_p_xi(:,ind  ,low:high)*  &
                              ( soln%V(:,ind+1,low:high)   &
                              - soln%V(:,ind  ,low:high))  &
