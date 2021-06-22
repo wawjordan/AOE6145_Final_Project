@@ -19,16 +19,16 @@ module bc_type
     integer, dimension(3) :: loop1, loop2
     integer, dimension(2) :: i0, j0
     integer, allocatable, dimension(:,:) :: i1, j1, i2, j2
-    real(prec), allocatable, dimension(:,:,:) :: Fxi, Feta
-    real(prec), allocatable, dimension(:,:) :: nx, ny, &
-                              rho, uvel, vvel, press, mach
+!    real(prec), allocatable, dimension(:,:,:) :: Fxi, Feta
+    real(prec), allocatable, dimension(:,:) :: nx, ny
+!                              rho, uvel, vvel, press, mach
   contains
     procedure, public :: set_bc  => set_bc_sub
-    procedure, public :: set_val => set_val_sub
+!    procedure, public :: set_val => set_val_sub
     procedure, public :: enforce => enforce_sub
   end type bc_t
   
-  private :: set_bc_sub, set_val_sub, enforce_sub
+  private :: set_bc_sub, enforce_sub !, set_val_sub
   
 contains
   
@@ -72,8 +72,10 @@ contains
         this%loop2 = (/i_low,i_high,1/)
       case(3) ! "bottom" (eta / j == constant)
         do j = j_low, j_high
-          this%nx(:,j) = grid%n_eta(i_low:i_high,j_high,1)
-          this%ny(:,j) = grid%n_eta(i_low:i_high,j_high,2)
+         this%nx(:,j) = grid%n_eta(i_low:i_high,j_high+1,1)
+         this%ny(:,j) = grid%n_eta(i_low:i_high,j_high+1,2)
+         !this%nx(:,j) = grid%n_eta(i_low:i_high,j_high,1)
+         !this%ny(:,j) = grid%n_eta(i_low:i_high,j_high,2)
         end do
         this%i_offset = 0
         this%j_offset = -1
@@ -135,10 +137,10 @@ contains
     end select
 !    select case(ID)
 !    case(1:5)
-      allocate( this%rho(  i_low:i_high,j_low:j_high),&
-                this%uvel( i_low:i_high,j_low:j_high),&
-                this%vvel( i_low:i_high,j_low:j_high),&
-                this%press(i_low:i_high,j_low:j_high) )
+!      allocate( this%rho(  i_low:i_high,j_low:j_high),&
+!                this%uvel( i_low:i_high,j_low:j_high),&
+!                this%vvel( i_low:i_high,j_low:j_high),&
+!                this%press(i_low:i_high,j_low:j_high) )
 !    case(6)
 !      allocate( this%Fxi (neq,i_low:i_high,j_low:j_high),&
 !                this%Feta(neq,i_low:i_high,j_low:j_high) )
@@ -150,23 +152,31 @@ contains
     
   end subroutine set_bc_sub
   
-  subroutine set_val_sub(this,soln)
+  subroutine enforce_sub(this,soln)
     use set_inputs, only : epsM
     implicit none
     class(bc_t), intent(inout) :: this
     type(soln_t), intent(inout) :: soln
     real(prec) :: asnd,mach,vmag,vx,vy
-    integer :: i, j, d1, d2
+    integer :: i, j, d1, d2, i2, j2
     select case(this%bc_id)
     case(1)  ! MMS dirichlet
-      this%rho(this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
+      soln%V(1,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
            soln%Vmms(1,this%i0(1):this%i0(2),this%j0(1):this%j0(2))
-      this%uvel(this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
+      soln%V(2,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
            soln%Vmms(2,this%i0(1):this%i0(2),this%j0(1):this%j0(2))
-      this%vvel(this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
+      soln%V(3,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
            soln%Vmms(3,this%i0(1):this%i0(2),this%j0(1):this%j0(2))
-      this%press(this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
+      soln%V(4,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
            soln%Vmms(4,this%i0(1):this%i0(2),this%j0(1):this%j0(2))
+      !this%rho(this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
+      !     soln%Vmms(1,this%i0(1):this%i0(2),this%j0(1):this%j0(2))
+      !this%uvel(this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
+      !     soln%Vmms(2,this%i0(1):this%i0(2),this%j0(1):this%j0(2))
+      !this%vvel(this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
+      !     soln%Vmms(3,this%i0(1):this%i0(2),this%j0(1):this%j0(2))
+      !this%press(this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
+      !     soln%Vmms(4,this%i0(1):this%i0(2),this%j0(1):this%j0(2))
     case(2)  ! Far field dirichlet
       soln%V(1,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = rho_inf
       soln%V(2,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = &
@@ -206,19 +216,27 @@ contains
       d2 = this%j_offset
       do j = this%loop1(1),this%loop1(2),this%loop1(3)
         do i = this%loop2(1),this%loop2(2),this%loop2(3)
-          this%rho(i,j)   = soln%V(1,i-d1,j-d2) + epsM*( &
+          soln%V(1,i,j)   = soln%V(1,i-d1,j-d2) + epsM*( &
                             soln%V(1,i-d1,j-d2) - soln%V(1,i-2*d1,j-2*d2) )
-          this%uvel(i,j)  = soln%V(2,i-d1,j-d2) + epsM*( &
+          soln%V(2,i,j)  = soln%V(2,i-d1,j-d2) + epsM*( &
                             soln%V(2,i-d1,j-d2) - soln%V(2,i-2*d1,j-2*d2) )
-          this%vvel(i,j)  = soln%V(3,i-d1,j-d2) + epsM*( &
+          soln%V(3,i,j)  = soln%V(3,i-d1,j-d2) + epsM*( &
                             soln%V(3,i-d1,j-d2) - soln%V(3,i-2*d1,j-2*d2) )
-          this%press(i,j) = soln%V(4,i-d1,j-d2) + epsM*( &
+          soln%V(4,i,j) = soln%V(4,i-d1,j-d2) + epsM*( &
                             soln%V(4,i-d1,j-d2) - soln%V(4,i-2*d1,j-2*d2) )
+          !this%rho(i,j)   = soln%V(1,i-d1,j-d2) + epsM*( &
+          !                  soln%V(1,i-d1,j-d2) - soln%V(1,i-2*d1,j-2*d2) )
+          !this%uvel(i,j)  = soln%V(2,i-d1,j-d2) + epsM*( &
+          !                  soln%V(2,i-d1,j-d2) - soln%V(2,i-2*d1,j-2*d2) )
+          !this%vvel(i,j)  = soln%V(3,i-d1,j-d2) + epsM*( &
+          !                  soln%V(3,i-d1,j-d2) - soln%V(3,i-2*d1,j-2*d2) )
+          !this%press(i,j) = soln%V(4,i-d1,j-d2) + epsM*( &
+          !                  soln%V(4,i-d1,j-d2) - soln%V(4,i-2*d1,j-2*d2) )
         end do
       end do
     case(5)  ! slip wall w/ ghost cells
       d1 = this%i_offset
-      d2 = this%j_offset
+      d2 = this%j_offset 
      !write(*,*) d1, d2
      !write(*,*) this%i1(1), this%i1(2) 
      !write(*,*) this%j1(1), this%j1(2)
@@ -228,14 +246,27 @@ contains
      !   end do
      ! end do
      !stop
+      i2 = 0
+      j2 = 0
       do j = this%loop1(1),this%loop1(2),this%loop1(3)
+        j2 = j2+1
         do i = this%loop2(1),this%loop2(2),this%loop2(3)
-          call reflect_vec( soln%V(2,i-d1,j-d2), soln%V(3,i-d1,j-d2), &
+          i2 = i2+1
+          call reflect_vec( soln%V(2,i-d1*(2*i2-1),j-d2*(2*j2-1)), &
+                            soln%V(3,i-d1*(2*i2-1),j-d2*(2*j2-1)), &
                               this%nx(i,j), this%ny(i,j), &
                               soln%V(2,i,j), soln%V(3,i,j) )
-          soln%V(4,i,j) = soln%V(4,i-d1,j-d2) + zero*epsM*( &
+          soln%V(4,i,j) = soln%V(4,i-d1,j-d2) + epsM*( &
                             soln%V(4,i-d1,j-d2) - soln%V(4,i-2*d1,j-2*d2) )
-          soln%V(1,i,j) = soln%V(4,i,j)/( R_gas*soln%temp(i-d1,j-d2) )
+          soln%V(1,i,j) = soln%V(4,i,j)/&
+              ( R_gas*soln%temp(i-d1,j-d2) )
+          !write(*,*) i,j,'-->',i-d1*(2*i2-1),j-d2*(2*j2-1)
+          !call reflect_vec( soln%V(2,i-d1,j-d2), soln%V(3,i-d1,j-d2), &
+          !                    this%nx(i,j), this%ny(i,j), &
+          !                    soln%V(2,i,j), soln%V(3,i,j) )
+          !soln%V(4,i,j) = soln%V(4,i-d1,j-d2) + epsM*( &
+          !                  soln%V(4,i-d1,j-d2) - soln%V(4,i-2*d1,j-2*d2) )
+          !soln%V(1,i,j) = soln%V(4,i,j)/( R_gas*soln%temp(i-d1,j-d2) )
           !call reflect_vec( soln%V(2,i-d1,j-d2), soln%V(3,i-d1,j-d2), &
           !                    this%nx(i,j), this%ny(i,j), &
           !                    this%uvel(i,j), this%vvel(i,j) )
@@ -259,17 +290,17 @@ contains
       end do  
     case default
     end select
-  end subroutine set_val_sub 
+  end subroutine enforce_sub 
 
-  subroutine enforce_sub(this,soln)
-    class(bc_t), intent(in)   :: this
-    type(soln_t), intent(inout):: soln
-    
-    soln%V(1,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = this%rho
-    soln%V(2,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = this%uvel
-    soln%V(3,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = this%vvel
-    soln%V(4,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = this%press
-  end subroutine enforce_sub
+!  subroutine enforce_sub(this,soln)
+!    class(bc_t), intent(in)   :: this
+!    type(soln_t), intent(inout):: soln
+!    
+!    soln%V(1,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = this%rho
+!    soln%V(2,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = this%uvel
+!    soln%V(3,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = this%vvel
+!    soln%V(4,this%i0(1):this%i0(2),this%j0(1):this%j0(2)) = this%press
+!  end subroutine enforce_sub
   
   elemental subroutine reflect_vec(u1,v1,nx,ny,u0,v0)
     real(prec), intent(in) :: u1,v1,nx,ny
